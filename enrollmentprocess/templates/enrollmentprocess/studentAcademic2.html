@@ -5,14 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Academic Data - Step 2</title>
-    <link rel="stylesheet" href="../css/studentAcademic.css">
+    {% load static %}
+    <link rel="stylesheet" href="../../static/enrollmentprocess/css/studentAcademic.css">
 </head>
 
 <body>
     <!-- Same header structure as studentAcademic.html -->
     <div class="header">
         <div class="logo-container">
-            <img src="/placeholder.svg?height=80&width=80" alt="School Logo" class="logo">
+            <img src="{% static 'assets/westLogo.png' %}" alt="School Logo" class="logo">
             <div class="school-info">
                 <h1>Zamboanga National High School West</h1>
                 <p>Barangay Tumaga, Zamboanga City, Philippines</p>
@@ -20,9 +21,9 @@
             </div>
         </div>
         <div class="government-logos">
-            <img src="../assets/deped1.png" alt="DepEd Logo">
-            <img src="../assets/deped2.png" alt="Matatag Logo">
-            <img src="../assets/deped3.png" alt="Philippines Flag">
+            <img src="{% static 'assets/deped1.png' %}" alt="DepEd Logo">
+            <img src="{% static 'assets/deped2.png' %}" alt="Matatag Logo">
+            <img src="{% static 'assets/deped3.png' %}" alt="Philippines Flag">
         </div>
     </div>
 
@@ -191,70 +192,78 @@
 
     <script src="../js/preEnlistment.js" defer></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const subjectInputs = document.querySelectorAll('.subjects-grid input[type="number"]');
-            const overallAverageInput = document.getElementById('overallAverage');
+    document.addEventListener('DOMContentLoaded', function () {
+        const subjectInputs = document.querySelectorAll('.subjects-grid input[type="number"]');
+        const overallAverageInput = document.getElementById('overallAverage');
 
-            function calculateAverage() {
-                let total = 0;
-                let count = 0;
-
-                subjectInputs.forEach(input => {
-                    const value = parseFloat(input.value);
-                    if (!isNaN(value) && value > 0) {
-                        total += value;
-                        count++;
-                    }
-                });
-
-                if (count > 0) {
-                    const average = (total / count).toFixed(2);
-                    overallAverageInput.value = average;
-                } else {
-                    overallAverageInput.value = '';
-                }
-            }
+        function calculateAverage() {
+            let total = 0;
+            let count = 0;
 
             subjectInputs.forEach(input => {
-                input.addEventListener('input', calculateAverage);
-            });
-
-            // File upload handling for both report card and birth certificate
-            const fileInputs = document.querySelectorAll('input[type="file"]');
-
-            fileInputs.forEach(fileInput => {
-                const fileButton = fileInput.parentElement.querySelector('.file-button');
-                const fileName = fileInput.parentElement.querySelector('.file-name');
-
-                fileButton.addEventListener('click', () => {
-                    fileInput.click();
-                });
-
-                fileInput.addEventListener('change', function () {
-                    if (this.files.length > 0) {
-                        fileName.textContent = this.files[0].name;
-                    } else {
-                        fileName.textContent = 'No file chosen';
-                    }
-                });
-            });
-
-            // Handle disability type visibility based on disability status
-            const disabilitySelect = document.getElementById('disability');
-            const disabilityTypeGroup = document.getElementById('disabilityType').parentElement;
-
-            disabilitySelect.addEventListener('change', function () {
-                if (this.value === 'yes') {
-                    disabilityTypeGroup.style.display = 'block';
-                    document.getElementById('disabilityType').required = true;
-                } else {
-                    disabilityTypeGroup.style.display = 'none';
-                    document.getElementById('disabilityType').required = false;
-                    document.getElementById('disabilityType').value = 'not-applicable';
+                const value = parseFloat(input.value);
+                if (!isNaN(value) && value > 0) {
+                    total += value;
+                    count++;
                 }
             });
+
+            if (count > 0) {
+                const average = (total / count).toFixed(2);
+                overallAverageInput.value = average;
+            } else {
+                overallAverageInput.value = '';
+            }
+        }
+
+        subjectInputs.forEach(input => {
+            input.addEventListener('input', calculateAverage);
         });
-    </script>
+
+        // File upload handling
+        const fileInput = document.getElementById('reportCard');
+        const fileButton = document.querySelector('.file-button');
+        const fileName = document.querySelector('.file-name');
+
+        fileButton.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', function () {
+            if (this.files.length > 0) {
+                fileName.textContent = this.files[0].name;
+            } else {
+                fileName.textContent = 'No file chosen';
+            }
+        });
+
+        const academicForm = document.getElementById('academicForm');
+        academicForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // Basic form validation
+            const requiredFields = this.querySelectorAll('[required]');
+            let isValid = true;
+
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    isValid = false;
+                    field.style.borderColor = '#c00';
+                } else {
+                    field.style.borderColor = '';
+                }
+            });
+
+            if (isValid) {
+                // Define the URL to redirect to
+                const redirectUrl = "{% url 'student_academic_2' %}";
+                window.location.href = redirectUrl;
+            } else {
+                alert('Please fill in all required fields.');
+            }
+        });
+    });
+</script>
 </body>
 
 </html>

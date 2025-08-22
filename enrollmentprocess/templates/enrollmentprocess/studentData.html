@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pre-Enrollment Form</title>
-    <link rel="stylesheet" href="../css/preEnlistment.css">
+     {% load static %}
+    <link rel="stylesheet" href="../../static/enrollmentprocess/css/preEnlistment.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
 
@@ -13,7 +14,7 @@
 
     <header class="header">
         <div class="logo-section">
-            <img src="../assets/westLogo.png" alt="School Logo" class="logo">
+            <img src="{% static 'assets/westLogo.png' %}" alt="School Logo" class="logo">
             <div class="school-info">
                 <h1>Zamboanga National High School West</h1>
                 <p>R.T. Lim Boulevard Zamboanga City, Philippines</p>
@@ -21,9 +22,9 @@
             </div>
         </div>
         <div class="header-icons">
-            <img src="../assets/deped1.png" alt="Logo 2" class="logo">
-            <img src="../assets/deped2.png" alt="SRIC" class="logo">
-            <img src="../assets/deped3.png" alt="DepEd Logo" class="logo">
+            <img src="{% static 'assets/deped1.png' %}" alt="Logo 2" class="logo">
+            <img src="{% static 'assets/deped2.png' %}" alt="SRIC" class="logo">
+            <img src="{% static 'assets/deped3.png' %}" alt="DepEd Logo" class="logo">
         </div>
     </header>
 
@@ -149,8 +150,8 @@
             </div>
         </div>
         <div class="form-footer">
-            <a href="../html/index.html" class="back-btn" role="button">Back</a>
-            <a href="familyData.html" class="next-btn" role="button">Next Form</a>
+            <a href="{% url 'homepage' %}" class="back-btn" role="button">Back</a>
+            <a href="{% url 'family_data' %}" class="next-btn" role="button">Next Form</a>
         </div>
     </main>
 

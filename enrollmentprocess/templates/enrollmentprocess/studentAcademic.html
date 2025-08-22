@@ -5,14 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Academic Data</title>
-    <link rel="stylesheet" href="../css/studentAcademic.css">
+    {% load static %}
+    <link rel="stylesheet" href="../../static/enrollmentprocess/css/studentAcademic.css">
 </head>
 
 <body>
     <!-- Updated header to match school branding and navigation structure -->
     <div class="header">
         <div class="logo-container">
-            <img src="../assets/westLogo.png" alt="School Logo" class="logo">
+            <img src="{% static 'assets/westLogo.png' %}" alt="School Logo" class="logo">
             <div class="school-info">
                 <h1>Zamboanga National High School West</h1>
                 <p>Barangay Tumaga, Zamboanga City, Philippines</p>
@@ -20,9 +21,9 @@
             </div>
         </div>
         <div class="government-logos">
-            <img src="../assets/deped1.png" alt="DepEd Logo">
-            <img src="../assets/deped2.png" alt="Matatag Logo">
-            <img src="../assets/deped3.png" alt="Philippines Flag">
+            <img src="{% static 'assets/deped1.png' %}" alt="DepEd Logo">
+            <img src="{% static 'assets/deped2.png' %}" alt="Matatag Logo">
+            <img src="{% static 'assets/deped3.png' %}" alt="Philippines Flag">
         </div>
     </div>
 
@@ -162,13 +163,13 @@
             </div>
 
             <div class="form-actions">
-                <a href="studentNonAcademic.html" class="back-btn" role="button">Back</a>
+                <a href="{% url 'student_academic' %}" class="back-btn" role="button">Back</a>
                 <button type="submit" class="submit-btn">See Section</button>
             </div>
         </form>
     </div>
 
-    <script src="../js/preEnlistment.js" defer></script>
+    <script src="{% static 'enrollmentprocess/js/preEnlistment.js' %}" defer></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const subjectInputs = document.querySelectorAll('.subjects-grid input[type="number"]');
@@ -232,9 +233,9 @@
                     }
                 });
 
-                if (isValid) {
-
-                    window.location.href = 'studentAcademic2.html';
+                 if (isValid) {
+                const redirectUrl = "{% url 'student_academic_2' %}";
+                window.location.href = redirectUrl;
                 } else {
                     alert('Please fill in all required fields.');
                 }
