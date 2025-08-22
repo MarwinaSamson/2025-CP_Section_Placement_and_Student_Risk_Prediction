@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pre-Enrollment Form</title>
+    <link rel="stylesheet" href="../css/preEnlistment.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+
+<body>
+
+    <header class="header">
+        <div class="logo-section">
+            <img src="../assets/westLogo.png" alt="School Logo" class="logo">
+            <div class="school-info">
+                <h1>Zamboanga National High School West</h1>
+                <p>R.T. Lim Boulevard Zamboanga City, Philippines</p>
+                <p>School I.D: 303942</p>
+            </div>
+        </div>
+        <div class="header-icons">
+            <img src="../assets/deped1.png" alt="Logo 2" class="logo">
+            <img src="../assets/deped2.png" alt="SRIC" class="logo">
+            <img src="../assets/deped3.png" alt="DepEd Logo" class="logo">
+        </div>
+    </header>
+
+    <main class="form-container">
+        <div class="form-header">
+            <h2>ENROLLMENT FORM</h2>
+            <p>School Year 2025-2026</p>
+        </div>
+
+        <div class="form-content">
+            <div class="form-left">
+                <div class="form-field">
+                    <label for="lrn">LRN Number:</label>
+                    <input type="text" id="lrn">
+                </div>
+                <div class="form-field checkbox-group">
+                    <p>Please check the appropriate box if you are enrolling as on of the following:</p>
+                    <div class="checkbox-options">
+                        <label><input type="checkbox"> 4 Ps Member</label>
+                        <label><input type="checkbox"> Retained</label>
+                        <label><input type="checkbox"> Balik-aral</label>
+                        <label><input type="checkbox"> Transferee</label>
+                    </div>
+                </div>
+
+                <div class="form-field radio-input">
+                    <p>Is the student needs Special Education Program?</p>
+                    <div class="radio-options">
+                        <label><input type="radio" name="sped" value="yes"> YES</label>
+                        <input type="text" class="fill-in-box">
+                        <label><input type="radio" name="sped" value="no"> NO</label>
+                    </div>
+                </div>
+
+                <div class="form-field radio-input">
+                    <p>Is the student a Working Student?</p>
+                    <div class="radio-options">
+                        <label><input type="radio" name="working" value="yes"> YES</label>
+                        <input type="text" class="fill-in-box">
+                        <label><input type="radio" name="working" value="no"> NO</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-right">
+                <div class="image-upload-box">
+                    <p>UPLOAD STUDENT 1x1 PICTURE</p>
+                    <label for="photo-upload" class="upload-area">
+                        <div class="upload-icon-container">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <img id="photo-preview" src="#" alt="Photo Preview" style="display: none;">
+                    </label>
+                    <input type="file" id="photo-upload" accept="image/*" class="file-input">
+                </div>
+            </div>
+        </div>
+
+        <div class="student-info-section">
+            <h3 class="section-title">A. Student's Information Data <span class="subtitle">(Please fill in the complete
+                    and correct details)</span></h3>
+            <div class="grid-container">
+                <div class="grid-item full-width">
+                    <label>NAME:</label>
+                    <div class="name-fields">
+                        <input type="text" placeholder="Last Name">
+                        <input type="text" placeholder="First Name">
+                        <input type="text" placeholder="Middle Name">
+                    </div>
+                </div>
+                <div class="grid-item full-width">
+                    <label>Present Home Address:</label>
+                    <input type="text">
+                </div>
+                <div class="grid-item">
+                    <label>Age:</label>
+                    <input type="text">
+                </div>
+                <div class="grid-item">
+                    <label>Gender:</label>
+                    <select>
+                        <option value="">Select</option>
+                    </select>
+                </div>
+                <div class="grid-item">
+                    <label>Date of Birth:</label>
+                    <input type="date">
+                </div>
+                <div class="grid-item">
+                    <label>Place of Birth:</label>
+                    <input type="text">
+                </div>
+                <div class="grid-item">
+                    <label>Religion:</label>
+                    <select>
+                        <option value="">Select</option>
+                    </select>
+                </div>
+                <div class="grid-item">
+                    <label>Dialect Spoken:</label>
+                    <input type="text">
+                </div>
+                <div class="grid-item">
+                    <label>Ethnic Tribe:</label>
+                    <select>
+                        <option value="">Select</option>
+                    </select>
+                </div>
+            </div>
+            <div class="grid-container second-row">
+                <div class="grid-item full-width">
+                    <label>Name of Last School Attended:</label>
+                    <input type="text">
+                </div>
+                <div class="grid-item">
+                    <label>Previous Grade and Section:</label>
+                    <input type="text">
+                </div>
+                <div class="grid-item">
+                    <label>School Year Last Attended:</label>
+                    <input type="text">
+                </div>
+            </div>
+        </div>
+        <div class="form-footer">
+            <a href="../html/index.html" class="back-btn" role="button">Back</a>
+            <a href="familyData.html" class="next-btn" role="button">Next Form</a>
+        </div>
+    </main>
+
+    <script src="../js/preEnlistment.js" defer></script>
+</body>
+
+</html>

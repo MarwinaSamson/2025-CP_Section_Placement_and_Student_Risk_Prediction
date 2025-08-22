@@ -1,0 +1,539 @@
+/* Basic Form Styling */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+}
+
+.header {
+    background-color: #ffffff;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #ddd;
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    height: 60px;
+    margin-right: 15px;
+}
+
+.school-info h1 {
+    font-size: 1.2em;
+    margin: 0;
+    color: #c00;
+}
+
+.school-info p {
+    font-size: 0.9em;
+    margin: 0;
+    color: #555;
+}
+
+.header-icons {
+    display: flex;
+    gap: 10px;
+}
+
+.form-container {
+    max-width: 900px;
+    margin: 30px auto;
+    background-color: white;
+    padding: 30px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.form-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.form-header h2 {
+    color: #c00;
+    margin: 0;
+}
+
+.form-header p {
+    margin: 5px 0 0;
+    font-size: 1.1em;
+}
+
+.form-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.form-left {
+    flex: 2;
+    padding-right: 20px;
+}
+
+.form-right {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.form-field {
+    margin-bottom: 15px;
+}
+
+.form-field label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.form-field input[type="text"],
+.form-field select,
+.form-field input[type="date"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.checkbox-group p,
+.radio-input p {
+    margin: 0 0 10px;
+}
+
+.checkbox-options,
+.radio-options {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Styles for "Other" text fields next to checkboxes/radios */
+.checkbox-options input[type="text"],
+.radio-options input[type="text"] {
+    width: auto;
+    flex-grow: 1;
+}
+
+.radio-options .fill-in-box {
+    flex-grow: 1;
+}
+
+.image-upload-box {
+    border: 2px dashed #ccc;
+    text-align: center;
+    padding: 20px;
+    border-radius: 8px;
+    width: 200px;
+    height: 200px;
+    position: relative;
+}
+
+.upload-area {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.upload-icon-container {
+    font-size: 3em;
+    color: #c00;
+    margin-top: 10px;
+}
+
+#photo-preview {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.file-input {
+    display: none;
+}
+
+.student-info-section {
+    border: 1px solid #ddd;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.section-title {
+    color: #c00;
+    font-size: 1.2em;
+    margin-top: 0;
+}
+
+.subtitle {
+    font-size: 0.9em;
+    font-weight: normal;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.name-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+}
+
+.grid-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.name-fields input {
+    width: 100%;
+}
+
+.form-footer {
+    text-align: center;
+}
+
+.next-btn {
+    background-color: #c00;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    font-size: 1.2em;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+    text-decoration: none;
+}
+
+.next-btn:hover {
+    background-color: #a00;
+}
+
+/* Styling for the family info sections */
+.family-info-section {
+    border: 1px solid #ddd;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.family-info-section h4 {
+    color: #c00;
+    margin-top: 0;
+    font-size: 1.1em;
+}
+
+.family-info-section .sub-section {
+    margin-bottom: 25px;
+}
+
+/* Styling for the parent photo preview */
+#parent-photo-preview {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Style for the back button */
+.back-btn {
+    background-color: #555;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    font-size: 1.2em;
+    cursor: pointer;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: background-color 0.3s;
+    margin-right: 10px;
+}
+
+.back-btn:hover {
+    background-color: #333;
+}
+
+/* Basic Form Styling */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+}
+
+.header {
+    background-color: #ffffff;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #ddd;
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    height: 60px;
+    margin-right: 15px;
+}
+
+.school-info h1 {
+    font-size: 1.2em;
+    margin: 0;
+    color: #c00;
+}
+
+.school-info p {
+    font-size: 0.9em;
+    margin: 0;
+    color: #555;
+}
+
+.header-icons {
+    display: flex;
+    gap: 10px;
+}
+
+.form-container {
+    max-width: 900px;
+    margin: 30px auto;
+    background-color: white;
+    padding: 30px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.form-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.form-header h2 {
+    color: #c00;
+    margin: 0;
+}
+
+.form-header p {
+    margin: 5px 0 0;
+    font-size: 1.1em;
+}
+
+.form-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.form-left {
+    flex: 2;
+    padding-right: 20px;
+}
+
+.form-right {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.form-field {
+    margin-bottom: 15px;
+}
+
+.form-field label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.form-field input[type="text"],
+.form-field select,
+.form-field input[type="date"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.checkbox-group p,
+.radio-input p {
+    margin: 0 0 10px;
+}
+
+.checkbox-options,
+.radio-options {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Styles for "Other" text fields next to checkboxes/radios */
+.checkbox-options input[type="text"],
+.radio-options input[type="text"] {
+    width: auto;
+    flex-grow: 1;
+}
+
+.radio-options .fill-in-box {
+    flex-grow: 1;
+}
+
+.image-upload-box {
+    border: 2px dashed #ccc;
+    text-align: center;
+    padding: 20px;
+    border-radius: 8px;
+    width: 200px;
+    height: 200px;
+    position: relative;
+}
+
+.upload-area {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.upload-icon-container {
+    font-size: 3em;
+    color: #c00;
+    margin-top: 10px;
+}
+
+#photo-preview {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.file-input {
+    display: none;
+}
+
+.student-info-section {
+    border: 1px solid #ddd;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.section-title {
+    color: #c00;
+    font-size: 1.2em;
+    margin-top: 0;
+}
+
+.subtitle {
+    font-size: 0.9em;
+    font-weight: normal;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.name-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+}
+
+.grid-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.name-fields input {
+    width: 100%;
+}
+
+.form-footer {
+    text-align: center;
+}
+
+.next-btn {
+    background-color: #c00;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    font-size: 1.2em;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+    text-decoration: none;
+}
+
+.next-btn:hover {
+    background-color: #a00;
+}
+
+/* Styling for the family info sections */
+.family-info-section {
+    border: 1px solid #ddd;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.family-info-section h4 {
+    color: #c00;
+    margin-top: 0;
+    font-size: 1.1em;
+}
+
+.family-info-section .sub-section {
+    margin-bottom: 25px;
+}
+
+/* Styling for the parent photo preview */
+#parent-photo-preview {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Style for the back button */
+.back-btn {
+    background-color: #555;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    font-size: 1.2em;
+    cursor: pointer;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: background-color 0.3s;
+    margin-right: 10px;
+}
+
+.back-btn:hover {
+    background-color: #333;
+}
