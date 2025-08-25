@@ -1,269 +1,378 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Student Academic Data - Step 2</title>
     {% load static %}
-    <link rel="stylesheet" href="../../static/enrollmentprocess/css/studentAcademic.css">
-</head>
+    <link
+      rel="stylesheet"
+      href="../../static/enrollmentprocess/css/studentAcademic.css"
+    />
+  </head>
 
-<body>
+  <body>
     <!-- Same header structure as studentAcademic.html -->
     <div class="header">
-        <div class="logo-container">
-            <img src="{% static 'assets/westLogo.png' %}" alt="School Logo" class="logo">
-            <div class="school-info">
-                <h1>Zamboanga National High School West</h1>
-                <p>Barangay Tumaga, Zamboanga City, Philippines</p>
-                <p>School ID: 303842</p>
-            </div>
+      <div class="logo-container">
+        <img
+          src="{% static 'assets/westLogo.png' %}"
+          alt="School Logo"
+          class="logo"
+        />
+        <div class="school-info">
+          <h1>Zamboanga National High School West</h1>
+          <p>Barangay Tumaga, Zamboanga City, Philippines</p>
+          <p>School ID: 303842</p>
         </div>
-        <div class="government-logos">
-            <img src="{% static 'assets/deped1.png' %}" alt="DepEd Logo">
-            <img src="{% static 'assets/deped2.png' %}" alt="Matatag Logo">
-            <img src="{% static 'assets/deped3.png' %}" alt="Philippines Flag">
-        </div>
+      </div>
+      <div class="government-logos">
+        <img src="{% static 'assets/deped1.png' %}" alt="DepEd Logo" />
+        <img src="{% static 'assets/deped2.png' %}" alt="Matatag Logo" />
+        <img src="{% static 'assets/deped3.png' %}" alt="Philippines Flag" />
+      </div>
     </div>
 
     <!-- Updated navigation to show Step 2 as active -->
     <div class="navigation-steps">
-        <div class="step completed">Step 1: Enrollment</div>
-        <div class="step active">Step 2: Section Placement</div>
+      <div class="step completed">Step 1: Enrollment</div>
+      <div class="step active">Step 2: Section Placement</div>
     </div>
 
     <div class="container">
-        <div class="form-header">
-            <h2>Student Academic Data</h2>
-            <p>Student Academic Data for Grade 7 Students (Please fill in the complete and correct details based on the
-                student Grade 6 Card)</p>
+      <div class="form-header">
+        <h2>Student Academic Data</h2>
+        <p>
+          Student Academic Data for Grade 7 Students (Please fill in the
+          complete and correct details based on the student Grade 6 Card)
+        </p>
+      </div>
+
+      <form id="academicForm2" class="academic-form">
+        <div class="form-section">
+          <h3>Basic Information</h3>
+
+          <div class="form-group">
+            <label for="lrnNumber">LRN Number</label>
+            <input
+              type="text"
+              id="lrnNumber"
+              name="lrnNumber"
+              value="Enter LRN Number"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="dostExam">DOST Exam Result</label>
+            <select id="dostExam" name="dostExam" required>
+              <option value="">-- Select Result --</option>
+              <option value="passed" selected>Passed</option>
+              <option value="failed">Failed</option>
+              <option value="not-taken">Not Taken</option>
+            </select>
+          </div>
+
+          <div class="form-group file-upload">
+            <label for="reportCard">Upload Grade 6 Report Card</label>
+            <div class="file-input-container">
+              <input
+                type="file"
+                id="reportCard"
+                name="reportCard"
+                accept=".pdf,.jpg,.jpeg,.png"
+                required
+              />
+              <button type="button" class="file-button">Choose File</button>
+              <span class="file-name">No file chosen</span>
+            </div>
+          </div>
+
+          <!-- Added Birth Certificate upload section -->
+          <div class="form-group file-upload">
+            <label for="birthCertificate">Upload Birth Certificate</label>
+            <div class="file-input-container">
+              <input
+                type="file"
+                id="birthCertificate"
+                name="birthCertificate"
+                accept=".pdf,.jpg,.jpeg,.png"
+                required
+              />
+              <button type="button" class="file-button">Choose File</button>
+              <span class="file-name">No file chosen</span>
+            </div>
+          </div>
         </div>
 
-        <form id="academicForm2" class="academic-form">
-            <div class="form-section">
-                <h3>Basic Information</h3>
+        <div class="form-section">
+          <h3>Grade 6 Academic Data</h3>
 
-                <div class="form-group">
-                    <label for="lrnNumber">LRN Number</label>
-                    <input type="text" id="lrnNumber" name="lrnNumber" value="Enter LRN Number" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="dostExam">DOST Exam Result</label>
-                    <select id="dostExam" name="dostExam" required>
-                        <option value="">-- Select Result --</option>
-                        <option value="passed" selected>Passed</option>
-                        <option value="failed">Failed</option>
-                        <option value="not-taken">Not Taken</option>
-                    </select>
-                </div>
-
-                <div class="form-group file-upload">
-                    <label for="reportCard">Upload Grade 6 Report Card</label>
-                    <div class="file-input-container">
-                        <input type="file" id="reportCard" name="reportCard" accept=".pdf,.jpg,.jpeg,.png" required>
-                        <button type="button" class="file-button">Choose File</button>
-                        <span class="file-name">No file chosen</span>
-                    </div>
-                </div>
-
-                <!-- Added Birth Certificate upload section -->
-                <div class="form-group file-upload">
-                    <label for="birthCertificate">Upload Birth Certificate</label>
-                    <div class="file-input-container">
-                        <input type="file" id="birthCertificate" name="birthCertificate" accept=".pdf,.jpg,.jpeg,.png"
-                            required>
-                        <button type="button" class="file-button">Choose File</button>
-                        <span class="file-name">No file chosen</span>
-                    </div>
-                </div>
+          <div class="subjects-grid">
+            <div class="form-group">
+              <label for="mathematics">Mathematics</label>
+              <input
+                type="number"
+                id="mathematics"
+                name="mathematics"
+                min="75"
+                max="100"
+                step="0.01"
+                placeholder="Grade"
+              />
             </div>
 
-            <div class="form-section">
-                <h3>Grade 6 Academic Data</h3>
-
-                <div class="subjects-grid">
-                    <div class="form-group">
-                        <label for="mathematics">Mathematics</label>
-                        <input type="number" id="mathematics" name="mathematics" min="75" max="100" step="0.01"
-                            placeholder="Grade">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="aralingPanlipunan">Araling Panlipunan</label>
-                        <input type="number" id="aralingPanlipunan" name="aralingPanlipunan" min="75" max="100"
-                            step="0.01" placeholder="Grade">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="english">English</label>
-                        <input type="number" id="english" name="english" min="75" max="100" step="0.01"
-                            placeholder="Grade">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="edukasyonPagpapakatao">Edukasyon sa Pagpapakatao</label>
-                        <input type="number" id="edukasyonPagpapakatao" name="edukasyonPagpapakatao" min="75" max="100"
-                            step="0.01" placeholder="Grade">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="science">Science</label>
-                        <input type="number" id="science" name="science" min="75" max="100" step="0.01"
-                            placeholder="Grade">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="edukasyonPangkabuhayan">Edukasyon Pampahalagang Pangkabuhayang</label>
-                        <input type="number" id="edukasyonPangkabuhayan" name="edukasyonPangkabuhayan" min="75"
-                            max="100" step="0.01" placeholder="Grade">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="filipino">Filipino</label>
-                        <input type="number" id="filipino" name="filipino" min="75" max="100" step="0.01"
-                            placeholder="Grade">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="mapeh">MAPEH</label>
-                        <input type="number" id="mapeh" name="mapeh" min="75" max="100" step="0.01" placeholder="Grade">
-                    </div>
-                </div>
-
-                <div class="form-group full-width">
-                    <label for="overallAverage">Overall Average</label>
-                    <input type="number" id="overallAverage" name="overallAverage" min="75" max="100" step="0.01"
-                        placeholder="Overall Average" readonly>
-                </div>
+            <div class="form-group">
+              <label for="aralingPanlipunan">Araling Panlipunan</label>
+              <input
+                type="number"
+                id="aralingPanlipunan"
+                name="aralingPanlipunan"
+                min="75"
+                max="100"
+                step="0.01"
+                placeholder="Grade"
+              />
             </div>
 
-            <div class="form-section">
-                <h3>Other Details</h3>
-
-                <div class="form-group">
-                    <label for="workingStudent">Is the Student a Working Student?</label>
-                    <select id="workingStudent" name="workingStudent" required>
-                        <option value="">-- Select --</option>
-                        <option value="yes">Yes</option>
-                        <option value="no" selected>No</option>
-                    </select>
-                </div>
-
-                <!-- Added detailed disability type dropdown -->
-                <div class="form-group">
-                    <label for="disabilityType">Type of Disability</label>
-                    <select id="disabilityType" name="disabilityType" required>
-                        <option value="not-applicable" selected>Not Applicable</option>
-                        <option value="deaf-hard-hearing">Deaf/Hard of Hearing</option>
-                        <option value="physical-disability">Physical Disability</option>
-                        <option value="learning-disability">Learning Disability</option>
-                        <option value="visual-impairment">Visual Impairment</option>
-                        <option value="intellectual-disability">Intellectual Disability</option>
-                        <option value="autism">Autism Spectrum Disorder</option>
-                        <option value="multiple-disabilities">Multiple Disabilities</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="disability">Is the Student a Person With Disability?</label>
-                    <select id="disability" name="disability" required>
-                        <option value="">-- Select --</option>
-                        <option value="yes">Yes</option>
-                        <option value="no" selected>No</option>
-                    </select>
-                </div>
-
-                <div class="form-group checkbox-group">
-                    <label class="checkbox-container">
-                        <input type="checkbox" id="agreeTerms" name="agreeTerms" required>
-                        <span class="checkmark"></span>
-                        I Agree to the <a href="#" class="terms-link">school policies and terms</a>
-                    </label>
-                </div>
+            <div class="form-group">
+              <label for="english">English</label>
+              <input
+                type="number"
+                id="english"
+                name="english"
+                min="75"
+                max="100"
+                step="0.01"
+                placeholder="Grade"
+              />
             </div>
 
-            <div class="form-actions">
-                <button type="submit" class="submit-btn">See Section</button>
+            <div class="form-group">
+              <label for="edukasyonPagpapakatao"
+                >Edukasyon sa Pagpapakatao</label
+              >
+              <input
+                type="number"
+                id="edukasyonPagpapakatao"
+                name="edukasyonPagpapakatao"
+                min="75"
+                max="100"
+                step="0.01"
+                placeholder="Grade"
+              />
             </div>
-        </form>
+
+            <div class="form-group">
+              <label for="science">Science</label>
+              <input
+                type="number"
+                id="science"
+                name="science"
+                min="75"
+                max="100"
+                step="0.01"
+                placeholder="Grade"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="edukasyonPangkabuhayan"
+                >Edukasyon Pampahalagang Pangkabuhayang</label
+              >
+              <input
+                type="number"
+                id="edukasyonPangkabuhayan"
+                name="edukasyonPangkabuhayan"
+                min="75"
+                max="100"
+                step="0.01"
+                placeholder="Grade"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="filipino">Filipino</label>
+              <input
+                type="number"
+                id="filipino"
+                name="filipino"
+                min="75"
+                max="100"
+                step="0.01"
+                placeholder="Grade"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="mapeh">MAPEH</label>
+              <input
+                type="number"
+                id="mapeh"
+                name="mapeh"
+                min="75"
+                max="100"
+                step="0.01"
+                placeholder="Grade"
+              />
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="overallAverage">Overall Average</label>
+            <input
+              type="number"
+              id="overallAverage"
+              name="overallAverage"
+              min="75"
+              max="100"
+              step="0.01"
+              placeholder="Overall Average"
+              readonly
+            />
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>Other Details</h3>
+
+          <div class="form-group">
+            <label for="workingStudent"
+              >Is the Student a Working Student?</label
+            >
+            <select id="workingStudent" name="workingStudent" required>
+              <option value="">-- Select --</option>
+              <option value="yes">Yes</option>
+              <option value="no" selected>No</option>
+            </select>
+          </div>
+
+          <!-- Added detailed disability type dropdown -->
+          <div class="form-group">
+            <label for="disabilityType">Type of Disability</label>
+            <select id="disabilityType" name="disabilityType" required>
+              <option value="not-applicable" selected>Not Applicable</option>
+              <option value="deaf-hard-hearing">Deaf/Hard of Hearing</option>
+              <option value="physical-disability">Physical Disability</option>
+              <option value="learning-disability">Learning Disability</option>
+              <option value="visual-impairment">Visual Impairment</option>
+              <option value="intellectual-disability">
+                Intellectual Disability
+              </option>
+              <option value="autism">Autism Spectrum Disorder</option>
+              <option value="multiple-disabilities">
+                Multiple Disabilities
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="disability"
+              >Is the Student a Person With Disability?</label
+            >
+            <select id="disability" name="disability" required>
+              <option value="">-- Select --</option>
+              <option value="yes">Yes</option>
+              <option value="no" selected>No</option>
+            </select>
+          </div>
+
+          <div class="form-group checkbox-group">
+            <label class="checkbox-container">
+              <input
+                type="checkbox"
+                id="agreeTerms"
+                name="agreeTerms"
+                required
+              />
+              <span class="checkmark"></span>
+              I Agree to the
+              <a href="#" class="terms-link">school policies and terms</a>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="submit-btn">See Section</button>
+        </div>
+      </form>
     </div>
 
     <script src="../js/preEnlistment.js" defer></script>
     <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const subjectInputs = document.querySelectorAll('.subjects-grid input[type="number"]');
-        const overallAverageInput = document.getElementById('overallAverage');
+      document.addEventListener("DOMContentLoaded", function () {
+        const subjectInputs = document.querySelectorAll(
+          '.subjects-grid input[type="number"]'
+        );
+        const overallAverageInput = document.getElementById("overallAverage");
 
         function calculateAverage() {
-            let total = 0;
-            let count = 0;
+          let total = 0;
+          let count = 0;
 
-            subjectInputs.forEach(input => {
-                const value = parseFloat(input.value);
-                if (!isNaN(value) && value > 0) {
-                    total += value;
-                    count++;
-                }
-            });
-
-            if (count > 0) {
-                const average = (total / count).toFixed(2);
-                overallAverageInput.value = average;
-            } else {
-                overallAverageInput.value = '';
+          subjectInputs.forEach((input) => {
+            const value = parseFloat(input.value);
+            if (!isNaN(value) && value > 0) {
+              total += value;
+              count++;
             }
+          });
+
+          if (count > 0) {
+            const average = (total / count).toFixed(2);
+            overallAverageInput.value = average;
+          } else {
+            overallAverageInput.value = "";
+          }
         }
 
-        subjectInputs.forEach(input => {
-            input.addEventListener('input', calculateAverage);
+        subjectInputs.forEach((input) => {
+          input.addEventListener("input", calculateAverage);
         });
 
         // File upload handling
-        const fileInput = document.getElementById('reportCard');
-        const fileButton = document.querySelector('.file-button');
-        const fileName = document.querySelector('.file-name');
+        const fileInput = document.getElementById("reportCard");
+        const fileButton = document.querySelector(".file-button");
+        const fileName = document.querySelector(".file-name");
 
-        fileButton.addEventListener('click', () => {
-            fileInput.click();
+        fileButton.addEventListener("click", () => {
+          fileInput.click();
         });
 
-        fileInput.addEventListener('change', function () {
-            if (this.files.length > 0) {
-                fileName.textContent = this.files[0].name;
+        fileInput.addEventListener("change", function () {
+          if (this.files.length > 0) {
+            fileName.textContent = this.files[0].name;
+          } else {
+            fileName.textContent = "No file chosen";
+          }
+        });
+
+        const academicForm = document.getElementById("academicForm");
+        academicForm.addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          // Basic form validation
+          const requiredFields = this.querySelectorAll("[required]");
+          let isValid = true;
+
+          requiredFields.forEach((field) => {
+            if (!field.value.trim()) {
+              isValid = false;
+              field.style.borderColor = "#c00";
             } else {
-                fileName.textContent = 'No file chosen';
+              field.style.borderColor = "";
             }
+          });
+
+          if (isValid) {
+            // Define the URL to redirect to
+            const redirectUrl = "{% url 'student_academic_2' %}";
+            window.location.href = redirectUrl;
+          } else {
+            alert("Please fill in all required fields.");
+          }
         });
-
-        const academicForm = document.getElementById('academicForm');
-        academicForm.addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            // Basic form validation
-            const requiredFields = this.querySelectorAll('[required]');
-            let isValid = true;
-
-            requiredFields.forEach(field => {
-                if (!field.value.trim()) {
-                    isValid = false;
-                    field.style.borderColor = '#c00';
-                } else {
-                    field.style.borderColor = '';
-                }
-            });
-
-            if (isValid) {
-                // Define the URL to redirect to
-                const redirectUrl = "{% url 'student_academic_2' %}";
-                window.location.href = redirectUrl;
-            } else {
-                alert('Please fill in all required fields.');
-            }
-        });
-    });
-</script>
-</body>
-
+      });
+    </script>
+  </body>
 </html>
