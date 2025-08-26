@@ -67,7 +67,7 @@ WSGI_APPLICATION = "phase1.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE" : "django.db.backends.postgresql",
-          "NAME" : "student_verify_db",
+          "NAME" : "Student_Section_Placement_And_Risk_Prediction_db",
           "USER" : "postgres",
           "PASSWORD" : "011304",
           "HOST" : "localhost",
