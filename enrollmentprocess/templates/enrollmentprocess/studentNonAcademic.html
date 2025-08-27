@@ -43,29 +43,29 @@
                 <h4>STUDENT'S STUDY HABITS:</h4>
                 <div class="form-field checkbox-group">
                     <p>How many hours do you spend studying or doing homework each day?</p>
-                    <div class="checkbox-options">
-                        <label><input type="checkbox"> Less than 1 hour</label>
-                        <label><input type="checkbox"> 1-2 hours</label>
-                        <label><input type="checkbox"> 2-3 hours</label>
-                        <label><input type="checkbox"> More than 3 hours</label>
+                    <div class="checkbox-options" data-single="true">
+                        <label><input type="checkbox" name="study_hours"> Less than 1 hour</label>
+                        <label><input type="checkbox" name="study_hours"> 1-2 hours</label>
+                        <label><input type="checkbox" name="study_hours"> 2-3 hours</label>
+                        <label><input type="checkbox" name="study_hours"> More than 3 hours</label>
                     </div>
                 </div>
                 <div class="form-field checkbox-group">
                     <p>Where do you usually study? (Check all that apply)</p>
                     <div class="checkbox-options">
-                        <label><input type="checkbox"> Bedroom</label>
-                        <label><input type="checkbox"> Living room</label>
-                        <label><input type="checkbox"> Library</label>
+                        <label><input type="checkbox" name="study_place"> Bedroom</label>
+                        <label><input type="checkbox" name="study_place"> Living room</label>
+                        <label><input type="checkbox" name="study_place"> Library</label>
                         <label>Other: <input type="text"></label>
                     </div>
                 </div>
-                <div class="form-field checkbox-group">
+                <div class="form-field checkbox-group" >
                     <p>How often do you study with friends or classmates?</p>
-                    <div class="checkbox-options">
-                        <label><input type="checkbox"> Never</label>
-                        <label><input type="checkbox"> Sometimes</label>
-                        <label><input type="checkbox"> Often</label>
-                        <label><input type="checkbox"> Always</label>
+                    <div class="checkbox-options" data-single="true">
+                        <label><input type="checkbox" name="study-with"> Never</label>
+                        <label><input type="checkbox" name="study-with"> Sometimes</label>
+                        <label><input type="checkbox" name="study-with"> Often</label>
+                        <label><input type="checkbox" name="study-with"> Always</label>
                     </div>
                 </div>
             </div>
@@ -83,7 +83,7 @@
                 </div>
                 <div class="form-field radio-input">
                     <p>Do your parents or guardians help you with your schoolwork?</p>
-                    <div class="radio-options">
+                    <div class="radio-options" data-single="true">
                         <label><input type="radio" name="help"> Never</label>
                         <label><input type="radio" name="help"> Sometimes</label>
                         <label><input type="radio" name="help"> Often</label>
@@ -114,7 +114,7 @@
                 <h4>STUDENT'S LIVING ENVIRONMENT:</h4>
                 <div class="form-field checkbox-group">
                     <p>What type of house do you live in?</p>
-                    <div class="checkbox-options">
+                    <div class="checkbox-options" data-single="true">
                         <label><input type="checkbox"> Apartment</label>
                         <label><input type="checkbox"> House</label>
                         <label><input type="checkbox"> Shared housing</label>
@@ -142,7 +142,7 @@
                 <h4>TRANSPORTATION:</h4>
                 <div class="form-field checkbox-group">
                     <p>How do you usually get to school?</p>
-                    <div class="checkbox-options">
+                    <div class="checkbox-options" data-single="true">
                         <label><input type="checkbox"> Walk</label>
                         <label><input type="checkbox"> Bicycle</label>
                         <label><input type="checkbox"> Public transport (e.g., jeepney, tricycle)</label>
@@ -152,7 +152,7 @@
                 </div>
                 <div class="form-field radio-input">
                     <p>How long does it take you to get to school?</p>
-                    <div class="radio-options">
+                    <div class="radio-options" >
                         <label><input type="radio" name="travel_time"> Less than 15 minutes</label>
                         <label><input type="radio" name="travel_time"> 15-30 minutes</label>
                         <label><input type="radio" name="travel_time"> 30-60 minutes</label>
@@ -215,6 +215,9 @@
             <a href="{% url 'student_academic_2' %}" class="next-btn" role="button">Next Form</a>
         </div>
     </main>
+
+    <script src="{% static 'enrollmentprocess/js/studentnonacademic.js' %}" defer></script>
+
 </body>
 
 </html>

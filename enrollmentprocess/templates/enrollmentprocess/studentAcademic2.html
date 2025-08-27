@@ -4,10 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Student Academic Data - Step 2</title>
+     <script>
+        // Define the redirect URL in the template
+        const redirectUrl = "{% url 'qualified_program' %}";
+    </script>
     {% load static %}
     <link
       rel="stylesheet"
-      href="../../static/enrollmentprocess/css/studentAcademic.css"
+      href="{% static 'enrollmentprocess/css/studentAcademic.css' %}"
     />
   </head>
 
@@ -53,14 +57,12 @@
           <h3>Basic Information</h3>
 
           <div class="form-group">
-            <label for="lrnNumber">LRN Number</label>
-            <input
-              type="text"
-              id="lrnNumber"
-              name="lrnNumber"
-              value="Enter LRN Number"
-              required
-            />
+             <div class="form-field">
+                  <label for="lrn">LRN Number:</label>
+                  <input type="text" id="lrn" maxlength="12" 
+                        oninput="this.value = this.value.replace(/[^0-9]/g, '');" 
+                        placeholder="Enter LRN (numbers only)" required>
+              </div>
           </div>
 
           <div class="form-group">
@@ -71,38 +73,7 @@
               <option value="failed">Failed</option>
               <option value="not-taken">Not Taken</option>
             </select>
-          </div>
-
-          <div class="form-group file-upload">
-            <label for="reportCard">Upload Grade 6 Report Card</label>
-            <div class="file-input-container">
-              <input
-                type="file"
-                id="reportCard"
-                name="reportCard"
-                accept=".pdf,.jpg,.jpeg,.png"
-                required
-              />
-              <button type="button" class="file-button">Choose File</button>
-              <span class="file-name">No file chosen</span>
-            </div>
-          </div>
-
-          <!-- Added Birth Certificate upload section -->
-          <div class="form-group file-upload">
-            <label for="birthCertificate">Upload Birth Certificate</label>
-            <div class="file-input-container">
-              <input
-                type="file"
-                id="birthCertificate"
-                name="birthCertificate"
-                accept=".pdf,.jpg,.jpeg,.png"
-                required
-              />
-              <button type="button" class="file-button">Choose File</button>
-              <span class="file-name">No file chosen</span>
-            </div>
-          </div>
+          </div>        
         </div>
 
         <div class="form-section">
@@ -232,6 +203,37 @@
             />
           </div>
         </div>
+         
+        {% comment %} For uploading the img of card and dost result {% endcomment %}
+        <div class="form-group file-upload">
+            <label for="reportCard">Upload Grade 6 Report Card</label>
+            <div class="file-input-container">
+              <input
+                type="file"
+                id="reportCard"
+                name="reportCard"
+                accept=".pdf,.jpg,.jpeg,.png"
+                required
+              />
+              <button type="button" class="file-button">Choose File</button>
+              <span class="file-name">No file chosen</span>
+            </div>
+          </div>
+
+          <div class="form-group file-upload">
+            <label for="distresult">Upload DOST exam result</label>
+            <div class="file-input-container">
+              <input
+                type="file"
+                id="dost_result"
+                name="dostexamresult"
+                accept=".pdf,.jpg,.jpeg,.png"
+                required
+              />
+              <button type="button" class="file-button">Choose File</button>
+              <span class="file-name">No file chosen</span>
+            </div>
+          </div>
 
         <div class="form-section">
           <h3>Other Details</h3>
@@ -298,81 +300,7 @@
       </form>
     </div>
 
-    <script src="../js/preEnlistment.js" defer></script>
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const subjectInputs = document.querySelectorAll(
-          '.subjects-grid input[type="number"]'
-        );
-        const overallAverageInput = document.getElementById("overallAverage");
-
-        function calculateAverage() {
-          let total = 0;
-          let count = 0;
-
-          subjectInputs.forEach((input) => {
-            const value = parseFloat(input.value);
-            if (!isNaN(value) && value > 0) {
-              total += value;
-              count++;
-            }
-          });
-
-          if (count > 0) {
-            const average = (total / count).toFixed(2);
-            overallAverageInput.value = average;
-          } else {
-            overallAverageInput.value = "";
-          }
-        }
-
-        subjectInputs.forEach((input) => {
-          input.addEventListener("input", calculateAverage);
-        });
-
-        // File upload handling
-        const fileInput = document.getElementById("reportCard");
-        const fileButton = document.querySelector(".file-button");
-        const fileName = document.querySelector(".file-name");
-
-        fileButton.addEventListener("click", () => {
-          fileInput.click();
-        });
-
-        fileInput.addEventListener("change", function () {
-          if (this.files.length > 0) {
-            fileName.textContent = this.files[0].name;
-          } else {
-            fileName.textContent = "No file chosen";
-          }
-        });
-
-        const academicForm = document.getElementById("academicForm");
-        academicForm.addEventListener("submit", function (e) {
-          e.preventDefault();
-
-          // Basic form validation
-          const requiredFields = this.querySelectorAll("[required]");
-          let isValid = true;
-
-          requiredFields.forEach((field) => {
-            if (!field.value.trim()) {
-              isValid = false;
-              field.style.borderColor = "#c00";
-            } else {
-              field.style.borderColor = "";
-            }
-          });
-
-          if (isValid) {
-            // Define the URL to redirect to
-            const redirectUrl = "{% url 'student_academic_2' %}";
-            window.location.href = redirectUrl;
-          } else {
-            alert("Please fill in all required fields.");
-          }
-        });
-      });
-    </script>
+    <script src="{% static 'enrollmentprocess/js/studentacademic.js' %}" defer></script>
+    
   </body>
 </html>
