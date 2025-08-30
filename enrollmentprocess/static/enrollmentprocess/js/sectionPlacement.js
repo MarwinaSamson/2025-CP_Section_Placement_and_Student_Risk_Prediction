@@ -76,8 +76,8 @@ function closeSuccessModal() {
 }
 
 function goBack() {
-  // Redirect back to the enrollment form
-  window.location.href = "studentData.html"
+    // Redirect back to the enrollment form using the defined redirect URL
+    window.location.href = redirectUrl;
 }
 
 // Close modal when clicking outside of it

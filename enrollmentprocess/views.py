@@ -18,6 +18,6 @@ def student_academic(request):
 def student_academic_2(request):
         return render(request, 'enrollmentprocess/studentAcademic2.html') # Render the studentAcademic2.html template
 
-def qualified_program(request):
-        return render(request, 'enrollmentprocess/qualified_program.html')
+def section_placement(request):
+        return render(request, 'enrollmentprocess/sectionPlacement.html')
 

@@ -5,14 +5,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Section Placement Result - Zamboanga National High School West</title>
+    {% load static %}
+    <script>
+        // Define the redirect URL in the template
+        const redirectUrl = "{% url 'student_data' %}";
+    </script>
     <link rel="stylesheet" href="../../static/enrollmentprocess/css/sectionPlacement.css">
 </head>
 
 <body>
     <div class="header">
         <div class="logo-container">
-            <a href="index.html">
-                <img src="../assets/westLogo.png" alt="School Logo" class="logo">
+            <a href="{% url 'homepage' %}">
+                <img src="{% static 'assets/westLogo.png' %}" alt="School Logo" class="logo">
             </a>
             <div class="school-info">
                 <h1>Zamboanga National High School West</h1>
@@ -21,9 +26,9 @@
             </div>
         </div>
         <div class="government-logos">
-            <img src="..//assets/deped1.png" alt="DepEd Logo">
-            <img src="..//assets/deped2.png" alt="Matatag Logo">
-            <img src="..//assets/deped3.png" alt="Philippines Flag">
+            <img src="{% static 'assets/deped1.png' %}" alt="DepEd Logo">
+            <img src="{% static 'assets/deped2.png' %}" alt="Matatag Logo">
+            <img src="{% static 'assets/deped3.png' %}" alt="Philippines Flag">
         </div>
     </div>
 
@@ -137,7 +142,7 @@
         </div>
     </div>
 
-    <script src="../../static/enrollmentprocess/js/sectionPlacement.js"></script>
+    <script src="{% static 'enrollmentprocess/js/sectionPlacement.js' %}"></script>
 </body>
 
 </html>

@@ -7,6 +7,6 @@ urlpatterns = [
         path("student-non-academic/", views.student_non_academic, name='student_non_academic'), # Route to the student_non_academic view
         path("student-academic/", views.student_academic, name='student_academic'), # Route to the student_academic view
         path("student-academic-2/", views.student_academic_2, name='student_academic_2'), # Route to the student_academic_2 view
-        path("qualified-program/", views.qualified_program, name='qualified_program'), # Route to the qualified_program view
+        path("section-placement/", views.section_placement, name='section_placement'), # Route to the qualified_program view
     ]
     
