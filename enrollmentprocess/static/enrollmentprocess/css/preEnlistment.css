@@ -86,20 +86,56 @@ body {
     margin-bottom: 15px;
 }
 
-.form-field label {
+.form-field label,
+.grid-container label {
     display: block;
-    font-weight: bold;
-    margin-bottom: 5px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #333;
+    font-size: 14px;
 }
 
 .form-field input[type="text"],
 .form-field select,
-.form-field input[type="date"] {
+.form-field input[type="date"],
+.form-field input[type="email"],
+.grid-container input[type="text"],
+.grid-container select,
+.grid-container input[type="date"],
+.grid-container input[type="email"],
+.name-fields input {
     width: 100%;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
     box-sizing: border-box;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+}
+
+.form-field input[type="text"]:focus,
+.form-field select:focus,
+.form-field input[type="date"]:focus,
+.form-field input[type="email"]:focus,
+.grid-container input[type="text"]:focus,
+.grid-container select:focus,
+.grid-container input[type="date"]:focus,
+.grid-container input[type="email"]:focus,
+.name-fields input:focus {
+    outline: none;
+    border-color: #c00;
+    box-shadow: 0 0 0 3px rgba(204, 0, 0, 0.1);
+}
+
+.form-field select,
+.grid-container select {
+    background-color: white;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    appearance: none;
+    cursor: pointer;
 }
 
 .checkbox-group p,
@@ -113,6 +149,24 @@ body {
     flex-wrap: wrap;
     align-items: center;
     gap: 15px;
+}
+
+.checkbox-options input[type="checkbox"],
+.radio-options input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+    accent-color: #c00;
+}
+
+.checkbox-options label,
+.radio-options label {
+    display: flex;
+    align-items: center;
+    font-weight: normal;
+    margin-bottom: 8px;
+    cursor: pointer;
+    font-size: 14px;
 }
 
 /* Styles for "Other" text fields next to checkboxes/radios */
@@ -148,7 +202,8 @@ body {
     margin-top: 10px;
 }
 
-#photo-preview {
+#photo-preview,
+#parent-photo-preview {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
@@ -162,17 +217,22 @@ body {
     display: none;
 }
 
-.student-info-section {
-    border: 1px solid #ddd;
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 20px;
+.student-info-section,
+.family-info-section,
+.non-academic-section {
+    border: 2px solid #e0e0e0;
+    padding: 24px;
+    border-radius: 10px;
+    margin-bottom: 24px;
+    background-color: #fafafa;
 }
 
 .section-title {
     color: #c00;
-    font-size: 1.2em;
+    font-size: 1.3em;
     margin-top: 0;
+    margin-bottom: 16px;
+    font-weight: 600;
 }
 
 .subtitle {
@@ -222,32 +282,20 @@ body {
 }
 
 /* Styling for the family info sections */
-.family-info-section {
-    border: 1px solid #ddd;
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-}
-
 .family-info-section h4 {
     color: #c00;
     margin-top: 0;
+    margin-bottom: 16px;
     font-size: 1.1em;
+    font-weight: 600;
 }
 
 .family-info-section .sub-section {
-    margin-bottom: 25px;
-}
-
-/* Styling for the parent photo preview */
-#parent-photo-preview {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    margin-bottom: 28px;
+    padding: 16px;
+    background-color: white;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
 }
 
 /* Style for the back button */
@@ -356,20 +404,56 @@ body {
     margin-bottom: 15px;
 }
 
-.form-field label {
+.form-field label,
+.grid-container label {
     display: block;
-    font-weight: bold;
-    margin-bottom: 5px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #333;
+    font-size: 14px;
 }
 
 .form-field input[type="text"],
 .form-field select,
-.form-field input[type="date"] {
+.form-field input[type="date"],
+.form-field input[type="email"],
+.grid-container input[type="text"],
+.grid-container select,
+.grid-container input[type="date"],
+.grid-container input[type="email"],
+.name-fields input {
     width: 100%;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
     box-sizing: border-box;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+}
+
+.form-field input[type="text"]:focus,
+.form-field select:focus,
+.form-field input[type="date"]:focus,
+.form-field input[type="email"]:focus,
+.grid-container input[type="text"]:focus,
+.grid-container select:focus,
+.grid-container input[type="date"]:focus,
+.grid-container input[type="email"]:focus,
+.name-fields input:focus {
+    outline: none;
+    border-color: #c00;
+    box-shadow: 0 0 0 3px rgba(204, 0, 0, 0.1);
+}
+
+.form-field select,
+.grid-container select {
+    background-color: white;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    appearance: none;
+    cursor: pointer;
 }
 
 .checkbox-group p,
@@ -383,6 +467,24 @@ body {
     flex-wrap: wrap;
     align-items: center;
     gap: 15px;
+}
+
+.checkbox-options input[type="checkbox"],
+.radio-options input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+    accent-color: #c00;
+}
+
+.checkbox-options label,
+.radio-options label {
+    display: flex;
+    align-items: center;
+    font-weight: normal;
+    margin-bottom: 8px;
+    cursor: pointer;
+    font-size: 14px;
 }
 
 /* Styles for "Other" text fields next to checkboxes/radios */
@@ -418,7 +520,8 @@ body {
     margin-top: 10px;
 }
 
-#photo-preview {
+#photo-preview,
+#parent-photo-preview {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
@@ -432,17 +535,22 @@ body {
     display: none;
 }
 
-.student-info-section {
-    border: 1px solid #ddd;
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 20px;
+.student-info-section,
+.family-info-section,
+.non-academic-section {
+    border: 2px solid #e0e0e0;
+    padding: 24px;
+    border-radius: 10px;
+    margin-bottom: 24px;
+    background-color: #fafafa;
 }
 
 .section-title {
     color: #c00;
-    font-size: 1.2em;
+    font-size: 1.3em;
     margin-top: 0;
+    margin-bottom: 16px;
+    font-weight: 600;
 }
 
 .subtitle {
@@ -492,32 +600,20 @@ body {
 }
 
 /* Styling for the family info sections */
-.family-info-section {
-    border: 1px solid #ddd;
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-}
-
 .family-info-section h4 {
     color: #c00;
     margin-top: 0;
+    margin-bottom: 16px;
     font-size: 1.1em;
+    font-weight: 600;
 }
 
 .family-info-section .sub-section {
-    margin-bottom: 25px;
-}
-
-/* Styling for the parent photo preview */
-#parent-photo-preview {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    margin-bottom: 28px;
+    padding: 16px;
+    background-color: white;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
 }
 
 /* Style for the back button */
@@ -537,4 +633,3 @@ body {
 .back-btn:hover {
     background-color: #333;
 }
-

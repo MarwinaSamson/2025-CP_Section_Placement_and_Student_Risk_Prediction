@@ -5,8 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Landing Page</title>
-  {% load static %}
-<link rel="stylesheet" href="../../static/enrollmentprocess/css/index.css">
+  <link rel="stylesheet" href="../../static/enrollmentprocess/css/index.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
 
@@ -14,7 +13,7 @@
 
   <header class="header">
     <div class="logo-section">
-      <img src="{% static 'assets/westLogo.png' %}" alt="School Logo" class="logo">
+      <img src="../assets/westLogo.png" alt="School Logo" class="logo">
       <div class="school-info">
         <h1>Zamboanga National High School West</h1>
         <p>R.T. Lim Boulevard Zamboanga City, Philippines</p>
@@ -22,9 +21,9 @@
       </div>
     </div>
     <div class="header-icons">
-      <img src="{% static 'assets/deped1.png' %}" alt="Logo 2" class="logo">
-      <img src="{% static 'assets/deped2.png' %}" alt="SRIC" class="logo">
-      <img src="{% static 'assets/deped3.png' %}" alt="DepEd Logo" class="logo">
+      <img src="../assets/deped1.png" alt="Logo 2" class="logo">
+      <img src="../assets/deped2.png" alt="SRIC" class="logo">
+      <img src="../assets/deped3.png" alt="DepEd Logo" class="logo">
     </div>
   </header>
 
@@ -56,8 +55,8 @@
       </div>
     </div>
     <div class="nav-buttons">
-      <a href="{% url 'student_data' %}" class="nav-button pre-enrollment" role="button">Pre-Enrollment</a>
-      <button class="nav-button login">Log in</button>
+      <a href="studentData.html" class="nav-button pre-enrollment" role="button">Pre-Enrollment</a>
+      <a href="login.html" class="nav-button login" role="button">Log in</a>
     </div>
   </nav>
   <br>
@@ -65,9 +64,9 @@
   <section class="image-carousel-section">
     <div class="carousel-container">
       <div class="carousel-images">
-        <img src="{% static 'assets/brigada.png' %}" alt="Carousel Image 1" class="carousel-image active">
-        <img src="{% static 'assets/deped3.png' %}" alt="Carousel Image 2" class="carousel-image">
-        <img src="{% static 'assets/deped1.png' %}" alt="Carousel Image 3" class="carousel-image">
+        <img src="../assets/brigada.png" alt="Carousel Image 1" class="carousel-image active">
+        <img src="../assets/deped3.png" alt="Carousel Image 2" class="carousel-image">
+        <img src="../assets/deped1.png" alt="Carousel Image 3" class="carousel-image">
       </div>
       <button class="prev-button">&#10094;</button>
       <button class="next-button">&#10095;</button>
@@ -136,42 +135,42 @@
     <h2>Faculty</h2>
     <div class="faculty-grid">
       <div class="faculty-card">
-        <img src="{% static 'assets/secretary.png' %}" alt="Hon. Sony Angara" class="faculty-image">
+        <img src="../assets/secretary.png" alt="Hon. Sony Angara" class="faculty-image">
         <h5>Hon. Sony Angara</h5>
         <p>DepEd Secretary</p>
       </div>
       <div class="faculty-card">
-        <img src="{% static 'assets/secretary.png' %}" alt="Name of Teacher" class="faculty-image">
+        <img src="../assets/secretary.png" alt="Name of Teacher" class="faculty-image">
         <h5>Name of Teacher</h5>
         <p>Position</p>
       </div>
       <div class="faculty-card">
-        <img src="{% static 'assets/secretary.png' %}" alt="Name of Teacher" class="faculty-image">
+        <img src="../assets/secretary.png" alt="Name of Teacher" class="faculty-image">
         <h5>Name of Teacher</h5>
         <p>Position</p>
       </div>
       <div class="faculty-card">
-        <img src="{% static 'assets/secretary.png' %}" alt="Name of Teacher" class="faculty-image">
+        <img src="../assets/secretary.png" alt="Name of Teacher" class="faculty-image">
         <h5>Name of Teacher</h5>
         <p>Position</p>
       </div>
       <div class="faculty-card">
-        <img src="{% static 'assets/secretary.png' %}" alt="Name of Teacher" class="faculty-image">
+        <img src="../assets/secretary.png" alt="Name of Teacher" class="faculty-image">
         <h5>Name of Teacher</h5>
         <p>Position</p>
       </div>
       <div class="faculty-card">
-        <img src="{% static 'assets/secretary.png' %}" alt="Name of Teacher" class="faculty-image">
+        <img src="../assets/secretary.png" alt="Name of Teacher" class="faculty-image">
         <h5>Name of Teacher</h5>
         <p>Position</p>
       </div>
       <div class="faculty-card">
-        <img src="{% static 'assets/secretary.png' %}" alt="Name of Teacher" class="faculty-image">
+        <img src="../assets/secretary.png" alt="Name of Teacher" class="faculty-image">
         <h5>Name of Teacher</h5>
         <p>Position</p>
       </div>
       <div class="faculty-card">
-        <img src="{% static 'assets/secretary.png' %}" alt="Name of Teacher" class="faculty-image">
+        <img src="../assets/secretary.png" alt="Name of Teacher" class="faculty-image">
         <h5>Name of Teacher</h5>
         <p>Position</p>
       </div>
@@ -179,9 +178,9 @@
   </section>
 
   <footer class="footer">
-    <p>Copyright © 2024. Northern Luzon College Inc. All Rights Reserved.</p>
+    <p>Copyright © 2025. Zamboanga National High School West. All Rights Reserved.</p>
   </footer>
-  <script src="{% static 'enrollmentprocess/js/index.js' %}" defer></script>
+  <script src="../../static/enrollmentprocess/js/index.js" defer></script>
 </body>
 
 </html>

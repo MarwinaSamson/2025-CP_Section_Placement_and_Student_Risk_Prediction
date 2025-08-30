@@ -5,17 +5,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pre-Enrollment Form</title>
-     {% load static %}
     <link rel="stylesheet" href="../../static/enrollmentprocess/css/preEnlistment.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    
 </head>
 
 <body>
 
     <header class="header">
         <div class="logo-section">
-            <img src="{% static 'assets/westLogo.png' %}" alt="School Logo" class="logo">
+            <a href="index.html">
+                <img src="../assets/westLogo.png" alt="School Logo" class="logo">
+            </a>
             <div class="school-info">
                 <h1>Zamboanga National High School West</h1>
                 <p>R.T. Lim Boulevard Zamboanga City, Philippines</p>
@@ -23,9 +23,9 @@
             </div>
         </div>
         <div class="header-icons">
-            <img src="{% static 'assets/deped1.png' %}" alt="Logo 2" class="logo">
-            <img src="{% static 'assets/deped2.png' %}" alt="SRIC" class="logo">
-            <img src="{% static 'assets/deped3.png' %}" alt="DepEd Logo" class="logo">
+            <img src="../assets/deped1.png" alt="Logo 2" class="logo">
+            <img src="../assets/deped2.png" alt="SRIC" class="logo">
+            <img src="../assets/deped3.png" alt="DepEd Logo" class="logo">
         </div>
     </header>
 
@@ -39,77 +39,36 @@
             <div class="form-left">
                 <div class="form-field">
                     <label for="lrn">LRN Number:</label>
-                    <input type="text" id="lrn" maxlength="12" 
-                        oninput="this.value = this.value.replace(/[^0-9]/g, '');" 
-                        placeholder="Enter LRN (numbers only)" required>
+                    <input type="text" id="lrn">
                 </div>
                 <div class="form-field checkbox-group">
                     <p>Please check the appropriate box if you are enrolling as on of the following:</p>
                     <div class="checkbox-options">
-                        <label><input type="checkbox" class="option" id="fourPs"> 4 Ps Member</label>
-                        <label><input type="checkbox" class="option" id="retained"> Retained</label>
-                        <label><input type="checkbox" class="option" id="balikAral"> Balik-aral</label>
-                        <label><input type="checkbox" class="option" id="transferee"> Transferee</label>
+                        <label><input type="checkbox"> 4 Ps Member</label>
+                        <label><input type="checkbox"> Retained</label>
+                        <label><input type="checkbox"> Balik-aral</label>
+                        <label><input type="checkbox"> Transferee</label>
                     </div>
                 </div>
-
 
                 <div class="form-field radio-input">
-                    <p>Does the student need a Special Education Program?</p>
+                    <p>Is the student needs Special Education Program?</p>
                     <div class="radio-options">
                         <label><input type="radio" name="sped" value="yes"> YES</label>
-<input type="text" class="fill-in-box" id="additional-info" placeholder="Please specify..." disabled />
-<label><input type="radio" name="sped" value="no"> NO</label>
+                        <input type="text" class="fill-in-box">
+                        <label><input type="radio" name="sped" value="no"> NO</label>
                     </div>
                 </div>
 
-                
                 <div class="form-field radio-input">
                     <p>Is the student a Working Student?</p>
                     <div class="radio-options">
-                        <label><input type="radio" name="working" value="yes" > YES</label>
-                        <input type="text" class="fill-in-box" id="additional-info-working" placeholder="Please specify..." disabled />
-                        <label><input type="radio" name="working" value="no" > NO</label>
+                        <label><input type="radio" name="working" value="yes"> YES</label>
+                        <input type="text" class="fill-in-box">
+                        <label><input type="radio" name="working" value="no"> NO</label>
                     </div>
                 </div>
             </div>
-
-            <script>
-document.addEventListener("DOMContentLoaded", function () {
-    // SPED section
-    const spedRadios = document.querySelectorAll('input[name="sped"]');
-    const spedInput = document.getElementById("additional-info");
-
-    spedRadios.forEach(radio => {
-        radio.addEventListener("change", function () {
-            if (this.value === "yes") {
-                spedInput.disabled = false;
-                spedInput.focus();
-            } else {
-                spedInput.disabled = true;
-                spedInput.value = "";
-            }
-        });
-    });
-
-    // Working Student section
-    const workingRadios = document.querySelectorAll('input[name="working"]');
-    const workingInput = document.getElementById("additional-info-working");
-
-    workingRadios.forEach(radio => {
-        radio.addEventListener("change", function () {
-            if (this.value === "yes") {
-                workingInput.disabled = false;
-                workingInput.focus();
-            } else {
-                workingInput.disabled = true;
-                workingInput.value = "";
-            }
-        });
-    });
-});
-</script>
-
 
             <div class="form-right">
                 <div class="image-upload-box">
@@ -149,11 +108,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     <label>Gender:</label>
                     <select>
                         <option value="">Select</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                        <option value="non-binary">Non-binary</option>
-                        <option value="prefer-not-to-say">Prefer not to say</option>
-                        <option value="other">Other</option>
                     </select>
                 </div>
                 <div class="grid-item">
@@ -168,14 +122,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     <label>Religion:</label>
                     <select>
                         <option value="">Select</option>
-                        <option value="christianity">Christianity</option>
-                        <option value="islam">Islam</option>
-                        <option value="hinduism">Hinduism</option>
-                        <option value="buddhism">Buddhism</option>
-                        <option value="judaism">Judaism</option>
-                        <option value="atheism">Atheism</option>
-                        <option value="agnosticism">Agnosticism</option>
-                        <option value="other">Other</option>
                     </select>
                 </div>
                 <div class="grid-item">
@@ -186,15 +132,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     <label>Ethnic Tribe:</label>
                     <select>
                         <option value="">Select</option>
-                        <option value="tagalog">Tagalog</option>
-                        <option value="cebuano">Cebuano</option>
-                        <option value="ilokano">Ilokano</option>
-                        <option value="bisaya">Bisaya</option>
-                        <option value="bicolano">Bicolano</option>
-                        <option value="hiligaynon">Hiligaynon</option>
-                        <option value="kapampangan">Kapampangan</option>
-                        <option value="moros">Moros</option>
-                        <option value="other">Other</option>
                     </select>
                 </div>
             </div>
@@ -214,12 +151,12 @@ document.addEventListener("DOMContentLoaded", function () {
             </div>
         </div>
         <div class="form-footer">
-            <a href="{% url 'homepage' %}" class="back-btn" role="button">Back</a>
-            <a href="{% url 'family_data' %}" class="next-btn" role="button">Next Form</a>
+            <a href="../html/index.html" class="back-btn" role="button">Back</a>
+            <a href="familyData.html" class="next-btn" role="button">Next Form</a>
         </div>
     </main>
 
-    <script src="{% static 'enrollmentprocess/js/preEnlistment.js' %}" defer></script>
+    <script src="../../static/enrollmentprocess/js/preEnlistment.js" defer></script>
 </body>
 
 </html>

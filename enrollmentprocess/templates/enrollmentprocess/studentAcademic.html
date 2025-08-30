@@ -4,16 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Academic Data</title>
-    {% load static %}
+    <title>Student Academic Data - Step 2</title>
     <link rel="stylesheet" href="../../static/enrollmentprocess/css/studentAcademic.css">
 </head>
 
 <body>
-    <!-- Updated header to match school branding and navigation structure -->
     <div class="header">
         <div class="logo-container">
-            <img src="{% static 'assets/westLogo.png' %}" alt="School Logo" class="logo">
+            <img src="..//assets/westLogo.png" alt="School Logo" class="logo">
             <div class="school-info">
                 <h1>Zamboanga National High School West</h1>
                 <p>Barangay Tumaga, Zamboanga City, Philippines</p>
@@ -21,34 +19,31 @@
             </div>
         </div>
         <div class="government-logos">
-            <img src="{% static 'assets/deped1.png' %}" alt="DepEd Logo">
-            <img src="{% static 'assets/deped2.png' %}" alt="Matatag Logo">
-            <img src="{% static 'assets/deped3.png' %}" alt="Philippines Flag">
+            <img src="../assets/deped1.png" alt="DepEd Logo">
+            <img src="../assets/deped2.png" alt="Matatag Logo">
+            <img src="../assets/deped3.png" alt="Philippines Flag">
         </div>
     </div>
 
-    <!-- Added navigation steps matching the enrollment process -->
     <div class="navigation-steps">
         <div class="step completed">Step 1: Enrollment</div>
-        <div class="step">Step 2: Section Placement</div>
+        <div class="step active">Step 2: Section Placement</div>
     </div>
 
     <div class="container">
-        <!-- Updated form title and description to match academic data collection -->
         <div class="form-header">
             <h2>Student Academic Data</h2>
             <p>Student Academic Data for Grade 7 Students (Please fill in the complete and correct details based on the
                 student Grade 6 Card)</p>
         </div>
 
-        <form id="academicForm" class="academic-form">
-            <!-- Replaced generic academic sections with specific Grade 6 data collection -->
+        <form id="academicForm2" class="academic-form">
             <div class="form-section">
                 <h3>Basic Information</h3>
 
                 <div class="form-group">
                     <label for="lrnNumber">LRN Number</label>
-                    <input type="text" id="lrnNumber" name="lrnNumber" placeholder="Enter LRN Number" required>
+                    <input type="text" id="lrnNumber" name="lrnNumber" value="Enter LRN Number" required>
                 </div>
 
                 <div class="form-group">
@@ -61,6 +56,16 @@
                     </select>
                 </div>
 
+
+                <div class="form-group file-upload" id="dostProofGroup" style="display: none;">
+                    <label for="dostProof">Upload DOST Exam Proof</label>
+                    <div class="file-input-container">
+                        <input type="file" id="dostProof" name="dostProof" accept=".pdf,.jpg,.jpeg,.png">
+                        <button type="button" class="file-button">Choose File</button>
+                        <span class="file-name">No file chosen</span>
+                    </div>
+                </div>
+
                 <div class="form-group file-upload">
                     <label for="reportCard">Upload Grade 6 Report Card</label>
                     <div class="file-input-container">
@@ -71,7 +76,6 @@
                 </div>
             </div>
 
-            <!-- Added Grade 6 Academic Data section with Filipino subject names -->
             <div class="form-section">
                 <h3>Grade 6 Academic Data</h3>
 
@@ -131,7 +135,6 @@
                 </div>
             </div>
 
-            <!-- Added Other Details section with specific questions -->
             <div class="form-section">
                 <h3>Other Details</h3>
 
@@ -140,7 +143,17 @@
                     <select id="workingStudent" name="workingStudent" required>
                         <option value="">-- Select --</option>
                         <option value="yes">Yes</option>
-                        <option value="no">No</option>
+                        <option value="no" selected>No</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="workTypeGroup" style="display: none;">
+                    <label for="workType">Work Type</label>
+                    <select id="workType" name="workType">
+                        <option value="">-- Select Work Type --</option>
+                        <option value="fulltime">Full Time</option>
+                        <option value="self-employed">Self Employed</option>
+                        <option value="family-business">Family Business</option>
                     </select>
                 </div>
 
@@ -149,7 +162,22 @@
                     <select id="disability" name="disability" required>
                         <option value="">-- Select --</option>
                         <option value="yes">Yes</option>
-                        <option value="no">No</option>
+                        <option value="no" selected>No</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="disabilityTypeGroup" style="display: none;">
+                    <label for="disabilityType">Type of Disability</label>
+                    <select id="disabilityType" name="disabilityType">
+                        <option value="">-- Select Disability Type --</option>
+                        <option value="visual-impairment">Visual Impairment</option>
+                        <option value="physical-disability">Physical Disability</option>
+                        <option value="learning-disability">Learning Disability</option>
+                        <option value="deaf-hard-hearing">Deaf/Hard of Hearing</option>
+                        <option value="intellectual-disability">Intellectual Disability</option>
+                        <option value="autism">Autism Spectrum Disorder</option>
+                        <option value="multiple-disabilities">Multiple Disabilities</option>
+                        <option value="others">Others</option>
                     </select>
                 </div>
 
@@ -163,85 +191,14 @@
             </div>
 
             <div class="form-actions">
-                <a href="{% url 'student_non_academic' %}" class="back-btn" role="button">Back</a>
-                <button type="submit" class="submit-btn">See Section</button>
+                <a href="studentNonAcademic.html" class="back-btn" role="button">Back</a>
+                <a href="sectionPlacement.html" class="submit-btn" role="button">See Section</a>
             </div>
         </form>
     </div>
 
-    <script src="{% static 'enrollmentprocess/js/preEnlistment.js' %}" defer></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const subjectInputs = document.querySelectorAll('.subjects-grid input[type="number"]');
-            const overallAverageInput = document.getElementById('overallAverage');
+    <script src="../../static/enrollmentprocess/js/preEnlistment.js" defer></script>
 
-            function calculateAverage() {
-                let total = 0;
-                let count = 0;
-
-                subjectInputs.forEach(input => {
-                    const value = parseFloat(input.value);
-                    if (!isNaN(value) && value > 0) {
-                        total += value;
-                        count++;
-                    }
-                });
-
-                if (count > 0) {
-                    const average = (total / count).toFixed(2);
-                    overallAverageInput.value = average;
-                } else {
-                    overallAverageInput.value = '';
-                }
-            }
-
-            subjectInputs.forEach(input => {
-                input.addEventListener('input', calculateAverage);
-            });
-
-            // File upload handling
-            const fileInput = document.getElementById('reportCard');
-            const fileButton = document.querySelector('.file-button');
-            const fileName = document.querySelector('.file-name');
-
-            fileButton.addEventListener('click', () => {
-                fileInput.click();
-            });
-
-            fileInput.addEventListener('change', function () {
-                if (this.files.length > 0) {
-                    fileName.textContent = this.files[0].name;
-                } else {
-                    fileName.textContent = 'No file chosen';
-                }
-            });
-
-            const academicForm = document.getElementById('academicForm');
-            academicForm.addEventListener('submit', function (e) {
-                e.preventDefault();
-
-                // Basic form validation
-                const requiredFields = this.querySelectorAll('[required]');
-                let isValid = true;
-
-                requiredFields.forEach(field => {
-                    if (!field.value.trim()) {
-                        isValid = false;
-                        field.style.borderColor = '#c00';
-                    } else {
-                        field.style.borderColor = '';
-                    }
-                });
-
-                 if (isValid) {
-                const redirectUrl = "{% url 'student_academic_2' %}";
-                window.location.href = redirectUrl;
-                } else {
-                    alert('Please fill in all required fields.');
-                }
-            });
-        });
-    </script>
 </body>
 
 </html>

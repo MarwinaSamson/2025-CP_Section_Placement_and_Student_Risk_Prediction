@@ -14,7 +14,6 @@ body {
     border-bottom: 2px solid #ddd;
 }
 
-/* Updated logo section class name to match HTML */
 .logo-container {
     display: flex;
     align-items: center;
@@ -37,7 +36,6 @@ body {
     color: #555;
 }
 
-/* Updated header icons class name to match HTML */
 .government-logos {
     display: flex;
     gap: 10px;
@@ -47,7 +45,7 @@ body {
     height: 60px;
 }
 
-/* Added navigation steps styling */
+/* navigation steps styling */
 .navigation-steps {
     background-color: #e0e0e0;
     padding: 10px 20px;
@@ -67,7 +65,6 @@ body {
     color: white;
 }
 
-/* Updated container class name to match HTML */
 .container {
     max-width: 900px;
     margin: 30px auto;
@@ -91,7 +88,7 @@ body {
     font-size: 1.1em;
 }
 
-/* Added form section styling */
+/* form section styling */
 .form-section {
     border: 1px solid #ddd;
     padding: 20px;
@@ -105,9 +102,13 @@ body {
     margin-top: 0;
 }
 
-/* Updated form field class name to match HTML */
 .form-group {
     margin-bottom: 15px;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.form-group[style*="display: none"] {
+    display: none !important;
 }
 
 .form-group label {
@@ -224,7 +225,7 @@ body {
     font-weight: normal;
 }
 
-/* Added subjects grid styling */
+/*subjects grid styling */
 .subjects-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -236,7 +237,7 @@ body {
     grid-column: 1 / -1;
 }
 
-/* Added file upload styling */
+/* file upload styling */
 .file-upload {
     margin-bottom: 20px;
 }
@@ -274,7 +275,7 @@ input[type="file"] {
     display: none;
 }
 
-/* Added checkbox styling */
+/* checkbox styling */
 .checkbox-group {
     margin: 20px 0;
 }
@@ -300,7 +301,6 @@ input[type="file"] {
     text-decoration: underline;
 }
 
-/* Updated submit button class name to match HTML */
 .form-actions {
     text-align: center;
     margin-top: 30px;
@@ -315,13 +315,14 @@ input[type="file"] {
     cursor: pointer;
     border-radius: 5px;
     transition: background-color 0.3s;
+    text-decoration: none;
 }
 
 .submit-btn:hover {
     background-color: #a00;
 }
 
-/* Styling for the family info sections */
+/* family info sections */
 .family-info-section {
     border: 1px solid #ddd;
     padding: 20px;
@@ -339,7 +340,7 @@ input[type="file"] {
     margin-bottom: 25px;
 }
 
-/* Styling for the parent photo preview */
+/* parent photo preview */
 #parent-photo-preview {
     max-width: 100%;
     max-height: 100%;
@@ -350,7 +351,7 @@ input[type="file"] {
     transform: translate(-50%, -50%);
 }
 
-/* Style for the back button */
+/* back button */
 .back-btn {
     background-color: #555;
     color: white;
@@ -366,33 +367,4 @@ input[type="file"] {
 
 .back-btn:hover {
     background-color: #333;
-}
-
-/* Only affects sections wrapped in .radio-with-text */
-.radio-with-text .radio-options {
-    display: flex;
-    align-items: center;
-    gap: 8px;           /* small space between items */
-    flex-wrap: nowrap;  /* keep on one line */
-}
-
-.radio-with-text .radio-options label {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-weight: normal;
-}
-
-.radio-with-text .radio-options input[type="radio"] {
-    margin: 0;
-    vertical-align: middle;
-}
-
-.radio-with-text .fill-in-box {
-    width: 180px;       /* adjust as needed */
-    flex-shrink: 0;
-    padding: 4px;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    font-size: 0.9em;
 }
