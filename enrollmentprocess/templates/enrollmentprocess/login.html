@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Zamboanga National High School West</title>
+    <link rel="stylesheet" href="../../static/enrollmentprocess/css/login.css">
+</head>
+
+<body class="login-body">
+    <div class="login-container">
+        <div class="login-card">
+            <!-- School Logo -->
+            <div class="login-header">
+                <img src="../assets/westLogo.png" alt="School Logo" class="login-logo">
+            </div>
+
+            <!-- Welcome Message -->
+            <div class="login-title">
+                <h2>Welcome, Login</h2>
+            </div>
+
+            <!-- Login Form -->
+            <form class="login-form" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="username">Username *</label>
+                    <input type="email" id="username" name="username" placeholder="user@gmail.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password *</label>
+                    <div class="password-field">
+                        <input type="password" id="password" name="password" required>
+                        <button type="button" class="password-toggle" onclick="togglePassword()">
+                            <span id="password-icon">👁️</span>
+                        </button>
+                    </div>
+                    <a href="#" class="forgot-password">Forgot Password?</a>
+                </div>
+
+                <button type="submit" class="login-btn">Login</button>
+            </form>
+
+            <!-- No Account Message -->
+            <div class="no-account">
+                <p><strong>Don't have an account?</strong></p>
+                <p>Please approach the school head or the school system administrator. Thank you.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../static/enrollmentprocess/js/login.js"></script>
+</body>
+
+</html>
