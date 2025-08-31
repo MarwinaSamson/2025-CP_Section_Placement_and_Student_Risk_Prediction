@@ -15,7 +15,9 @@
 
     <header class="header">
         <div class="logo-section">
-            <img src="{% static 'assets/westLogo.png' %}" alt="School Logo" class="logo">
+            <a href="index.html">
+                <img src="{% static 'assets/westLogo.png' %}" alt="School Logo" class="logo">
+            </a>
             <div class="school-info">
                 <h1>Zamboanga National High School West</h1>
                 <p>R.T. Lim Boulevard Zamboanga City, Philippines</p>
@@ -58,8 +60,8 @@
                     <p>Does the student need a Special Education Program?</p>
                     <div class="radio-options">
                         <label><input type="radio" name="sped" value="yes"> YES</label>
-<input type="text" class="fill-in-box" id="additional-info" placeholder="Please specify..." disabled />
-<label><input type="radio" name="sped" value="no"> NO</label>
+                        <input type="text" class="fill-in-box" id="additional-info" placeholder="Please specify..." disabled />
+                        <label><input type="radio" name="sped" value="no"> NO</label>
                     </div>
                 </div>
 
@@ -73,6 +75,8 @@
                     </div>
                 </div>
             </div>
+
+            
 
             <script>
 document.addEventListener("DOMContentLoaded", function () {
