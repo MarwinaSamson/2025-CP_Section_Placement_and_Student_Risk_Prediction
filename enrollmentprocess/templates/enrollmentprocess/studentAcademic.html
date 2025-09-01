@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Academic Data - Step 2</title>
     {% load static %}
+    <script>
+        // Define the redirect URL in the template
+        const redirectUrl = "{% url 'section_placement' %}";
+    </script>
     <link rel="stylesheet" href="../../static/enrollmentprocess/css/studentAcademic.css">
 </head>
 
@@ -199,7 +203,7 @@
         </form>
     </div>
 
-    <script src="{% static 'enrollmentprocess/js/preEnlistment.js' %}" defer></script>
+    <script src="{% static 'enrollmentprocess/js/studentacademic.js' %}" defer></script>
     
 </body>
 
