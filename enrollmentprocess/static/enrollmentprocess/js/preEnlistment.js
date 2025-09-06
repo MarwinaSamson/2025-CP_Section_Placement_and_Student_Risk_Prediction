@@ -42,99 +42,67 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 })
 
+document.addEventListener("DOMContentLoaded", () => {
+    const fourPsCheckbox = document.getElementById("fourPs");
+    const otherCheckboxes = document.querySelectorAll(".checkbox-options .option:not(#fourPs)");
 
-// StudentAcademic.html
+    fourPsCheckbox.addEventListener("change", () => {
+        if (fourPsCheckbox.checked) {
+            // Enable other checkboxes if 4 Ps is selected
+            otherCheckboxes.forEach(checkbox => {
+                checkbox.disabled = false;  // Enable them
+            });
+        } else {
+            // If 4 Ps is not selected, uncheck all other checkboxes and enable them
+            otherCheckboxes.forEach(checkbox => {
+                checkbox.checked = false; // Uncheck them
+                checkbox.disabled = false; // Enable them
+            });
+        }
+    });
 
-// document.addEventListener('DOMContentLoaded', function () {
-//             const subjectInputs = document.querySelectorAll('.subjects-grid input[type="number"]');
-//             const overallAverageInput = document.getElementById('overallAverage');
+    // Add event listeners to other checkboxes
+    otherCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener("change", () => {
+            if (checkbox.checked) {
+                // Uncheck all other checkboxes if one of them is checked
+                otherCheckboxes.forEach(other => {
+                    if (other !== checkbox) {
+                        other.checked = false;
+                    }
+                });
+            }
+        });
+    });
+});
 
-//             function calculateAverage() {
-//                 let total = 0;
-//                 let count = 0;
+ 
+document.addEventListener("DOMContentLoaded", function () {
+  /**
+   * Enables or disables a text input field
+   * based on the selected radio button value.
+   *
+   * @param {string} radioName - Name attribute of the radio group
+   * @param {string} inputId - ID of the text input to enable/disable
+   */
+  function setupRadioControl(radioName, inputId) {
+    const radios = document.querySelectorAll(`input[name="${radioName}"]`);
+    const textInput = document.getElementById(inputId);
 
-//                 subjectInputs.forEach(input => {
-//                     const value = parseFloat(input.value);
-//                     if (!isNaN(value) && value > 0) {
-//                         total += value;
-//                         count++;
-//                     }
-//                 });
+    radios.forEach(radio => {
+      radio.addEventListener("change", function () {
+        if (this.value === "True") {
+          textInput.disabled = false;
+          textInput.focus();
+        } else {
+          textInput.disabled = true;
+          textInput.value = ""; // Clear text when disabled
+        }
+      });
+    });
+  }
 
-//                 if (count > 0) {
-//                     const average = (total / count).toFixed(2);
-//                     overallAverageInput.value = average;
-//                 } else {
-//                     overallAverageInput.value = '';
-//                 }
-//             }
-
-//             subjectInputs.forEach(input => {
-//                 input.addEventListener('input', calculateAverage);
-//             });
-
-//             const fileInputs = document.querySelectorAll('input[type="file"]');
-
-//             fileInputs.forEach(fileInput => {
-//                 const fileButton = fileInput.parentElement.querySelector('.file-button');
-//                 const fileName = fileInput.parentElement.querySelector('.file-name');
-
-//                 fileButton.addEventListener('click', () => {
-//                     fileInput.click();
-//                 });
-
-//                 fileInput.addEventListener('change', function () {
-//                     if (this.files.length > 0) {
-//                         fileName.textContent = this.files[0].name;
-//                     } else {
-//                         fileName.textContent = 'No file chosen';
-//                     }
-//                 });
-//             });
-
-//             const dostExamSelect = document.getElementById('dostExam');
-//             const dostProofGroup = document.getElementById('dostProofGroup');
-//             const dostProofInput = document.getElementById('dostProof');
-
-//             dostExamSelect.addEventListener('change', function () {
-//                 if (this.value === 'passed') {
-//                     dostProofGroup.style.display = 'block';
-//                     dostProofInput.required = true;
-//                 } else {
-//                     dostProofGroup.style.display = 'none';
-//                     dostProofInput.required = false;
-//                     dostProofInput.value = '';
-//                     dostProofGroup.querySelector('.file-name').textContent = 'No file chosen';
-//                 }
-//             });
-
-//             const workingStudentSelect = document.getElementById('workingStudent');
-//             const workTypeGroup = document.getElementById('workTypeGroup');
-//             const workTypeSelect = document.getElementById('workType');
-
-//             workingStudentSelect.addEventListener('change', function () {
-//                 if (this.value === 'yes') {
-//                     workTypeGroup.style.display = 'block';
-//                     workTypeSelect.required = true;
-//                 } else {
-//                     workTypeGroup.style.display = 'none';
-//                     workTypeSelect.required = false;
-//                     workTypeSelect.value = '';
-//                 }
-//             });
-
-//             const disabilitySelect = document.getElementById('disability');
-//             const disabilityTypeGroup = document.getElementById('disabilityTypeGroup');
-//             const disabilityTypeSelect = document.getElementById('disabilityType');
-
-//             disabilitySelect.addEventListener('change', function () {
-//                 if (this.value === 'yes') {
-//                     disabilityTypeGroup.style.display = 'block';
-//                     disabilityTypeSelect.required = true;
-//                 } else {
-//                     disabilityTypeGroup.style.display = 'none';
-//                     disabilityTypeSelect.required = false;
-//                     disabilityTypeSelect.value = '';
-//                 }
-//             });
-//         });
+  // Initialize both sections
+  setupRadioControl("is_sped", "additional-info"); 
+  setupRadioControl("is_working_student", "additional-info-working");
+});
