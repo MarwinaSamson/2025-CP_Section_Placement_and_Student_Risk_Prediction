@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+{% comment %} <!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -34,7 +34,7 @@
             <p>School Year 2025-2026</p>
         </div>
 
-<form method="POST" action="{% url 'family_data' student.id %}" enctype="multipart/form-data" id="familyDataForm">
+<form method="POST" action="{% url 'family_data'%}" enctype="multipart/form-data" id="familyDataForm">
             {% csrf_token %}
 
         <div class="form-content">
@@ -175,6 +175,202 @@
             <button type="submit" class="next-btn">Next Form</button>
         </div>
     </form>
+    </main>
+
+    <script src="{% static 'enrollmentprocess/js/preEnlistment.js' %}" defer></script>
+</body>
+
+</html> {% endcomment %}
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pre-Enrollment Form 2</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'enrollmentprocess/css/preEnlistment.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+
+<body>
+
+    <header class="header">
+        <div class="logo-section">
+            <img src="{% static 'assets/westLogo.png' %}" alt="School Logo" class="logo">
+            <div class="school-info">
+                <h1>Zamboanga National High School West</h1>
+                <p>R.T. Lim Boulevard Zamboanga City, Philippines</p>
+                <p>School I.D: 303942</p>
+            </div>
+        </div>
+        <div class="header-icons">
+            <img src="{% static 'assets/deped1.png' %}" alt="Logo 2" class="logo">
+            <img src="{% static 'assets/deped2.png' %}" alt="SRIC" class="logo">
+            <img src="{% static 'assets/deped3.png' %}" alt="DepEd Logo" class="logo">
+        </div>
+    </header>
+
+    <main class="form-container">
+        <div class="form-header">
+            <h2>ENROLLMENT FORM</h2>
+            <p>School Year 2025-2026</p>
+        </div>
+
+        <form method="POST" action="{% url 'family_data' student_id=student_id %}" enctype="multipart/form-data" id="familyDataForm">
+            {% csrf_token %}
+            {% if form.errors %}
+                <ul class="errorlist">
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li>{{ field.label }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            <div class="form-content">
+                <div class="form-left-full">
+                    <div class="family-info-section">
+                        <h3 class="section-title">B. Family Information Data <span class="subtitle">(Please fill in the complete and correct details)</span></h3>
+
+                        <div class="sub-section">
+                            <h4>FATHER'S INFORMATION:</h4>
+                            <div class="grid-container">
+                                <div class="grid-item full-width">
+                                    <label>NAME:</label>
+                                    <div class="name-fields">
+                                        {{ form.father_family_name }}
+                                        {{ form.father_first_name }}
+                                        {{ form.father_middle_name }}
+                                    </div>
+                                </div>
+                                <div class="grid-item">
+                                    <label>Age:</label>
+                                    {{ form.father_age }}
+                                </div>
+                                <div class="grid-item">
+                                    <label>Occupation:</label>
+                                    {{ form.father_occupation }}
+                                </div>
+                                <div class="grid-item">
+                                    <label>Date of Birth:</label>
+                                    {{ form.father_dob }}
+                                </div>
+                                <div class="grid-item">
+                                    <label>Contact Number:</label>
+                                    {{ form.father_contact_number }}
+                                </div>
+                                <div class="grid-item">
+                                    <label>Email Address:</label>
+                                    {{ form.father_email }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="sub-section">
+                            <h4>MOTHER'S INFORMATION:</h4>
+                            <div class="grid-container">
+                                <div class="grid-item full-width">
+                                    <label>NAME:</label>
+                                    <div class="name-fields">
+                                        {{ form.mother_family_name }}
+                                        {{ form.mother_first_name }}
+                                        {{ form.mother_middle_name }}
+                                    </div>
+                                </div>
+                                <div class="grid-item">
+                                    <label>Age:</label>
+                                    {{ form.mother_age }}
+                                </div>
+                                <div class="grid-item">
+                                    <label>Occupation:</label>
+                                    {{ form.mother_occupation }}
+                                </div>
+                                <div class="grid-item">
+                                    <label>Date of Birth:</label>
+                                    {{ form.mother_dob }}
+                                </div>
+                                <div class="grid-item">
+                                    <label>Contact Number:</label>
+                                    {{ form.mother_contact_number }}
+                                </div>
+                                <div class="grid-item">
+                                    <label>Email Address:</label>
+                                    {{ form.mother_email }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="sub-section">
+                            <h4>GUARDIAN INFORMATION: <span class="subtitle">(if not staying with the parents)</span></h4>
+                            <div class="grid-container">
+                                <div class="grid-item full-width">
+                                    <label>NAME:</label>
+                                    <div class="name-fields">
+                                        {{ form.guardian_family_name }}
+                                        {{ form.guardian_first_name }}
+                                        {{ form.guardian_middle_name }}
+                                    </div>
+                                </div>
+                                <div class="grid-item">
+                                    <label>Age:</label>
+                                    {{ form.guardian_age }}
+                                </div>
+                                <div class="grid-item">
+                                    <label>Occupation:</label>
+                                    {{ form.guardian_occupation }}
+                                </div>
+                                <div class="grid-item">
+                                    <label>Date of Birth:</label>
+                                    {{ form.guardian_dob }}
+                                </div>
+                                <div class="grid-item full-width">
+                                    <label>Complete Home Address:</label>
+                                    {{ form.guardian_address }}
+                                </div>
+                                <div class="grid-item full-width">
+                                    <label>Relationship with the student:</label>
+                                    {{ form.guardian_relationship }}
+                                </div>
+                                <div class="grid-item">
+                                    <label>Contact Number:</label>
+                                    {{ form.guardian_contact_number }}
+                                </div>
+                                <div class="grid-item">
+                                    <label>Email Address:</label>
+                                    {{ form.guardian_email }}
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="form-right">
+                    <div class="image-upload-box">
+                        <p>UPLOAD PARENT 1x1 PICTURE</p>
+                        <label for="parent-photo-upload" class="upload-area">
+                            <div class="upload-icon-container">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                            </div>
+                            <img id="parent-photo-preview" src="#" alt="Parent Photo Preview" style="display: none;">
+                        </label>
+                        {{ form.parent_photo }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-footer">
+                <a href="{% url 'student_data' %}" class="back-btn" role="button">Back</a>
+                <button type="submit" class="next-btn">Next Form</button>
+            </div>
+        </form>
     </main>
 
     <script src="{% static 'enrollmentprocess/js/preEnlistment.js' %}" defer></script>

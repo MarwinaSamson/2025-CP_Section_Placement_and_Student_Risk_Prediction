@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+{% comment %} <!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -142,6 +142,180 @@
         </div>
     </div>
 
+    <script src="{% static 'enrollmentprocess/js/sectionPlacement.js' %}"></script>
+</body>
+
+</html> {% endcomment %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Section Placement Result - Zamboanga National High School West</title>
+    {% load static %}
+    <script>
+        // Define the redirect URL in the template
+        const redirectUrl = "{% url 'student_data' %}"; // This might need to be adjusted based on your flow
+    </script>
+    <link rel="stylesheet" href="{% static 'enrollmentprocess/css/sectionPlacement.css' %}">
+</head>
+
+<body>
+    <div class="header">
+        <div class="logo-container">
+            <a href="{% url 'homepage' %}">
+                <img src="{% static 'assets/westLogo.png' %}" alt="School Logo" class="logo">
+            </a>
+            <div class="school-info">
+                <h1>Zamboanga National High School West</h1>
+                <p>R.T. Lim Boulevard Zamboanga City, Philippines</p>
+                <p>School I.D: 303942</p>
+            </div>
+        </div>
+        <div class="government-logos">
+            <img src="{% static 'assets/deped1.png' %}" alt="DepEd Logo">
+            <img src="{% static 'assets/deped2.png' %}" alt="Matatag Logo">
+            <img src="{% static 'assets/deped3.png' %}" alt="Philippines Flag">
+        </div>
+    </div>
+
+
+    <div class="navigation-steps">
+        <div class="step completed">Step 1: Enrollment</div>
+        <div class="step active">Step 2: Section Placement</div>
+    </div>
+
+    <main class="main-content">
+        <div class="container">
+            <h2 class="page-title">Section Placement Result</h2>
+            <p class="subtitle">Below are the programs and sections that the student qualifies for.</p>
+
+            {% if error_message %}
+                <p style="color: red;">{{ error_message }}</p>
+            {% endif %}
+
+            <form method="POST" action="{% url 'section_placement' student_id=student.pk %}" id="sectionPlacementForm">
+                {% csrf_token %}
+                <input type="hidden" name="selected_program" id="selectedProgramInput">
+
+                <!-- Special Programs Section -->
+                <div class="programs-section">
+                    <h3 class="section-title">Special Programs</h3>
+                    <div class="programs-grid">
+                        <div class="program-card available" data-program="STE">
+                            <div class="program-icon">🎓</div>
+                            <h4>STE</h4>
+                            <p>Science Technology and Engineering</p>
+                        </div>
+                        <div class="program-card available" data-program="SPFL">
+                            <div class="program-icon">🗣️</div>
+                            <h4>SPFL</h4>
+                            <p>Special Program in Foreign Language</p>
+                        </div>
+                        <div class="program-card available" data-program="SPTVL">
+                            <div class="program-icon">🔧</div>
+                            <h4>SPTVL</h4>
+                            <p>Special Program in Technical Vocational Livelihood</p>
+                        </div>
+                        <div class="program-card {% if student.is_working_student %}available{% else %}disabled{% endif %}" data-program="OHSP">
+                            <div class="program-icon">📚</div>
+                            <h4>OHSP</h4>
+                            <p>Open High School Program</p>
+                        </div>
+                        <div class="program-card {% if student.is_sped %}available{% else %}disabled{% endif %}" data-program="SNED">
+                            <div class="program-icon">♿</div>
+                            <h4>SNED</h4>
+                            <p>Special Needs Education</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Regular Section -->
+                <div class="programs-section">
+                    <h3 class="section-title">Regular Section</h3>
+                    <div class="programs-grid regular-grid">
+                        <div class="program-card available large-card" data-program="TOP5">
+                            <div class="program-icon">🏆</div>
+                            <h4>Top 5 Sections</h4>
+                            <p>For students with high academic performance</p>
+                        </div>
+                        <div class="program-card available large-card" data-program="REGULAR">
+                            <div class="program-icon">📖</div>
+                            <h4>Regular Section</h4>
+                            <p>Standard academic program</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Qualification Status -->
+                <div class="qualification-status">
+                    <div class="status-icon">🎯</div>
+                    <p>Qualified for STE, SPFL, SPTVE, and Top 5.</p>
+                </div>
+
+                <!-- Back Button -->
+                <div class="button-container">
+                    <button type="button" class="back-btn" onclick="goBack()">
+                        ← Back to Pre-Enrollment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="modal">
+        <div class="modal-content">
+            <h3>Confirm Your Selection</h3>
+            <div class="program-details">
+                <div class="program-info">
+                    <h4 id="selectedProgramName"></h4>
+                    <p id="selectedProgramDescription"></p>
+                </div>
+                <div class="confirmation-note">
+                    <p><strong>Note:</strong> The Special Program placement will only be confirmed after the school
+                        conducts further assessments and upon submission of the required documents:</p>
+                    <ul>
+                        <li>Form 137, Good Moral Certificate, Birth Certificate</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="back-modal-btn" onclick="closeConfirmationModal()">Back</button>
+                <button class="confirm-btn" onclick="confirmSelection()">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal">
+        <div class="modal-content success-modal">
+            <div class="success-icon">✅</div>
+            <h3>Selection Recorded</h3>
+            <p>Your chosen program/section has been successfully recorded. Please prepare the required documents for
+                validation.</p>
+            <button class="okay-btn" onclick="closeSuccessModal()">Okay</button>
+        </div>
+    </div>
+
+    <script>
+        // This script needs to be updated to handle the form submission via JS
+        // and send the selected program to the Django view.
+        // The existing sectionPlacement.js might already have this logic.
+        // Ensure the confirmSelection function submits the form.
+
+        function confirmSelection() {
+            const selectedProgram = document.getElementById('selectedProgramName').innerText;
+            document.getElementById('selectedProgramInput').value = selectedProgram;
+            document.getElementById('sectionPlacementForm').submit();
+            closeConfirmationModal(); // Close modal after submission
+        }
+
+        // The rest of your sectionPlacement.js logic should remain the same
+        // to handle modal display and card clicks.
+    </script>
     <script src="{% static 'enrollmentprocess/js/sectionPlacement.js' %}"></script>
 </body>
 

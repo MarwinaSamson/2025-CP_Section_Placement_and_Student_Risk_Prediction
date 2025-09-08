@@ -1,4 +1,4 @@
- {% comment %} <!DOCTYPE html>
+{% comment %} <!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -33,7 +33,7 @@
             <h2>ENROLLMENT FORM</h2>
             <p>School Year 2025-2026</p>
         </div>
-<form method="POST" action="{% url 'student_non_academic' student.id %}">
+<form method="POST" action="{% url 'student_non_academic'%}">
     {% csrf_token %}
         <div class="non-academic-section">
             <h3 class="section-title">C. Non-Academic Student Survey for Grade 7 Students
@@ -54,9 +54,9 @@
                 <div class="form-field checkbox-group">
                     <p>Where do you usually study? (Check all that apply)</p>
                     <div class="checkbox-options">
-                        <label><input type="checkbox" name="study_place"> Bedroom</label>
-                        <label><input type="checkbox" name="study_place"> Living room</label>
-                        <label><input type="checkbox" name="study_place"> Library</label>
+                        <label><input type="checkbox" name="study_place" value="Bedroom"> Bedroom</label>
+                        <label><input type="checkbox" name="study_place" value="Living Room"> Living room</label>
+                        <label><input type="checkbox" name="study_place" value="Library"> Library</label>
                         <label>
                             <input type="checkbox" name="study_place" value="other"> Other:
                             <input type="text" name="study_place_other" placeholder="Please specify">
@@ -79,9 +79,9 @@
                 <div class="form-field checkbox-group">
                     <p>Who do you live with? (Check all that apply)</p>
                     <div class="checkbox-options">
-                        <label><input type="checkbox" name="live_with" value="parents" > Parents</label>
-                        <label><input type="checkbox" name="live_with" value="siblings"> Siblings</label>
-                        <label><input type="checkbox" name="live_with" value="grandparents"> Grandparents</label>
+                        <label><input type="checkbox" name="live_with" value="Parents" > Parents</label>
+                        <label><input type="checkbox" name="live_with" value="Siblings"> Siblings</label>
+                        <label><input type="checkbox" name="live_with" value="Grandparents"> Grandparents</label>
                         <label>
                             <input type="checkbox" name="live_with" value="other"> Other:
                             <input type="text" name="live_with_other" placeholder="Please specify">
@@ -101,9 +101,9 @@
                     <p>What is the highest education level of your parents or guardians? (Answer for the one with the
                         highest level)</p>
                     <div class="radio-options">
-                        <label><input type="radio" name="highest_education" value="did_not_finish_hs" required> Did not finish high school</label>
-                        <label><input type="radio" name="highest_education" value="high_school_graduate"> High school graduate</label>
-                        <label><input type="radio" name="highest_education" value="college_graduate"> College graduate</label>
+                        <label><input type="radio" name="highest_education" value="Did not finish high school" required> Did not finish high school</label>
+                        <label><input type="radio" name="highest_education" value="High school graduate"> High school graduate</label>
+                        <label><input type="radio" name="highest_education" value="College graduate"> College graduate</label>
                         <label>
                             <input type="radio" name="highest_education" value="other"> Other:
                              <input type="text" name="highest_education_other" placeholder="Please specify">
@@ -113,8 +113,8 @@
                 <div class="form-field radio-input">
                     <p>Are your parents married, separated, or other?</p>
                     <div class="radio-options">
-                        <label><input type="radio" name="marital_status" value="married" required> Married</label>
-                        <label><input type="radio" name="marital_status" value="separated"> Separated</label>
+                        <label><input type="radio" name="marital_status" value="Married" required> Married</label>
+                        <label><input type="radio" name="marital_status" value="Separated"> Separated</label>
                         <label>
                             <input type="radio" name="marital_status" value="other"> Other:
                             <input type="text" name="marital_status_other" placeholder="Please specify">
@@ -128,9 +128,9 @@
                 <div class="form-field checkbox-group">
                     <p>What type of house do you live in?</p>
                     <div class="checkbox-options" data-single="true">
-                        <label><input type="radio" name="house_type" value="apartment" required> Apartment</label>
-                        <label><input type="radio" name="house_type" value="house"> House</label>
-                        <label><input type="radio" name="house_type" value="shared_housing"> Shared housing</label>
+                        <label><input type="radio" name="house_type" value="Apartment" required> Apartment</label>
+                        <label><input type="radio" name="house_type" value="House"> House</label>
+                        <label><input type="radio" name="house_type" value="Shared_housing"> Shared housing</label>
                         <label>
                             <input type="radio" name="house_type" value="other"> Other:
                             <input type="text" name="house_type_other" placeholder="Please specify">
@@ -140,16 +140,16 @@
                 <div class="form-field radio-input">
                     <p>Do you have a quiet place to study at home?</p>
                     <div class="radio-options">
-                        <label><input type="radio" name="quiet_place" value="yes" required> Yes</label>
-                        <label><input type="radio" name="quiet_place" value="no"> No</label>
+                        <label><input type="radio" name="quiet_place" value="Yes" required> Yes</label>
+                        <label><input type="radio" name="quiet_place" value="No"> No</label>
                     </div>
                 </div>
                 <div class="form-field radio-input">
                     <p>How would you describe your study area at home?</p>
                     <div class="radio-options">
-                        <label><input type="radio" name="study_area" value="very_quiet" required> Very quiet</label>
-                        <label><input type="radio" name="study_area" value="somewhat_quiet"> Somewhat quiet</label>
-                        <label><input type="radio" name="study_area" value="noisy"> Noisy</label>
+                        <label><input type="radio" name="study_area" value="Very_quiet" required> Very quiet</label>
+                        <label><input type="radio" name="study_area" value="Somewhat quiet"> Somewhat quiet</label>
+                        <label><input type="radio" name="study_area" value="Noisy"> Noisy</label>
                     </div>
                 </div>
             </div>
@@ -159,10 +159,10 @@
                 <div class="form-field checkbox-group">
                     <p>How do you usually get to school?</p>
                     <div class="checkbox-options" data-single="true">
-                        <label><input type="radio" name="transport_mode" value="walk" required> Walk</label>
-                        <label><input type="radio" name="transport_mode" value="bicycle"> Bicycle</label>
-                        <label><input type="radio" name="transport_mode" value="public_transport"> Public transport (e.g., jeepney, tricycle)</label>
-                        <label><input type="radio" name="transport_mode" value="family_vehicle"> Family vehicle</label>
+                        <label><input type="radio" name="transport_mode" value="Walk" required> Walk</label>
+                        <label><input type="radio" name="transport_mode" value="Bicycle"> Bicycle</label>
+                        <label><input type="radio" name="transport_mode" value="Public transport"> Public transport (e.g., jeepney, tricycle)</label>
+                        <label><input type="radio" name="transport_mode" value="Family vehicle"> Family vehicle</label>
                         <label>
                             <input type="radio" name="transport_mode" value="other"> Other:
                             <input type="text" name="transport_mode_other" placeholder="Please specify">
@@ -172,10 +172,10 @@
                 <div class="form-field radio-input">
                     <p>How long does it take you to get to school?</p>
                     <div class="radio-options" >
-                       <label><input type="radio" name="travel_time" value="less_than_15" required> Less than 15 minutes</label>
-                        <label><input type="radio" name="travel_time" value="15_30_minutes"> 15-30 minutes</label>
-                        <label><input type="radio" name="travel_time" value="30_60_minutes"> 30-60 minutes</label>
-                        <label><input type="radio" name="travel_time" value="more_than_1_hour"> More than 1 hour</label>
+                       <label><input type="radio" name="travel_time" value="Less than 15 minutes" required> Less than 15 minutes</label>
+                        <label><input type="radio" name="travel_time" value="15-30 minutes"> 15-30 minutes</label>
+                        <label><input type="radio" name="travel_time" value="30-60 minutes"> 30-60 minutes</label>
+                        <label><input type="radio" name="travel_time" value="More than 1 hour"> More than 1 hour</label>
                     </div>
                 </div>
             </div>
@@ -185,19 +185,19 @@
                 <div class="form-field checkbox-group">
                     <p>Do you have access to the following at home? (Check all that apply)</p>
                     <div class="checkbox-options">
-                        <label><input type="checkbox" name="access_resources" value="books_materials"> Books or study materials</label>
-                        <label><input type="checkbox" name="access_resources" value="computer_tablet"> Computer or tablet</label>
-                        <label><input type="checkbox" name="access_resources" value="internet"> Internet</label>
-                        <label><input type="checkbox" name="access_resources" value="none"> None</label>
+                        <label><input type="checkbox" name="access_resources" value="books & materials"> Books or study materials</label>
+                        <label><input type="checkbox" name="access_resources" value="computer & tablet"> Computer or tablet</label>
+                        <label><input type="checkbox" name="access_resources" value="Internet"> Internet</label>
+                        <label><input type="checkbox" name="access_resources" value="None"> None</label>
                     </div>
                 </div>
                 <div class="form-field radio-input">
                     <p>How often do you use a computer or tablet for schoolwork?</p>
                     <div class="radio-options">
-                       <label><input type="radio" name="computer_use" value="never" required> Never</label>
-                        <label><input type="radio" name="computer_use" value="sometimes"> Sometimes</label>
-                        <label><input type="radio" name="computer_use" value="often"> Often</label>
-                        <label><input type="radio" name="computer_use" value="always"> Always</label>
+                       <label><input type="radio" name="computer_use" value="Never" required> Never</label>
+                        <label><input type="radio" name="computer_use" value="Sometimes"> Sometimes</label>
+                        <label><input type="radio" name="computer_use" value="Often"> Often</label>
+                        <label><input type="radio" name="computer_use" value="Always"> Always</label>
                     </div>
                 </div>
             </div>
@@ -224,16 +224,16 @@
                 <div class="form-field radio-input">
                     <p>Do you feel confident about doing well in school?</p>
                     <div class="radio-options">
-                         <label><input type="radio" name="confidence_level" value="yes" required> Yes</label>
-                        <label><input type="radio" name="confidence_level" value="sometimes"> Sometimes</label>
-                        <label><input type="radio" name="confidence_level" value="no"> No</label>
+                         <label><input type="radio" name="confidence_level" value="Yes" required> Yes</label>
+                        <label><input type="radio" name="confidence_level" value="Sometimes"> Sometimes</label>
+                        <label><input type="radio" name="confidence_level" value="No"> No</label>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="form-footer">
-            <a href="{% url 'family_data' student.id  %}" class="back-btn" role="button">Back</a>
+            <a href="{% url 'family_data'  %}" class="back-btn" role="button">Back</a>
             <button type="submit" class="next-btn">Next Form</button>
         </div>
     </form>
@@ -244,24 +244,27 @@
 
 </body>
 
-</html>  
-
-
+</html>   
 
  {% endcomment %}
 
 
- {% load static %}
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Non-Academic Survey</title>
-    <link rel="stylesheet" href="{% static 'enrollmentprocess/css/preEnlistment.css' %}" />
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'enrollmentprocess/css/preEnlistment.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
+
 <body>
-<header class="header">
-    <div class="logo-section">
+
+    <header class="header">
+        <div class="logo-section">
             <img src="{% static 'assets/westLogo.png' %}" alt="School Logo" class="logo">
             <div class="school-info">
                 <h1>Zamboanga National High School West</h1>
@@ -274,144 +277,251 @@
             <img src="{% static 'assets/deped2.png' %}" alt="SRIC" class="logo">
             <img src="{% static 'assets/deped3.png' %}" alt="DepEd Logo" class="logo">
         </div>
-</header>
+    </header>
 
-<main class="form-container">
-    <div class="form-header">
-        <h2>ENROLLMENT FORM</h2>
-        <p>School Year 2025-2026</p>
-    </div>
-
-    <form method="POST" action="{% url 'student_non_academic' student.id %}">
-        {% csrf_token %}
-
-        {% if form.errors %}
-            <div class="form-errors">
-                <ul>
-                {% for field in form %}
-                    {% for error in field.errors %}
-                        <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+    <main class="form-container">
+        <div class="form-header">
+            <h2>ENROLLMENT FORM</h2>
+            <p>School Year 2025-2026</p>
+        </div>
+        <form method="POST" action="{% url 'student_non_academic' student_id=student_id %}" id="nonAcademicForm">
+            {% csrf_token %}
+            {% if form.errors %}
+                <ul class="errorlist">
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li>{{ field.label }}: {{ error }}</li>
+                        {% endfor %}
                     {% endfor %}
-                {% endfor %}
-                {% for error in form.non_field_errors %}
-                    <li>{{ error }}</li>
-                {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
                 </ul>
+            {% endif %}
+
+            <div class="non-academic-section">
+                <h3 class="section-title">C. Non-Academic Student Survey for Grade 7 Students
+                    <span class="subtitle">(Please fill in the complete and correct details)</span>
+                </h3>
+
+                <div class="sub-section">
+                    <h4>STUDENT'S STUDY HABITS:</h4>
+                    <div class="form-field checkbox-group">
+                        <p>How many hours do you spend studying or doing homework each day?</p>
+                        <div class="checkbox-options" data-single="true">
+                            {% for radio in form.study_hours %}
+                                <label>{{ radio.tag }} {{ radio.choice_label }}</label>
+                            {% endfor %}
+                        </div>
+                        {% if form.study_hours.errors %}<ul class="errorlist">{% for error in form.study_hours.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+                    <div class="form-field checkbox-group">
+                        <p>Where do you usually study? (Check all that apply)</p>
+                        <div class="checkbox-options">
+                            {% for checkbox in form.study_place %}
+                                <label>{{ checkbox.tag }} {{ checkbox.choice_label }}
+                                    {% if checkbox.choice_value == 'other' %}
+                                        {{ form.study_place_other }}
+                                    {% endif %}
+                                </label>
+                            {% endfor %}
+                        </div>
+                        {% if form.study_place.errors %}<ul class="errorlist">{% for error in form.study_place.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        {% if form.study_place_other.errors %}<ul class="errorlist">{% for error in form.study_place_other.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+                    <div class="form-field checkbox-group">
+                        <p>How often do you study with friends or classmates?</p>
+                        <div class="checkbox-options" data-single="true">
+                            {% for radio in form.study_with %}
+                                <label>{{ radio.tag }} {{ radio.choice_label }}</label>
+                            {% endfor %}
+                        </div>
+                        {% if form.study_with.errors %}<ul class="errorlist">{% for error in form.study_with.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+                </div>
+
+                <div class="sub-section">
+                    <h4>STUDENT'S FAMILY SUPPORT:</h4>
+                    <div class="form-field checkbox-group">
+                        <p>Who do you live with? (Check all that apply)</p>
+                        <div class="checkbox-options">
+                            {% for checkbox in form.live_with %}
+                                <label>{{ checkbox.tag }} {{ checkbox.choice_label }}
+                                    {% if checkbox.choice_value == 'other' %}
+                                        {{ form.live_with_other }}
+                                    {% endif %}
+                                </label>
+                            {% endfor %}
+                        </div>
+                        {% if form.live_with.errors %}<ul class="errorlist">{% for error in form.live_with.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        {% if form.live_with_other.errors %}<ul class="errorlist">{% for error in form.live_with_other.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+                    <div class="form-field radio-input">
+                        <p>Do your parents or guardians help you with your schoolwork?</p>
+                        <div class="radio-options" data-single="true">
+                            {% for radio in form.parent_help %}
+                                <label>{{ radio.tag }} {{ radio.choice_label }}</label>
+                            {% endfor %}
+                        </div>
+                        {% if form.parent_help.errors %}<ul class="errorlist">{% for error in form.parent_help.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+                    <div class="form-field radio-input">
+                        <p>What is the highest education level of your parents or guardians? (Answer for the one with the highest level)</p>
+                        <div class="radio-options">
+                            {% for radio in form.highest_education %}
+                                <label>{{ radio.tag }} {{ radio.choice_label }}
+                                    {% if radio.choice_value == 'other' %}
+                                        {{ form.highest_education_other }}
+                                    {% endif %}
+                                </label>
+                            {% endfor %}
+                        </div>
+                        {% if form.highest_education.errors %}<ul class="errorlist">{% for error in form.highest_education.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        {% if form.highest_education_other.errors %}<ul class="errorlist">{% for error in form.highest_education_other.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+                    <div class="form-field radio-input">
+                        <p>Are your parents married, separated, or other?</p>
+                        <div class="radio-options">
+                            {% for radio in form.marital_status %}
+                                <label>{{ radio.tag }} {{ radio.choice_label }}
+                                    {% if radio.choice_value == 'other' %}
+                                        {{ form.marital_status_other }}
+                                    {% endif %}
+                                </label>
+                            {% endfor %}
+                        </div>
+                        {% if form.marital_status.errors %}<ul class="errorlist">{% for error in form.marital_status.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        {% if form.marital_status_other.errors %}<ul class="errorlist">{% for error in form.marital_status_other.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+                </div>
+
+                <div class="sub-section">
+                    <h4>STUDENT'S LIVING ENVIRONMENT:</h4>
+                    <div class="form-field checkbox-group">
+                        <p>What type of house do you live in?</p>
+                        <div class="checkbox-options" data-single="true">
+                            {% for radio in form.house_type %}
+                                <label>{{ radio.tag }} {{ radio.choice_label }}
+                                    {% if radio.choice_value == 'other' %}
+                                        {{ form.house_type_other }}
+                                    {% endif %}
+                                </label>
+                            {% endfor %}
+                        </div>
+                        {% if form.house_type.errors %}<ul class="errorlist">{% for error in form.house_type.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        {% if form.house_type_other.errors %}<ul class="errorlist">{% for error in form.house_type_other.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+                    <div class="form-field radio-input">
+                        <p>Do you have a quiet place to study at home?</p>
+                        <div class="radio-options">
+                            {% for radio in form.quiet_place %}
+                                <label>{{ radio.tag }} {{ radio.choice_label }}</label>
+                            {% endfor %}
+                        </div>
+                        {% if form.quiet_place.errors %}<ul class="errorlist">{% for error in form.quiet_place.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+                    <div class="form-field radio-input">
+                        <p>How would you describe your study area at home?</p>
+                        <div class="radio-options">
+                            {% for radio in form.study_area %}
+                                <label>{{ radio.tag }} {{ radio.choice_label }}</label>
+                            {% endfor %}
+                        </div>
+                        {% if form.study_area.errors %}<ul class="errorlist">{% for error in form.study_area.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+                </div>
+
+                <div class="sub-section">
+                    <h4>TRANSPORTATION:</h4>
+                    <div class="form-field checkbox-group">
+                        <p>How do you usually get to school?</p>
+                        <div class="checkbox-options" data-single="true">
+                            {% for radio in form.transport_mode %}
+                                <label>{{ radio.tag }} {{ radio.choice_label }}
+                                    {% if radio.choice_value == 'other' %}
+                                        {{ form.transport_mode_other }}
+                                    {% endif %}
+                                </label>
+                            {% endfor %}
+                        </div>
+                        {% if form.transport_mode.errors %}<ul class="errorlist">{% for error in form.transport_mode.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        {% if form.transport_mode_other.errors %}<ul class="errorlist">{% for error in form.transport_mode_other.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+                    <div class="form-field radio-input">
+                        <p>How long does it take you to get to school?</p>
+                        <div class="radio-options">
+                            {% for radio in form.travel_time %}
+                                <label>{{ radio.tag }} {{ radio.choice_label }}</label>
+                            {% endfor %}
+                        </div>
+                        {% if form.travel_time.errors %}<ul class="errorlist">{% for error in form.travel_time.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+                </div>
+
+                <div class="sub-section">
+                    <h4>STUDENT'S ACCESS TO LEARNING RESOURCES:</h4>
+                    <div class="form-field checkbox-group">
+                        <p>Do you have access to the following at home? (Check all that apply)</p>
+                        <div class="checkbox-options">
+                            {% for checkbox in form.access_resources %}
+                                <label>{{ checkbox.tag }} {{ checkbox.choice_label }}</label>
+                            {% endfor %}
+                        </div>
+                        {% if form.access_resources.errors %}<ul class="errorlist">{% for error in form.access_resources.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+                    <div class="form-field radio-input">
+                        <p>How often do you use a computer or tablet for schoolwork?</p>
+                        <div class="radio-options">
+                            {% for radio in form.computer_use %}
+                                <label>{{ radio.tag }} {{ radio.choice_label }}</label>
+                            {% endfor %}
+                        </div>
+                        {% if form.computer_use.errors %}<ul class="errorlist">{% for error in form.computer_use.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+                </div>
+
+                <div class="sub-section">
+                    <h4>STUDENT'S PERSONALITY TRAITS AND INTERESTS:</h4>
+                    <div class="form-field">
+                        <p>What do you enjoy doing in your free time? (e.g., reading, sports, games)</p>
+                        {{ form.hobbies }}
+                        {% if form.hobbies.errors %}<ul class="errorlist">{% for error in form.hobbies.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+                    <div class="form-field checkbox-group">
+                        <p>How would you describe yourself? (Check all that apply)</p>
+                        <div class="checkbox-options">
+                            {% for checkbox in form.personality_traits %}
+                                <label>{{ checkbox.tag }} {{ checkbox.choice_label }}
+                                    {% if checkbox.choice_value == 'other' %}
+                                        {{ form.personality_traits_other }}
+                                    {% endif %}
+                                </label>
+                            {% endfor %}
+                        </div>
+                        {% if form.personality_traits.errors %}<ul class="errorlist">{% for error in form.personality_traits.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        {% if form.personality_traits_other.errors %}<ul class="errorlist">{% for error in form.personality_traits_other.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+                    <div class="form-field radio-input">
+                        <p>Do you feel confident about doing well in school?</p>
+                        <div class="radio-options">
+                            {% for radio in form.confidence_level %}
+                                <label>{{ radio.tag }} {{ radio.choice_label }}</label>
+                            {% endfor %}
+                        </div>
+                        {% if form.confidence_level.errors %}<ul class="errorlist">{% for error in form.confidence_level.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+                </div>
             </div>
-        {% endif %}
 
-        <div class="non-academic-section">
-            <h3 class="section-title">C. Non-Academic Student Survey for Grade 7 Students
-                <span class="subtitle">(Please fill in the complete and correct details)</span>
-            </h3>
-
-            <div class="sub-section">
-                <h4>STUDENT'S STUDY HABITS:</h4>
-                <div class="form-field radio-input">
-                    <p>{{ form.study_hours.label }}</p>
-                    {{ form.study_hours }}
-                </div>
-                <div class="form-field checkbox-group">
-                    <p>{{ form.study_place.label }}</p>
-                    {{ form.study_place }}
-                    {{ form.study_place_other }}
-                </div>
-                <div class="form-field radio-input">
-                    <p>{{ form.study_with.label }}</p>
-                    {{ form.study_with }}
-                </div>
+            <div class="form-footer">
+                <a href="{% url 'family_data' student_id=student_id %}" class="back-btn" role="button">Back</a>
+                <button type="submit" class="next-btn">Next Form</button>
             </div>
+        </form>
+    </main>
 
-            <div class="sub-section">
-                <h4>STUDENT'S FAMILY SUPPORT:</h4>
-                <div class="form-field checkbox-group">
-                    <p>{{ form.live_with.label }}</p>
-                    {{ form.live_with }}
-                    {{ form.live_with_other }}
-                </div>
-                <div class="form-field radio-input">
-                    <p>{{ form.parent_help.label }}</p>
-                    {{ form.parent_help }}
-                </div>
-                <div class="form-field radio-input">
-                    <p>{{ form.highest_education.label }}</p>
-                    {{ form.highest_education }}
-                    {{ form.highest_education_other }}
-                </div>
-                <div class="form-field radio-input">
-                    <p>{{ form.marital_status.label }}</p>
-                    {{ form.marital_status }}
-                    {{ form.marital_status_other }}
-                </div>
-            </div>
+    <script src="{% static 'enrollmentprocess/js/studentnonacademic.js' %}" defer></script>
 
-            <div class="sub-section">
-                <h4>STUDENT'S LIVING ENVIRONMENT:</h4>
-                <div class="form-field radio-input">
-                    <p>{{ form.house_type.label }}</p>
-                    {{ form.house_type }}
-                    {{ form.house_type_other }}
-                </div>
-                <div class="form-field radio-input">
-                    <p>{{ form.quiet_place.label }}</p>
-                    {{ form.quiet_place }}
-                </div>
-                <div class="form-field radio-input">
-                    <p>{{ form.study_area.label }}</p>
-                    {{ form.study_area }}
-                </div>
-            </div>
-
-            <div class="sub-section">
-                <h4>TRANSPORTATION:</h4>
-                <div class="form-field radio-input">
-                    <p>{{ form.transport_mode.label }}</p>
-                    {{ form.transport_mode }}
-                    {{ form.transport_mode_other }}
-                </div>
-                <div class="form-field radio-input">
-                    <p>{{ form.travel_time.label }}</p>
-                    {{ form.travel_time }}
-                </div>
-            </div>
-
-            <div class="sub-section">
-                <h4>STUDENT'S ACCESS TO LEARNING RESOURCES:</h4>
-                <div class="form-field checkbox-group">
-                    <p>{{ form.access_resources.label }}</p>
-                    {{ form.access_resources }}
-                </div>
-                <div class="form-field radio-input">
-                    <p>{{ form.computer_use.label }}</p>
-                    {{ form.computer_use }}
-                </div>
-            </div>
-
-            <div class="sub-section">
-                <h4>STUDENT'S PERSONALITY TRAITS AND INTERESTS:</h4>
-                <div class="form-field">
-                    <p>{{ form.hobbies.label }}</p>
-                    {{ form.hobbies }}
-                </div>
-                <div class="form-field checkbox-group">
-                    <p>{{ form.personality_traits.label }}</p>
-                    {{ form.personality_traits }}
-                    {{ form.personality_traits_other }}
-                </div>
-                <div class="form-field radio-input">
-                    <p>{{ form.confidence_level.label }}</p>
-                    {{ form.confidence_level }}
-                </div>
-            </div>
-        </div>
-
-        <div class="form-footer">
-            <a href="{% url 'family_data' student.id %}" class="back-btn" role="button">Back</a>
-            <button type="submit" class="next-btn">Next Form</button>
-        </div>
-    </form>
-</main>
-
-<script src="{% static 'enrollmentprocess/js/studentnonacademic.js' %}" defer></script>
 </body>
+
 </html>

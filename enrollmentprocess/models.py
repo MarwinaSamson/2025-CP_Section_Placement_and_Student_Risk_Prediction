@@ -1,339 +1,152 @@
 from django.db import models
 
-
-class FamilyData(models.Model):
+class Family(models.Model):
     # Father's Information
-    father_family_name = models.CharField(max_length=100)
-    father_first_name = models.CharField(max_length=100)
-    father_middle_name = models.CharField(max_length=100, blank=True, null=True)
-    father_age = models.PositiveIntegerField()
-    father_occupation = models.CharField(max_length=100)
-    father_dob = models.DateField()
-    father_contact_number = models.CharField(max_length=20)
-    father_email = models.EmailField(blank=True, null=True)
+    father_family_name = models.CharField(max_length=100, verbose_name="Father's Family Name")
+    father_first_name = models.CharField(max_length=100, verbose_name="Father's First Name")
+    father_middle_name = models.CharField(max_length=100, blank=True, null=True, verbose_name="Father's Middle Name")
+    father_age = models.IntegerField(verbose_name="Father's Age")
+    father_occupation = models.CharField(max_length=100, verbose_name="Father's Occupation")
+    father_dob = models.DateField(verbose_name="Father's Date of Birth")
+    father_contact_number = models.CharField(max_length=20, verbose_name="Father's Contact Number")
+    father_email = models.EmailField(max_length=254, blank=True, null=True, verbose_name="Father's Email Address")
 
     # Mother's Information
-    mother_family_name = models.CharField(max_length=100)
-    mother_first_name = models.CharField(max_length=100)
-    mother_middle_name = models.CharField(max_length=100, blank=True, null=True)
-    mother_age = models.PositiveIntegerField()
-    mother_occupation = models.CharField(max_length=100)
-    mother_dob = models.DateField()
-    mother_contact_number = models.CharField(max_length=20)
-    mother_email = models.EmailField(blank=True, null=True)
+    mother_family_name = models.CharField(max_length=100, verbose_name="Mother's Family Maiden Name")
+    mother_first_name = models.CharField(max_length=100, verbose_name="Mother's First Name")
+    mother_middle_name = models.CharField(max_length=100, blank=True, null=True, verbose_name="Mother's Middle Name")
+    mother_age = models.IntegerField(verbose_name="Mother's Age")
+    mother_occupation = models.CharField(max_length=100, verbose_name="Mother's Occupation")
+    mother_dob = models.DateField(verbose_name="Mother's Date of Birth")
+    mother_contact_number = models.CharField(max_length=20, verbose_name="Mother's Contact Number")
+    mother_email = models.EmailField(max_length=254, blank=True, null=True, verbose_name="Mother's Email Address")
 
-    # Guardian Information (if not staying with parents)
-    guardian_family_name = models.CharField(max_length=100)
-    guardian_first_name = models.CharField(max_length=100)
-    guardian_middle_name = models.CharField(max_length=100, blank=True, null=True)
-    guardian_age = models.PositiveIntegerField()
-    guardian_occupation = models.CharField(max_length=100)
-    guardian_dob = models.DateField()
-    guardian_address = models.CharField(max_length=255)
-    guardian_relationship = models.CharField(max_length=100)
-    guardian_contact_number = models.CharField(max_length=20)
-    guardian_email = models.EmailField(blank=True, null=True)
+    # Guardian's Information (if not staying with parents)
+    guardian_family_name = models.CharField(max_length=100, verbose_name="Guardian's Family Name")
+    guardian_first_name = models.CharField(max_length=100, verbose_name="Guardian's First Name")
+    guardian_middle_name = models.CharField(max_length=100, blank=True, null=True, verbose_name="Guardian's Middle Name")
+    guardian_age = models.IntegerField(verbose_name="Guardian's Age")
+    guardian_occupation = models.CharField(max_length=100, verbose_name="Guardian's Occupation")
+    guardian_dob = models.DateField(verbose_name="Guardian's Date of Birth")
+    guardian_address = models.TextField(verbose_name="Guardian's Complete Home Address")
+    guardian_relationship = models.CharField(max_length=100, verbose_name="Relationship with the student")
+    guardian_contact_number = models.CharField(max_length=20, verbose_name="Guardian's Contact Number")
+    guardian_email = models.EmailField(max_length=254, blank=True, null=True, verbose_name="Guardian's Email Address")
 
-    # Parent photo (optional)
-    parent_photo = models.ImageField(upload_to='parent_photos/', blank=True, null=True)
+    parent_photo = models.ImageField(upload_to='parent_photos/', blank=True, null=True, verbose_name="Parent 1x1 Picture")
 
     def __str__(self):
-        return f"Family of {self.father_family_name} / {self.mother_family_name}"
+        return f"Family of {self.father_family_name} & {self.mother_family_name}"
+
+    class Meta:
+        verbose_name_plural = "Families"
 
 
-class StudentData(models.Model):
-    # LRN Number: 12-digit numeric string
-    lrn = models.CharField(max_length=12, unique=True)
+class Student(models.Model):
+    # Initial Enrollment Data
+    lrn = models.CharField(max_length=12, unique=True, verbose_name="LRN Number")
+    enrolling_as = models.CharField(max_length=255, blank=True, null=True, verbose_name="Enrolling As") # Stores comma-separated choices
+    is_sped = models.BooleanField(default=False, verbose_name="Needs Special Education Program")
+    sped_details = models.CharField(max_length=255, blank=True, null=True, verbose_name="SPED Details")
+    is_working_student = models.BooleanField(default=False, verbose_name="Is a Working Student")
+    working_details = models.CharField(max_length=255, blank=True, null=True, verbose_name="Working Student Details")
+    photo = models.ImageField(upload_to='student_photos/', verbose_name="Student 1x1 Picture")
 
-    # Checkboxes: Boolean fields, default False
-    is_4ps_member = models.BooleanField(default=False)
-    is_retained = models.BooleanField(default=False)
-    is_balik_aral = models.BooleanField(default=False)
-    is_transferee = models.BooleanField(default=False)
+    # Student's Information Data
+    last_name = models.CharField(max_length=100, verbose_name="Last Name")
+    first_name = models.CharField(max_length=100, verbose_name="First Name")
+    middle_name = models.CharField(max_length=100, blank=True, null=True, verbose_name="Middle Name")
+    address = models.TextField(verbose_name="Present Home Address")
+    age = models.IntegerField(verbose_name="Age")
+    gender = models.CharField(max_length=50, verbose_name="Gender")
+    date_of_birth = models.DateField(verbose_name="Date of Birth")
+    place_of_birth = models.CharField(max_length=255, verbose_name="Place of Birth")
+    religion = models.CharField(max_length=100, verbose_name="Religion")
+    dialect_spoken = models.CharField(max_length=100, verbose_name="Dialect Spoken")
+    ethnic_tribe = models.CharField(max_length=100, verbose_name="Ethnic Tribe")
+    last_school_attended = models.CharField(max_length=255, verbose_name="Name of Last School Attended")
+    previous_grade_section = models.CharField(max_length=100, verbose_name="Previous Grade and Section")
+    last_school_year = models.CharField(max_length=20, verbose_name="School Year Last Attended")
 
-    # Special Education Program
-    is_sped = models.BooleanField()
-    sped_details = models.CharField(max_length=255, blank=True, null=True)
-
-    # Working Student
-    is_working_student = models.BooleanField()
-    working_details = models.CharField(max_length=255, blank=True, null=True)
-
-    # Photo upload
-    photo = models.ImageField(upload_to='student_photos/')
-
-    # Student's Name
-    last_name = models.CharField(max_length=100)
-    first_name = models.CharField(max_length=100)
-    middle_name = models.CharField(max_length=100, blank=True, null=True)
-
-    # Address
-    address = models.CharField(max_length=255)
-
-    # Age
-    age = models.PositiveIntegerField()
-
-    # Gender choices
-    GENDER_CHOICES = [
-        ('Male', 'Male'),
-        ('Female', 'Female'),
-        ('Non-binary', 'Non-binary'),
-        ('Prefer not to say', 'Prefer not to say'),
-        ('Other', 'Other'),
-    ]
-    gender = models.CharField(max_length=20, choices=GENDER_CHOICES)
-
-    # Date of Birth
-    date_of_birth = models.DateField()
-
-    # Place of Birth
-    place_of_birth = models.CharField(max_length=255)
-
-    # Religion choices
-    RELIGION_CHOICES = [
-        ('christianity', 'Christianity'),
-        ('islam', 'Islam'),
-        ('hinduism', 'Hinduism'),
-        ('buddhism', 'Buddhism'),
-        ('judaism', 'Judaism'),
-        ('atheism', 'Atheism'),
-        ('agnosticism', 'Agnosticism'),
-        ('other', 'Other'),
-    ]
-    religion = models.CharField(max_length=20, choices=RELIGION_CHOICES)
-
-    # Dialect Spoken choices
-    DIALECT_CHOICES = [
-        ('Chavacano', 'Chavacano'),
-        ('Tagalog', 'Tagalog'),
-        ('Cebuano', 'Cebuano'),
-        ('Ilocano', 'Ilocano'),
-        ('Tausug', 'Tausug'),
-        ('Sama', 'Sama'),
-        ('Other', 'Other'),
-    ]
-    dialect_spoken = models.CharField(max_length=20, choices=DIALECT_CHOICES)
-
-    # Ethnic Tribe choices
-    ETHNIC_TRIBE_CHOICES = [
-        ('tagalog', 'Tagalog'),
-        ('cebuano', 'Cebuano'),
-        ('ilokano', 'Ilokano'),
-        ('bisaya', 'Bisaya'),
-        ('bicolano', 'Bicolano'),
-        ('hiligaynon', 'Hiligaynon'),
-        ('kapampangan', 'Kapampangan'),
-        ('moros', 'Moros'),
-        ('other', 'Other'),
-    ]
-    ethnic_tribe = models.CharField(max_length=20, choices=ETHNIC_TRIBE_CHOICES)
-
-    # Last school attended
-    last_school_attended = models.CharField(max_length=255)
-
-    # Previous grade and section
-    previous_grade_section = models.CharField(max_length=100)
-
-    # School year last attended
-    last_school_year = models.CharField(max_length=20)
-    
-    family = models.ForeignKey(FamilyData, on_delete=models.PROTECT, related_name='students', null=True, blank=True)
+    # Relationships
+    family_data = models.ForeignKey(Family, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Family Information")
+    section_placement = models.CharField(max_length=100, blank=True, null=True, verbose_name="Assigned Section/Program")
 
     def __str__(self):
         return f"{self.last_name}, {self.first_name} ({self.lrn})"
 
+    class Meta:
+        verbose_name_plural = "Students"
 
 
-class StudentNonAcademicData(models.Model):
-    student = models.OneToOneField('StudentData', on_delete=models.CASCADE, related_name='non_academic_data')
+class StudentNonAcademic(models.Model):
+    student = models.OneToOneField(Student, on_delete=models.CASCADE, primary_key=True, verbose_name="Student")
 
-    # STUDY HABITS
-    STUDY_HOURS_CHOICES = [
-        ('less_than_1', 'Less than 1 hour'),
-        ('1_2_hours', '1-2 hours'),
-        ('2_3_hours', '2-3 hours'),
-        ('more_than_3', 'More than 3 hours'),
-    ]
-    study_hours = models.CharField(max_length=20, choices=STUDY_HOURS_CHOICES)
+    # Student's Study Habits
+    study_hours = models.CharField(max_length=50, verbose_name="Hours spent studying/homework each day")
+    study_place = models.TextField(verbose_name="Where student usually studies") # Stores comma-separated choices including 'other'
+    study_with = models.CharField(max_length=50, verbose_name="How often student studies with friends/classmates")
 
-    # study_place: multiple checkboxes, store as comma-separated string
-    # Possible values: 'Bedroom', 'Living room', 'Library', 'Other'
-    study_place = models.CharField(max_length=255, help_text="Comma-separated study places")
-    study_place_other = models.CharField(max_length=255, blank=True, null=True)
+    # Student's Family Support
+    live_with = models.TextField(verbose_name="Who student lives with") # Stores comma-separated choices including 'other'
+    parent_help = models.CharField(max_length=50, verbose_name="Do parents/guardians help with schoolwork")
+    highest_education = models.CharField(max_length=100, verbose_name="Highest education level of parents/guardians") # Stores 'other' input
+    marital_status = models.CharField(max_length=50, verbose_name="Parents' marital status") # Stores 'other' input
 
-    STUDY_WITH_CHOICES = [
-        ('never', 'Never'),
-        ('sometimes', 'Sometimes'),
-        ('often', 'Often'),
-        ('always', 'Always'),
-    ]
-    study_with = models.CharField(max_length=20, choices=STUDY_WITH_CHOICES)
+    # Student's Living Environment
+    house_type = models.CharField(max_length=100, verbose_name="Type of house student lives in") # Stores 'other' input
+    quiet_place = models.CharField(max_length=10, verbose_name="Has a quiet place to study at home")
+    study_area = models.CharField(max_length=50, verbose_name="Description of study area at home")
 
-    # FAMILY SUPPORT
-    # live_with: multiple checkboxes, comma-separated string
-    live_with = models.CharField(max_length=255, help_text="Comma-separated live with options")
-    live_with_other = models.CharField(max_length=255, blank=True, null=True)
+    # Transportation
+    transport_mode = models.CharField(max_length=100, verbose_name="How student usually gets to school") # Stores 'other' input
+    travel_time = models.CharField(max_length=50, verbose_name="Time taken to get to school")
 
-    PARENT_HELP_CHOICES = [
-        ('never', 'Never'),
-        ('sometimes', 'Sometimes'),
-        ('often', 'Often'),
-        ('always', 'Always'),
-    ]
-    parent_help = models.CharField(max_length=20, choices=PARENT_HELP_CHOICES)
+    # Student's Access to Learning Resources
+    access_resources = models.TextField(verbose_name="Access to learning resources at home") # Stores comma-separated choices
+    computer_use = models.CharField(max_length=50, verbose_name="How often computer/tablet is used for schoolwork")
 
-    HIGHEST_EDUCATION_CHOICES = [
-        ('did_not_finish_hs', 'Did not finish high school'),
-        ('high_school_graduate', 'High school graduate'),
-        ('college_graduate', 'College graduate'),
-        ('other', 'Other'),
-    ]
-    highest_education = models.CharField(max_length=30, choices=HIGHEST_EDUCATION_CHOICES)
-    highest_education_other = models.CharField(max_length=255, blank=True, null=True)
-
-    MARITAL_STATUS_CHOICES = [
-        ('married', 'Married'),
-        ('separated', 'Separated'),
-        ('other', 'Other'),
-    ]
-    marital_status = models.CharField(max_length=20, choices=MARITAL_STATUS_CHOICES)
-    marital_status_other = models.CharField(max_length=255, blank=True, null=True)
-
-    # LIVING ENVIRONMENT
-    HOUSE_TYPE_CHOICES = [
-        ('apartment', 'Apartment'),
-        ('house', 'House'),
-        ('shared_housing', 'Shared housing'),
-        ('other', 'Other'),
-    ]
-    house_type = models.CharField(max_length=20, choices=HOUSE_TYPE_CHOICES)
-    house_type_other = models.CharField(max_length=255, blank=True, null=True)
-
-    QUIET_PLACE_CHOICES = [
-        ('yes', 'Yes'),
-        ('no', 'No'),
-    ]
-    quiet_place = models.CharField(max_length=3, choices=QUIET_PLACE_CHOICES)
-
-    STUDY_AREA_CHOICES = [
-        ('very_quiet', 'Very quiet'),
-        ('somewhat_quiet', 'Somewhat quiet'),
-        ('noisy', 'Noisy'),
-    ]
-    study_area = models.CharField(max_length=20, choices=STUDY_AREA_CHOICES)
-
-    # TRANSPORTATION
-    TRANSPORT_MODE_CHOICES = [
-        ('walk', 'Walk'),
-        ('bicycle', 'Bicycle'),
-        ('public_transport', 'Public transport'),
-        ('family_vehicle', 'Family vehicle'),
-        ('other', 'Other'),
-    ]
-    transport_mode = models.CharField(max_length=20, choices=TRANSPORT_MODE_CHOICES)
-    transport_mode_other = models.CharField(max_length=255, blank=True, null=True)
-
-    TRAVEL_TIME_CHOICES = [
-        ('less_than_15', 'Less than 15 minutes'),
-        ('15_30_minutes', '15-30 minutes'),
-        ('30_60_minutes', '30-60 minutes'),
-        ('more_than_1_hour', 'More than 1 hour'),
-    ]
-    travel_time = models.CharField(max_length=20, choices=TRAVEL_TIME_CHOICES)
-
-    # ACCESS TO LEARNING RESOURCES
-    # access_resources: multiple checkboxes, comma-separated string
-    access_resources = models.CharField(max_length=255, help_text="Comma-separated access resources")
-
-    COMPUTER_USE_CHOICES = [
-        ('never', 'Never'),
-        ('sometimes', 'Sometimes'),
-        ('often', 'Often'),
-        ('always', 'Always'),
-    ]
-    computer_use = models.CharField(max_length=20, choices=COMPUTER_USE_CHOICES)
-
-    # PERSONALITY TRAITS AND INTERESTS
-    hobbies = models.CharField(max_length=255)
-
-    # personality_traits: multiple checkboxes, comma-separated string
-    personality_traits = models.CharField(max_length=255, help_text="Comma-separated personality traits")
-    personality_traits_other = models.CharField(max_length=255, blank=True, null=True)
-
-    CONFIDENCE_LEVEL_CHOICES = [
-        ('yes', 'Yes'),
-        ('sometimes', 'Sometimes'),
-        ('no', 'No'),
-    ]
-    confidence_level = models.CharField(max_length=10, choices=CONFIDENCE_LEVEL_CHOICES)
+    # Student's Personality Traits and Interests
+    hobbies = models.TextField(verbose_name="Free time activities/hobbies")
+    personality_traits = models.TextField(verbose_name="Student's personality traits") # Stores comma-separated choices including 'other'
+    confidence_level = models.CharField(max_length=50, verbose_name="Confidence about doing well in school")
 
     def __str__(self):
         return f"Non-Academic Data for {self.student.first_name} {self.student.last_name}"
 
+    class Meta:
+        verbose_name_plural = "Student Non-Academic Data"
 
 
-
-class StudentAcademicData(models.Model):
-    student = models.OneToOneField('StudentData', on_delete=models.CASCADE, related_name='academic_data')
+class StudentAcademic(models.Model):
+    student = models.OneToOneField(Student, on_delete=models.CASCADE, primary_key=True, verbose_name="Student")
 
     # Basic Information
-    lrn = models.CharField(max_length=12)  # You may want to validate this matches StudentData.lrn
-    DOST_EXAM_RESULT_CHOICES = [
-        ('passed', 'Passed'),
-        ('failed', 'Failed'),
-        ('not-taken', 'Not Taken'),
-    ]
-    dost_exam_result = models.CharField(max_length=10, choices=DOST_EXAM_RESULT_CHOICES)
+    lrn = models.CharField(max_length=12, verbose_name="LRN Number") # Redundant but kept for form mapping
+    dost_exam_result = models.CharField(max_length=50, verbose_name="DOST Exam Result")
+    report_card = models.FileField(upload_to='report_cards/', verbose_name="Grade 6 Report Card")
 
-    # File upload for Grade 6 Report Card
-    report_card = models.FileField(upload_to='report_cards/')
+    # Grade 6 Academic Data
+    mathematics = models.FloatField(verbose_name="Mathematics Grade")
+    araling_panlipunan = models.FloatField(verbose_name="Araling Panlipunan Grade")
+    english = models.FloatField(verbose_name="English Grade")
+    edukasyon_pagpapakatao = models.FloatField(verbose_name="Edukasyon sa Pagpapakatao Grade")
+    science = models.FloatField(verbose_name="Science Grade")
+    edukasyon_pangkabuhayan = models.FloatField(verbose_name="Edukasyon Pampahalagang Pangkabuhayang Grade")
+    filipino = models.FloatField(verbose_name="Filipino Grade")
+    mapeh = models.FloatField(verbose_name="MAPEH Grade")
+    overall_average = models.FloatField(verbose_name="Overall Average")
 
-    # Grade 6 Academic Data (grades)
-    mathematics = models.DecimalField(max_digits=5, decimal_places=2)
-    araling_panlipunan = models.DecimalField(max_digits=5, decimal_places=2)
-    english = models.DecimalField(max_digits=5, decimal_places=2)
-    edukasyon_pagpapakatao = models.DecimalField(max_digits=5, decimal_places=2)
-    science = models.DecimalField(max_digits=5, decimal_places=2)
-    edukasyon_pangkabuhayan = models.DecimalField(max_digits=5, decimal_places=2)
-    filipino = models.DecimalField(max_digits=5, decimal_places=2)
-    mapeh = models.DecimalField(max_digits=5, decimal_places=2)
-
-    overall_average = models.DecimalField(max_digits=5, decimal_places=2)
-
-    # Other Details
-    IS_WORKING_STUDENT_CHOICES = [
-        ('yes', 'Yes'),
-        ('no', 'No'),
-    ]
-    is_working_student = models.CharField(max_length=3, choices=IS_WORKING_STUDENT_CHOICES)
-
-    WORK_TYPE_CHOICES = [
-        ('fulltime', 'Full Time'),
-        ('self-employed', 'Self Employed'),
-        ('family-business', 'Family Business'),
-    ]
-    work_type = models.CharField(max_length=20, choices=WORK_TYPE_CHOICES, blank=True, null=True)
-
-    IS_PWD_CHOICES = [
-        ('yes', 'Yes'),
-        ('no', 'No'),
-    ]
-    is_pwd = models.CharField(max_length=3, choices=IS_PWD_CHOICES)
-
-    DISABILITY_TYPE_CHOICES = [
-        ('visual-impairment', 'Visual Impairment'),
-        ('physical-disability', 'Physical Disability'),
-        ('learning-disability', 'Learning Disability'),
-        ('deaf-hard-hearing', 'Deaf/Hard of Hearing'),
-        ('intellectual-disability', 'Intellectual Disability'),
-        ('autism', 'Autism Spectrum Disorder'),
-        ('multiple-disabilities', 'Multiple Disabilities'),
-        ('others', 'Others'),
-    ]
-    disability_type = models.CharField(max_length=30, choices=DISABILITY_TYPE_CHOICES, blank=True, null=True)
-
-    # Terms agreement
-    agreed_to_terms = models.BooleanField(default=False)
+    # Other Details (populated from Student model)
+    is_working_student = models.BooleanField(default=False, verbose_name="Is a Working Student")
+    work_type = models.CharField(max_length=100, blank=True, null=True, verbose_name="Work Type")
+    is_pwd = models.BooleanField(default=False, verbose_name="Is a Person With Disability")
+    disability_type = models.CharField(max_length=100, blank=True, null=True, verbose_name="Type of Disability")
+    agreed_to_terms = models.BooleanField(default=False, verbose_name="Agreed to School Policies and Terms")
 
     def __str__(self):
         return f"Academic Data for {self.student.first_name} {self.student.last_name}"
+
+    class Meta:
+        verbose_name_plural = "Student Academic Data"
+

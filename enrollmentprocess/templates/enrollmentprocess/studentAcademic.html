@@ -45,7 +45,7 @@
         </div>
 
 
-        <form method="POST" action="{% url 'student_academic' student.id %}" 
+        <form method="POST" action="{% url 'student_academic' %}" 
       enctype="multipart/form-data" id="academicForm2" class="academic-form">
     {% csrf_token %}
             <div class="form-section">
@@ -77,7 +77,7 @@
                     </div>
                 </div> {% endcomment %}
 
-  {% comment %}              <div class="form-group file-upload">
+       {% comment %}    <div class="form-group file-upload">
                     <label for="reportCard">Upload Grade 6 Report Card</label>
                     <div class="file-input-container">
                         <input type="file" id="reportCard" name="report_card" accept=".pdf,.jpg,.jpeg,.png" required>
@@ -202,7 +202,7 @@
             </div>
 
             <div class="form-actions">
-                <a href="{% url 'student_non_academic' student.id  %}" class="back-btn" role="button">Back</a>
+                <a href="{% url 'student_non_academic' %}" class="back-btn" role="button">Back</a>
                 <button type="submit" class="submit-btn">See Section</button>
             </div>
         </form>
@@ -212,170 +212,184 @@
     
 </body>
 
-</html>
- {% endcomment %}
+</html> {% endcomment %}
 
 
-{% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Academic Data - Step 2</title>
-    <link rel="stylesheet" href="{% static 'enrollmentprocess/css/studentAcademic.css' %}" />
+    {% load static %}
+    <script>
+        // Define the redirect URL in the template
+        const redirectUrl = "{% url 'section_placement' student_id=student_id %}";
+    </script>
+    <link rel="stylesheet" href="{% static 'enrollmentprocess/css/studentAcademic.css' %}">
 </head>
+
 <body>
 
-<div class="header">
-    <div class="logo-container">
-        <img src="{% static 'assets/westLogo.png' %}" alt="School Logo" class="logo">
-        <div class="school-info">
-            <h1>Zamboanga National High School West</h1>
-            <p>Barangay Tumaga, Zamboanga City, Philippines</p>
-            <p>School ID: 303842</p>
+    <div class="header">
+        <div class="logo-container">
+            <img src="{% static 'assets/westLogo.png' %}" alt="School Logo" class="logo">
+            <div class="school-info">
+                <h1>Zamboanga National High School West</h1>
+                <p>Barangay Tumaga, Zamboanga City, Philippines</p>
+                <p>School ID: 303842</p>
+            </div>
+        </div>
+        <div class="government-logos">
+            <img src="{% static 'assets/deped1.png' %}" alt="DepEd Logo">
+            <img src="{% static 'assets/deped2.png' %}" alt="Matatag Logo">
+            <img src="{% static 'assets/deped3.png' %}" alt="Philippines Flag">
         </div>
     </div>
-    <div class="government-logos">
-        <img src="{% static 'assets/deped1.png' %}" alt="DepEd Logo">
-        <img src="{% static 'assets/deped2.png' %}" alt="Matatag Logo">
-        <img src="{% static 'assets/deped3.png' %}" alt="Philippines Flag">
-    </div>
-</div>
 
-<div class="navigation-steps">
-    <div class="step completed">Step 1: Enrollment</div>
-    <div class="step active">Step 2: Section Placement</div>
-</div>
 
-<div class="container">
-    <div class="form-header">
-        <h2>Student Academic Data</h2>
-        <p>Student Academic Data for Grade 7 Students (Please fill in the complete and correct details based on the student Grade 6 Card)</p>
+    <div class="navigation-steps">
+        <div class="step completed">Step 1: Enrollment</div>
+        <div class="step active">Step 2: Section Placement</div>
     </div>
 
-    <form method="POST" action="{% url 'student_academic' student.id %}" enctype="multipart/form-data" id="academicForm2" class="academic-form">
-        {% csrf_token %}
+    <div class="container">
+        <div class="form-header">
+            <h2>Student Academic Data</h2>
+            <p>Student Academic Data for Grade 7 Students (Please fill in the complete and correct details based on the
+                student Grade 6 Card)</p>
+        </div>
 
-        {% if form.errors %}
-            <div class="form-errors">
-                <ul>
-                {% for field in form %}
-                    {% for error in field.errors %}
-                        <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+
+        <form method="POST" action="{% url 'student_academic' student_id=student_id %}"
+            enctype="multipart/form-data" id="academicForm2" class="academic-form">
+            {% csrf_token %}
+            {% if form.errors %}
+                <ul class="errorlist">
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li>{{ field.label }}: {{ error }}</li>
+                        {% endfor %}
                     {% endfor %}
-                {% endfor %}
-                {% for error in form.non_field_errors %}
-                    <li>{{ error }}</li>
-                {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
                 </ul>
-            </div>
-        {% endif %}
+            {% endif %}
 
-        <div class="form-section">
-            <h3>Basic Information</h3>
+            <div class="form-section">
+                <h3>Basic Information</h3>
 
-            <div class="form-group">
-                {{ form.lrn.label_tag }}
-                {{ form.lrn }}
-            </div>
+                <div class="form-group">
+                    <label for="{{ form.lrn.id_for_label }}">LRN Number</label>
+                    {{ form.lrn }}
+                    {% if form.lrn.errors %}<ul class="errorlist">{% for error in form.lrn.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                </div>
 
-            <div class="form-group">
-                {{ form.dost_exam_result.label_tag }}
-                {{ form.dost_exam_result }}
-            </div>
+                <div class="form-group">
+                    <label for="{{ form.dost_exam_result.id_for_label }}">DOST Exam Result</label>
+                    {{ form.dost_exam_result }}
+                    {% if form.dost_exam_result.errors %}<ul class="errorlist">{% for error in form.dost_exam_result.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                </div>
 
-            <div class="form-group">
-                {{ form.dost_result_file.label_tag }}
-                {{ form.dost_result_file }}
-            </div>
-
-            <div class="form-group">
-                {{ form.report_card.label_tag }}
-                {{ form.report_card }}
-            </div>
-        </div>
-
-        <div class="form-section">
-            <h3>Grade 6 Academic Data</h3>
-
-            <div class="subjects-grid">
-                <div class="form-group">
-                    {{ form.mathematics.label_tag }}
-                    {{ form.mathematics }}
-                </div>
-                <div class="form-group">
-                    {{ form.araling_panlipunan.label_tag }}
-                    {{ form.araling_panlipunan }}
-                </div>
-                <div class="form-group">
-                    {{ form.english.label_tag }}
-                    {{ form.english }}
-                </div>
-                <div class="form-group">
-                    {{ form.edukasyon_pagpapakatao.label_tag }}
-                    {{ form.edukasyon_pagpapakatao }}
-                </div>
-                <div class="form-group">
-                    {{ form.science.label_tag }}
-                    {{ form.science }}
-                </div>
-                <div class="form-group">
-                    {{ form.edukasyon_pangkabuhayan.label_tag }}
-                    {{ form.edukasyon_pangkabuhayan }}
-                </div>
-                <div class="form-group">
-                    {{ form.filipino.label_tag }}
-                    {{ form.filipino }}
-                </div>
-                <div class="form-group">
-                    {{ form.mapeh.label_tag }}
-                    {{ form.mapeh }}
+                <div class="form-group file-upload">
+                    <label for="{{ form.report_card.id_for_label }}">Upload Grade 6 Report Card</label>
+                    <div class="file-input-container">
+                        {{ form.report_card }}
+                        <button type="button" class="file-button">Choose File</button>
+                        <span class="file-name">No file chosen</span>
+                    </div>
+                    {% if form.report_card.errors %}<ul class="errorlist">{% for error in form.report_card.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
                 </div>
             </div>
 
-            <div class="form-group full-width">
-                {{ form.overall_average.label_tag }}
-                {{ form.overall_average }}
+            <div class="form-section">
+                <h3>Grade 6 Academic Data</h3>
+
+                <div class="subjects-grid">
+                    <div class="form-group">
+                        <label for="{{ form.mathematics.id_for_label }}">Mathematics</label>
+                        {{ form.mathematics }}
+                        {% if form.mathematics.errors %}<ul class="errorlist">{% for error in form.mathematics.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.araling_panlipunan.id_for_label }}">Araling Panlipunan</label>
+                        {{ form.araling_panlipunan }}
+                        {% if form.araling_panlipunan.errors %}<ul class="errorlist">{% for error in form.araling_panlipunan.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.english.id_for_label }}">English</label>
+                        {{ form.english }}
+                        {% if form.english.errors %}<ul class="errorlist">{% for error in form.english.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.edukasyon_pagpapakatao.id_for_label }}">Edukasyon sa Pagpapakatao</label>
+                        {{ form.edukasyon_pagpapakatao }}
+                        {% if form.edukasyon_pagpapakatao.errors %}<ul class="errorlist">{% for error in form.edukasyon_pagpapakatao.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.science.id_for_label }}">Science</label>
+                        {{ form.science }}
+                        {% if form.science.errors %}<ul class="errorlist">{% for error in form.science.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.edukasyon_pangkabuhayan.id_for_label }}">Edukasyon Pampahalagang Pangkabuhayang</label>
+                        {{ form.edukasyon_pangkabuhayan }}
+                        {% if form.edukasyon_pangkabuhayan.errors %}<ul class="errorlist">{% for error in form.edukasyon_pangkabuhayan.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.filipino.id_for_label }}">Filipino</label>
+                        {{ form.filipino }}
+                        {% if form.filipino.errors %}<ul class="errorlist">{% for error in form.filipino.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.mapeh.id_for_label }}">MAPEH</label>
+                        {{ form.mapeh }}
+                        {% if form.mapeh.errors %}<ul class="errorlist">{% for error in form.mapeh.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="overallAverage">Overall Average</label>
+                    <input type="number" id="overallAverage" name="overall_average" min="75" max="100" step="0.01"
+                        placeholder="Overall Average" readonly value="{{ form.overall_average.value|default:'' }}">
+                    {# overall_average is calculated in form.clean(), so it won't be directly rendered by form.overall_average #}
+                </div>
             </div>
-        </div>
 
-        <div class="form-section">
-            <h3>Other Details</h3>
+            <div class="form-section">
+                <h3>Other Details</h3>
 
-            <div class="form-group">
-                {{ form.is_working_student.label_tag }}
-                {{ form.is_working_student }}
+                {# is_working_student and work_type are now populated from Student model, not directly input here #}
+                {# is_pwd and disability_type are now populated from Student model, not directly input here #}
+
+                <div class="form-group checkbox-group">
+                    <label class="checkbox-container">
+                        {{ form.agreed_to_terms }}
+                        <span class="checkmark"></span>
+                        I Agree to the <a href="#" class="terms-link">school policies and terms</a>
+                    </label>
+                    {% if form.agreed_to_terms.errors %}<ul class="errorlist">{% for error in form.agreed_to_terms.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                </div>
             </div>
 
-            <div class="form-group">
-                {{ form.work_type.label_tag }}
-                {{ form.work_type }}
+            <div class="form-actions">
+                <a href="{% url 'student_non_academic' student_id=student_id %}" class="back-btn" role="button">Back</a>
+                <button type="submit" class="submit-btn">See Section</button>
             </div>
+        </form>
+    </div>
 
-            <div class="form-group">
-                {{ form.is_sped.label_tag }}
-                {{ form.is_sped }}
-            </div>
-
-            <div class="form-group">
-                {{ form.sped_details.label_tag }}
-                {{ form.sped_details }}
-            </div>
-
-            <div class="form-group checkbox-group">
-                {{ form.agreed_to_terms }}
-                {{ form.agreed_to_terms.label_tag }}
-            </div>
-        </div>
-
-        <div class="form-actions">
-            <a href="{% url 'student_non_academic' student.id %}" class="back-btn" role="button">Back</a>
-            <button type="submit" class="submit-btn">See Section</button>
-        </div>
-    </form>
-</div>
-
-<script src="{% static 'enrollmentprocess/js/studentacademic.js' %}" defer></script>
+    <script src="{% static 'enrollmentprocess/js/studentacademic.js' %}" defer></script>
 
 </body>
+
 </html>

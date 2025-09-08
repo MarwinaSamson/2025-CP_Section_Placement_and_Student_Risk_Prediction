@@ -67,7 +67,7 @@ WSGI_APPLICATION = "phase1.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE" : "django.db.backends.postgresql",
-          "NAME" : "Student_Section_Placement_And_Risk_Prediction_db",
+          "NAME" : "SPARK_db",
           "USER" : "postgres",
           "PASSWORD" : "011304",
           "HOST" : "localhost",
@@ -116,6 +116,11 @@ STATICFILES_DIRS = [
     ]
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+# File upload settings
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
   
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
