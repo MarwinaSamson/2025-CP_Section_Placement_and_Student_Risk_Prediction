@@ -111,6 +111,9 @@ class StudentAcademicView(CreateView):
         if form.cleaned_data['lrn'] != student.lrn:
             form.add_error('lrn', "LRN does not match the student's record.")
             return self.form_invalid(form)
+        
+        # Set overall_average on the instance explicitly
+        form.instance.overall_average = form.cleaned_data.get('overall_average', 0.0)
 
         return super().form_valid(form)
 

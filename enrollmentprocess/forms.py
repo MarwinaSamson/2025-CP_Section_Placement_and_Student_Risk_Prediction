@@ -141,6 +141,7 @@ class FamilyForm(forms.ModelForm):
             'guardian_email': forms.EmailInput(attrs={'placeholder': "Email Address"}),
 
             'parent_photo': forms.FileInput(attrs={'class': 'file-input'}),
+            
         }
 
 
@@ -212,6 +213,20 @@ class StudentNonAcademicForm(forms.ModelForm):
         required=False,
         widget=forms.TextInput(attrs={'placeholder': 'Please specify'})
     )
+    
+    PARENT_HELP_CHOICES = [
+    ('never', 'Never'),
+    ('sometimes', 'Sometimes'),
+    ('often', 'Often'),
+    ('always', 'Always'),
+    
+    ]
+
+    parent_help = forms.ChoiceField(
+        choices=PARENT_HELP_CHOICES,
+        widget=forms.RadioSelect,
+        required=True,
+    )
 
     HOUSE_TYPE_CHOICES = [
         ('Apartment', 'Apartment'),
@@ -228,6 +243,29 @@ class StudentNonAcademicForm(forms.ModelForm):
         max_length=255,
         required=False,
         widget=forms.TextInput(attrs={'placeholder': 'Please specify'})
+    )
+    
+    QUIET_PLACE_CHOICES = [
+    ('Yes', 'Yes'),
+    ('No', 'No'),
+    ]
+
+    quiet_place = forms.ChoiceField(
+        choices=QUIET_PLACE_CHOICES,
+        widget=forms.RadioSelect,
+        required=True,
+    )
+
+    STUDY_AREA_CHOICES = [
+        ('Very_quiet', 'Very quiet'),
+        ('Somewhat_quiet', 'Somewhat quiet'),
+        ('Noisy', 'Noisy'),
+    ]
+
+    study_area = forms.ChoiceField(
+        choices=STUDY_AREA_CHOICES,
+        widget=forms.RadioSelect,
+        required=True,
     )
 
     TRANSPORT_MODE_CHOICES = [
@@ -265,6 +303,90 @@ class StudentNonAcademicForm(forms.ModelForm):
         required=False,
         widget=forms.TextInput(attrs={'placeholder': 'Please specify'})
     )
+    
+    STUDY_HOURS_CHOICES = [
+    ('less_than_1', 'Less than 1 hour'),
+    ('1_2_hours', '1-2 hours'),
+    ('2_3_hours', '2-3 hours'),
+    ('more_than_3', 'More than 3 hours'),
+    
+    ]
+
+    study_hours = forms.ChoiceField(
+        choices=STUDY_HOURS_CHOICES,
+        widget=forms.RadioSelect,
+        required=True,
+    )
+    
+    STUDY_WITH_CHOICES = [
+    ('never', 'Never'),
+    ('sometimes', 'Sometimes'),
+    ('often', 'Often'),
+    ('always', 'Always'),
+    
+    ]
+
+    study_with = forms.ChoiceField(
+        choices=STUDY_WITH_CHOICES,
+        widget=forms.RadioSelect,
+        required=True,
+    )
+
+    TRAVEL_TIME_CHOICES = [
+        ('Less than 15 minutes', 'Less than 15 minutes'),
+        ('15-30 minutes', '15-30 minutes'),
+        ('30-60 minutes', '30-60 minutes'),
+        ('More than 1 hour', 'More than 1 hour'),
+    ]
+
+    travel_time = forms.ChoiceField(
+        choices=TRAVEL_TIME_CHOICES,
+        widget=forms.RadioSelect,
+        required=True,
+    )
+
+    ACCESS_RESOURCES_CHOICES = [
+        ('books & materials', 'Books or study materials'),
+        ('computer & tablet', 'Computer or tablet'),
+        ('Internet', 'Internet'),
+        ('None', 'None'),
+    ]
+
+    access_resources = forms.MultipleChoiceField(
+        choices=ACCESS_RESOURCES_CHOICES,
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+    )
+
+    COMPUTER_USE_CHOICES = [
+        ('Never', 'Never'),
+        ('Sometimes', 'Sometimes'),
+        ('Often', 'Often'),
+        ('Always', 'Always'),
+    ]
+
+    computer_use = forms.ChoiceField(
+        choices=COMPUTER_USE_CHOICES,
+        widget=forms.RadioSelect,
+        required=True,
+    )
+    
+    CONFIDENCE_LEVEL_CHOICES = [
+    ('Very_confident', 'Very confident'),
+    ('Somewhat_confident', 'Somewhat confident'),
+    ('Not_confident', 'Not confident'),
+    
+    ]
+    
+    confidence_level = forms.ChoiceField(
+        choices=CONFIDENCE_LEVEL_CHOICES,
+        widget=forms.RadioSelect,
+        required=True,
+    )
+
+    
+    
+
 
     class Meta:
         model = StudentNonAcademic

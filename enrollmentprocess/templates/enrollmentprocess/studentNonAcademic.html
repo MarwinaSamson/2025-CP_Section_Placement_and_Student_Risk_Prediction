@@ -306,210 +306,250 @@
 
                 <div class="sub-section">
                     <h4>STUDENT'S STUDY HABITS:</h4>
+                   <div class="form-field checkbox-group">
+    <p>How many hours do you spend studying or doing homework each day?</p>
+    <div class="checkbox-options" data-single="true">
+        {% for radio in form.study_hours %}
+            <label>{{ radio.tag }} {{ radio.choice_label }}</label>
+        {% endfor %}
+    </div>
+    {% if form.study_hours.errors %}
+        <ul class="errorlist">{% for error in form.study_hours.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    {% endif %}
+</div>
                     <div class="form-field checkbox-group">
-                        <p>How many hours do you spend studying or doing homework each day?</p>
-                        <div class="checkbox-options" data-single="true">
-                            {% for radio in form.study_hours %}
-                                <label>{{ radio.tag }} {{ radio.choice_label }}</label>
-                            {% endfor %}
-                        </div>
-                        {% if form.study_hours.errors %}<ul class="errorlist">{% for error in form.study_hours.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-                    </div>
+    <p>Where do you usually study? (Check all that apply)</p>
+    <div class="checkbox-options">
+        {% for checkbox in form.study_place %}
+            <label>{{ checkbox.tag }} {{ checkbox.choice_label }}</label>
+        {% endfor %}
+    </div>
+    <div style="margin-top: 5px;">
+        {{ form.study_place_other }}
+        {% if form.study_place_other.errors %}
+            <ul class="errorlist">{% for error in form.study_place_other.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+        {% endif %}
+    </div>
+    {% if form.study_place.errors %}
+        <ul class="errorlist">{% for error in form.study_place.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    {% endif %}
+</div>
                     <div class="form-field checkbox-group">
-                        <p>Where do you usually study? (Check all that apply)</p>
-                        <div class="checkbox-options">
-                            {% for checkbox in form.study_place %}
-                                <label>{{ checkbox.tag }} {{ checkbox.choice_label }}
-                                    {% if checkbox.choice_value == 'other' %}
-                                        {{ form.study_place_other }}
-                                    {% endif %}
-                                </label>
-                            {% endfor %}
-                        </div>
-                        {% if form.study_place.errors %}<ul class="errorlist">{% for error in form.study_place.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-                        {% if form.study_place_other.errors %}<ul class="errorlist">{% for error in form.study_place_other.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-                    </div>
-                    <div class="form-field checkbox-group">
-                        <p>How often do you study with friends or classmates?</p>
-                        <div class="checkbox-options" data-single="true">
-                            {% for radio in form.study_with %}
-                                <label>{{ radio.tag }} {{ radio.choice_label }}</label>
-                            {% endfor %}
-                        </div>
-                        {% if form.study_with.errors %}<ul class="errorlist">{% for error in form.study_with.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-                    </div>
-                </div>
+    <p>How often do you study with friends or classmates?</p>
+    <div class="checkbox-options" data-single="true">
+        {% for radio in form.study_with %}
+            <label>{{ radio.tag }} {{ radio.choice_label }}</label>
+        {% endfor %}
+    </div>
+    {% if form.study_with.errors %}
+        <ul class="errorlist">{% for error in form.study_with.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    {% endif %}
+</div>
 
                 <div class="sub-section">
                     <h4>STUDENT'S FAMILY SUPPORT:</h4>
                     <div class="form-field checkbox-group">
-                        <p>Who do you live with? (Check all that apply)</p>
-                        <div class="checkbox-options">
-                            {% for checkbox in form.live_with %}
-                                <label>{{ checkbox.tag }} {{ checkbox.choice_label }}
-                                    {% if checkbox.choice_value == 'other' %}
-                                        {{ form.live_with_other }}
-                                    {% endif %}
-                                </label>
-                            {% endfor %}
-                        </div>
-                        {% if form.live_with.errors %}<ul class="errorlist">{% for error in form.live_with.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-                        {% if form.live_with_other.errors %}<ul class="errorlist">{% for error in form.live_with_other.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-                    </div>
+    <p>Who do you live with? (Check all that apply)</p>
+    <div class="checkbox-options">
+        {% for checkbox in form.live_with %}
+            <label>{{ checkbox.tag }} {{ checkbox.choice_label }}</label>
+        {% endfor %}
+    </div>
+    <div style="margin-top: 5px;">
+        {{ form.live_with_other }}
+        {% if form.live_with_other.errors %}
+            <ul class="errorlist">{% for error in form.live_with_other.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+        {% endif %}
+    </div>
+    {% if form.live_with.errors %}
+        <ul class="errorlist">{% for error in form.live_with.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    {% endif %}
+</div>
                     <div class="form-field radio-input">
-                        <p>Do your parents or guardians help you with your schoolwork?</p>
-                        <div class="radio-options" data-single="true">
-                            {% for radio in form.parent_help %}
-                                <label>{{ radio.tag }} {{ radio.choice_label }}</label>
-                            {% endfor %}
-                        </div>
-                        {% if form.parent_help.errors %}<ul class="errorlist">{% for error in form.parent_help.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-                    </div>
+    <p>Do your parents or guardians help you with your schoolwork?</p>
+    <div class="radio-options" data-single="true">
+        {% for radio in form.parent_help %}
+            <label>{{ radio.tag }} {{ radio.choice_label }}</label>
+        {% endfor %}
+    </div>
+    {% if form.parent_help.errors %}
+        <ul class="errorlist">{% for error in form.parent_help.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    {% endif %}
+</div>
                     <div class="form-field radio-input">
-                        <p>What is the highest education level of your parents or guardians? (Answer for the one with the highest level)</p>
-                        <div class="radio-options">
-                            {% for radio in form.highest_education %}
-                                <label>{{ radio.tag }} {{ radio.choice_label }}
-                                    {% if radio.choice_value == 'other' %}
-                                        {{ form.highest_education_other }}
-                                    {% endif %}
-                                </label>
-                            {% endfor %}
-                        </div>
-                        {% if form.highest_education.errors %}<ul class="errorlist">{% for error in form.highest_education.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-                        {% if form.highest_education_other.errors %}<ul class="errorlist">{% for error in form.highest_education_other.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-                    </div>
+    <p>What is the highest education level of your parents or guardians? (Answer for the one with the highest level)</p>
+    <div class="radio-options">
+        {% for radio in form.highest_education %}
+            <label>{{ radio.tag }} {{ radio.choice_label }}</label>
+        {% endfor %}
+    </div>
+    <div style="margin-top: 5px;">
+        {{ form.highest_education_other }}
+        {% if form.highest_education_other.errors %}
+            <ul class="errorlist">{% for error in form.highest_education_other.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+        {% endif %}
+    </div>
+    {% if form.highest_education.errors %}
+        <ul class="errorlist">{% for error in form.highest_education.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    {% endif %}
+</div>
                     <div class="form-field radio-input">
-                        <p>Are your parents married, separated, or other?</p>
-                        <div class="radio-options">
-                            {% for radio in form.marital_status %}
-                                <label>{{ radio.tag }} {{ radio.choice_label }}
-                                    {% if radio.choice_value == 'other' %}
-                                        {{ form.marital_status_other }}
-                                    {% endif %}
-                                </label>
-                            {% endfor %}
-                        </div>
-                        {% if form.marital_status.errors %}<ul class="errorlist">{% for error in form.marital_status.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-                        {% if form.marital_status_other.errors %}<ul class="errorlist">{% for error in form.marital_status_other.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-                    </div>
+    <p>Are your parents married, separated, or other?</p>
+    <div class="radio-options">
+        {% for radio in form.marital_status %}
+            <label>{{ radio.tag }} {{ radio.choice_label }}</label>
+        {% endfor %}
+    </div>
+    <div style="margin-top: 5px;">
+        {{ form.marital_status_other }}
+        {% if form.marital_status_other.errors %}
+            <ul class="errorlist">{% for error in form.marital_status_other.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+        {% endif %}
+    </div>
+    {% if form.marital_status.errors %}
+        <ul class="errorlist">{% for error in form.marital_status.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    {% endif %}
+</div>
                 </div>
 
                 <div class="sub-section">
                     <h4>STUDENT'S LIVING ENVIRONMENT:</h4>
                     <div class="form-field checkbox-group">
-                        <p>What type of house do you live in?</p>
-                        <div class="checkbox-options" data-single="true">
-                            {% for radio in form.house_type %}
-                                <label>{{ radio.tag }} {{ radio.choice_label }}
-                                    {% if radio.choice_value == 'other' %}
-                                        {{ form.house_type_other }}
-                                    {% endif %}
-                                </label>
-                            {% endfor %}
-                        </div>
-                        {% if form.house_type.errors %}<ul class="errorlist">{% for error in form.house_type.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-                        {% if form.house_type_other.errors %}<ul class="errorlist">{% for error in form.house_type_other.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-                    </div>
+    <p>What type of house do you live in?</p>
+    <div class="checkbox-options" data-single="true">
+        {% for radio in form.house_type %}
+            <label>{{ radio.tag }} {{ radio.choice_label }}</label>
+        {% endfor %}
+    </div>
+    <div style="margin-top: 5px;">
+        {{ form.house_type_other }}
+        {% if form.house_type_other.errors %}
+            <ul class="errorlist">{% for error in form.house_type_other.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+        {% endif %}
+    </div>
+    {% if form.house_type.errors %}
+        <ul class="errorlist">{% for error in form.house_type.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    {% endif %}
+</div>
                     <div class="form-field radio-input">
-                        <p>Do you have a quiet place to study at home?</p>
-                        <div class="radio-options">
-                            {% for radio in form.quiet_place %}
-                                <label>{{ radio.tag }} {{ radio.choice_label }}</label>
-                            {% endfor %}
-                        </div>
-                        {% if form.quiet_place.errors %}<ul class="errorlist">{% for error in form.quiet_place.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-                    </div>
+    <p>Do you have a quiet place to study at home?</p>
+    <div class="radio-options">
+        {% for radio in form.quiet_place %}
+            <label>{{ radio.tag }} {{ radio.choice_label }}</label>
+        {% endfor %}
+    </div>
+    {% if form.quiet_place.errors %}
+        <ul class="errorlist">{% for error in form.quiet_place.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    {% endif %}
+</div>
                     <div class="form-field radio-input">
-                        <p>How would you describe your study area at home?</p>
-                        <div class="radio-options">
-                            {% for radio in form.study_area %}
-                                <label>{{ radio.tag }} {{ radio.choice_label }}</label>
-                            {% endfor %}
-                        </div>
-                        {% if form.study_area.errors %}<ul class="errorlist">{% for error in form.study_area.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-                    </div>
+    <p>How would you describe your study area at home?</p>
+    <div class="radio-options">
+        {% for radio in form.study_area %}
+            <label>{{ radio.tag }} {{ radio.choice_label }}</label>
+        {% endfor %}
+    </div>
+    {% if form.study_area.errors %}
+        <ul class="errorlist">{% for error in form.study_area.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    {% endif %}
+</div>
                 </div>
 
                 <div class="sub-section">
                     <h4>TRANSPORTATION:</h4>
                     <div class="form-field checkbox-group">
-                        <p>How do you usually get to school?</p>
-                        <div class="checkbox-options" data-single="true">
-                            {% for radio in form.transport_mode %}
-                                <label>{{ radio.tag }} {{ radio.choice_label }}
-                                    {% if radio.choice_value == 'other' %}
-                                        {{ form.transport_mode_other }}
-                                    {% endif %}
-                                </label>
-                            {% endfor %}
-                        </div>
-                        {% if form.transport_mode.errors %}<ul class="errorlist">{% for error in form.transport_mode.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-                        {% if form.transport_mode_other.errors %}<ul class="errorlist">{% for error in form.transport_mode_other.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-                    </div>
+    <p>How do you usually get to school?</p>
+    <div class="checkbox-options" data-single="true">
+        {% for radio in form.transport_mode %}
+            <label>{{ radio.tag }} {{ radio.choice_label }}</label>
+        {% endfor %}
+    </div>
+    <div style="margin-top: 5px;">
+        {{ form.transport_mode_other }}
+        {% if form.transport_mode_other.errors %}
+            <ul class="errorlist">{% for error in form.transport_mode_other.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+        {% endif %}
+    </div>
+    {% if form.transport_mode.errors %}
+        <ul class="errorlist">{% for error in form.transport_mode.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    {% endif %}
+</div>
                     <div class="form-field radio-input">
-                        <p>How long does it take you to get to school?</p>
-                        <div class="radio-options">
-                            {% for radio in form.travel_time %}
-                                <label>{{ radio.tag }} {{ radio.choice_label }}</label>
-                            {% endfor %}
-                        </div>
-                        {% if form.travel_time.errors %}<ul class="errorlist">{% for error in form.travel_time.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-                    </div>
+    <p>How long does it take you to get to school?</p>
+    <div class="radio-options">
+        {% for radio in form.travel_time %}
+            <label>{{ radio.tag }} {{ radio.choice_label }}</label>
+        {% endfor %}
+    </div>
+    {% if form.travel_time.errors %}
+        <ul class="errorlist">{% for error in form.travel_time.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    {% endif %}
+</div>
                 </div>
 
                 <div class="sub-section">
                     <h4>STUDENT'S ACCESS TO LEARNING RESOURCES:</h4>
                     <div class="form-field checkbox-group">
-                        <p>Do you have access to the following at home? (Check all that apply)</p>
-                        <div class="checkbox-options">
-                            {% for checkbox in form.access_resources %}
-                                <label>{{ checkbox.tag }} {{ checkbox.choice_label }}</label>
-                            {% endfor %}
-                        </div>
-                        {% if form.access_resources.errors %}<ul class="errorlist">{% for error in form.access_resources.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-                    </div>
+    <p>Do you have access to the following at home? (Check all that apply)</p>
+    <div class="checkbox-options">
+        {% for checkbox in form.access_resources %}
+            <label>{{ checkbox.tag }} {{ checkbox.choice_label }}</label>
+        {% endfor %}
+    </div>
+    {% if form.access_resources.errors %}
+        <ul class="errorlist">{% for error in form.access_resources.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    {% endif %}
+</div>
                     <div class="form-field radio-input">
-                        <p>How often do you use a computer or tablet for schoolwork?</p>
-                        <div class="radio-options">
-                            {% for radio in form.computer_use %}
-                                <label>{{ radio.tag }} {{ radio.choice_label }}</label>
-                            {% endfor %}
-                        </div>
-                        {% if form.computer_use.errors %}<ul class="errorlist">{% for error in form.computer_use.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-                    </div>
+    <p>How often do you use a computer or tablet for schoolwork?</p>
+    <div class="radio-options">
+        {% for radio in form.computer_use %}
+            <label>{{ radio.tag }} {{ radio.choice_label }}</label>
+        {% endfor %}
+    </div>
+    {% if form.computer_use.errors %}
+        <ul class="errorlist">{% for error in form.computer_use.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    {% endif %}
+</div>
                 </div>
 
                 <div class="sub-section">
                     <h4>STUDENT'S PERSONALITY TRAITS AND INTERESTS:</h4>
                     <div class="form-field">
-                        <p>What do you enjoy doing in your free time? (e.g., reading, sports, games)</p>
-                        {{ form.hobbies }}
-                        {% if form.hobbies.errors %}<ul class="errorlist">{% for error in form.hobbies.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-                    </div>
+    <p>What do you enjoy doing in your free time? (e.g., reading, sports, games)</p>
+    {{ form.hobbies }}
+    {% if form.hobbies.errors %}
+        <ul class="errorlist">{% for error in form.hobbies.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    {% endif %}
+</div>
                     <div class="form-field checkbox-group">
-                        <p>How would you describe yourself? (Check all that apply)</p>
-                        <div class="checkbox-options">
-                            {% for checkbox in form.personality_traits %}
-                                <label>{{ checkbox.tag }} {{ checkbox.choice_label }}
-                                    {% if checkbox.choice_value == 'other' %}
-                                        {{ form.personality_traits_other }}
-                                    {% endif %}
-                                </label>
-                            {% endfor %}
-                        </div>
-                        {% if form.personality_traits.errors %}<ul class="errorlist">{% for error in form.personality_traits.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-                        {% if form.personality_traits_other.errors %}<ul class="errorlist">{% for error in form.personality_traits_other.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-                    </div>
+    <p>How would you describe yourself? (Check all that apply)</p>
+    <div class="checkbox-options">
+        {% for checkbox in form.personality_traits %}
+            <label>{{ checkbox.tag }} {{ checkbox.choice_label }}</label>
+        {% endfor %}
+    </div>
+    <div style="margin-top: 5px;">
+        {{ form.personality_traits_other }}
+        {% if form.personality_traits_other.errors %}
+            <ul class="errorlist">{% for error in form.personality_traits_other.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+        {% endif %}
+    </div>
+    {% if form.personality_traits.errors %}
+        <ul class="errorlist">{% for error in form.personality_traits.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    {% endif %}
+</div>
                     <div class="form-field radio-input">
-                        <p>Do you feel confident about doing well in school?</p>
-                        <div class="radio-options">
-                            {% for radio in form.confidence_level %}
-                                <label>{{ radio.tag }} {{ radio.choice_label }}</label>
-                            {% endfor %}
-                        </div>
-                        {% if form.confidence_level.errors %}<ul class="errorlist">{% for error in form.confidence_level.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-                    </div>
+    <p>Do you feel confident about doing well in school?</p>
+    <div class="radio-options">
+        {% for radio in form.confidence_level %}
+            <label>{{ radio.tag }} {{ radio.choice_label }}</label>
+        {% endfor %}
+    </div>
+    {% if form.confidence_level.errors %}
+        <ul class="errorlist">{% for error in form.confidence_level.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    {% endif %}
+</div>
                 </div>
             </div>
 
