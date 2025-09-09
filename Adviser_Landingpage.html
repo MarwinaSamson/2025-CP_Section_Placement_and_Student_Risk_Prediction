@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Adviser Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img src="logo/west_logo.jpg" alt="School Logo" class="logo">
+        <h2 class="school-name">ZNHS WEST</h2>
+      </div>
+
+      <nav class="nav">
+        <a href="#" class="active"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+        <a href="masterlist.html"><i class="fa-solid fa-users"></i><span>Masterlist</span></a>
+        <a href="#"><i class="fa-solid fa-upload"></i><span>Upload</span></a>
+        <a href="#"><i class="fa-solid fa-file-alt"></i><span>Reports</span></a>
+        <a href="#"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
+      </nav>
+
+      <div class="logout">
+        <a href="#"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main">
+      <!-- Header -->
+      <header class="header">
+        <h1>Adviser Dashboard</h1>
+        <div class="user-info">
+          <div class="user-text">
+            <span class="user-name">Villacampo, Noellene Pearl A.</span>
+            <span class="user-role">Adviser</span>
+          </div>
+          <img src="logo/miming.jfif" alt="Profile" class="user-avatar">
+        </div>
+      </header>
+
+      <!-- Sub Header -->
+      <section class="sub-header">
+        <div class="class-info">
+          <h3>Program: <span>Science Technology Engineering (STE)</span></h3>
+          <h3>Section: <span>Akatsuki</span></h3>
+        </div>
+        <div class="school-year">
+          <label for="school-year">School Year</label>
+          <select id="school-year">
+            <option selected>2025-2026</option>
+          </select>
+        </div>
+      </section>
+
+
+      <!-- Alert -->
+      <section class="alert">
+        <p><strong>Warning:</strong> The following requires immediate attention.<br>
+        • 1 student is under probation</p>
+      </section>
+
+      <!-- Summary -->
+      <section class="summary">
+        <div class="summary-header">
+          <h2>Class Overview</h2>
+          <p class="subtitle">Quick snapshot of your learners</p>
+        </div>
+
+        <div class="summary-content">
+          <!-- Learners -->
+          <div class="learners card">
+            <h3 class="card-title">Total Learners</h3>
+            <div class="learner-count">30</div>
+            <div class="gender-split">
+              <div class="gender male">
+               
+                <span><strong>15</strong> Male</span>
+              </div>
+              <div class="gender female">
+               
+                <span><strong>15</strong> Female</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Categories Table -->
+          <div class="table card">
+            <h3 class="card-title">Student Categories</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Category</th>
+                  <th>Male</th>
+                  <th>Female</th>
+                  <th>Total</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Transfer-in</td><td>0</td><td>0</td><td>0</td>
+                  <td><button class="view-btn" data-category="transfer-in">View</button></td>
+                </tr>
+                <tr>
+                  <td>Balik-aral</td><td>0</td><td>0</td><td>0</td>
+                  <td><button class="view-btn" data-category="balik-aral">View</button></td>
+                </tr>
+                <tr>
+                  <td>Repeater</td><td>0</td><td>0</td><td>0</td>
+                  <td><button class="view-btn" data-category="repeater">View</button></td>
+                </tr>
+                <tr>
+                  <td>On Probation</td><td>1</td><td>0</td><td>1</td>
+                  <td><button class="view-btn" data-category="probation">View</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Student Dropdown View -->
+        <div class="student-view card" id="student-view">
+          <h3 class="card-title">Student Details</h3>
+          <p class="placeholder">Select a category above to view students.</p>
+          <div class="student-content collapse"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>

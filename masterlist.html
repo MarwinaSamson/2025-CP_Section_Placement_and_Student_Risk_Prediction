@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Akatsuki Masterlist</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img src="logo/west_logo.jpg" alt="School Logo" class="logo">
+        <h2 class="school-name">ZNHS WEST</h2>
+      </div>
+      <nav class="nav">
+        <a href="Adviser_Landingpage.html"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+        <a href="masterlist.html" class="active"><i class="fa-solid fa-users"></i><span>Masterlist</span></a>
+        <a href="#"><i class="fa-solid fa-upload"></i><span>Uploads</span></a>
+        <a href="#"><i class="fa-solid fa-file-alt"></i><span>Reports</span></a>
+        <a href="#"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
+      </nav>
+      <div class="logout">
+        <a href="#"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main">
+      <!-- Header -->
+      <header class="header">
+        <h1>AKATSUKI MASTERLIST</h1>
+        <div class="user-info">
+          <div class="user-text">
+            <span class="user-name">Salatan, Juliana Mae E.</span>
+            <span class="user-role">Adviser</span>
+          </div>
+          <img src="logo/miming.jfif" alt="Profile" class="user-avatar">
+        </div>
+      </header>
+
+      <!-- Program Info -->
+      <section class="sub-header">
+            <div class="class-info">
+            <p><strong>Program:</strong> STE (Science Technology Education)</p>
+            <p><strong>Total Student Population:</strong> 60</p>
+            <p>Male: 30 | Female: 30</p>
+            </div>
+            <div class="search-bar">
+                <i class="fa fa-search"></i>
+                <input type="text" id="search" placeholder="Search students...">
+            </div>
+        </section>
+
+      <!-- Export Buttons -->
+      <div class="export-buttons">
+        <button class="btn export-pdf" onclick="exportPDF()">Export as PDF <i class="fa-solid fa-file-pdf"></i></button>
+        <button class="btn export-excel" onclick="exportExcel()">Export as Excel <i class="fa-solid fa-file-excel"></i></button>
+        <button class="btn export-csv" onclick="exportCSV()">Export as CSV <i class="fa-solid fa-file-csv"></i></button>
+      </div>
+
+      <!-- Table -->
+      <section class="table-section">
+        <table id="masterlist">
+          <thead>
+            <tr>
+              <th>LRN Number</th>
+              <th>Full Name</th>
+              <th>Sex</th>
+              <th>Age</th>
+              <th>Status</th>
+              <th>Profile</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>12345678910</td>
+              <td>Konan</td>
+              <td>F</td>
+              <td>20</td>
+              <td></td>
+                <td>
+                    <a href="learner_profile.html" class="btn view">View</a>
+                </td>
+            </tr>
+            <tr>
+              <td>12345678911</td>
+              <td>Hidan</td>
+              <td>M</td>
+              <td>23</td>
+              <td></td>
+               <td>
+                 <a href="learner_profile.html" class="btn view">View</a>
+                </td>
+            </tr>
+            <tr>
+              <td>12345678912</td>
+              <td>Kakuzu</td>
+              <td>M</td>
+              <td>100</td>
+              <td></td>
+                <td>
+                  <a href="learner_profile.html" class="btn view">View</a>
+                </td>
+            </tr>
+            <tr >
+              <td>12345678913</td>
+              <td>Uchiha, Itachi C.</td>
+              <td>M</td>
+              <td>21</td>
+              <td class="status-badge probation">On Probation</td>
+                <td>
+                  <a href="learner_profile.html" class="btn view">View</a>
+                </td>
+            </tr>
+            <tr>
+              <td>12345678914</td>
+              <td>Deidara</td>
+              <td>M</td>
+              <td>18</td>
+              <td></td>
+                <td>
+                    <a href="learner_profile.html" class="btn view">View</a>
+                </td>
+            </tr>
+            <tr>
+              <td>12345678915</td>
+              <td>Sasori</td>
+              <td>M</td>
+              <td>70</td>
+              <td class="status-badge probation">On Probation</td>
+               <td>
+                 <a href="learner_profile.html" class="btn view">View</a>
+                </td>
+            </tr>
+              <tr>
+              <td>12345678915</td>
+              <td>Kisame</td>
+              <td>M</td>
+              <td>70</td>
+              <td></td>
+                    <td>
+                        <a href="learner_profile.html" class="btn view">View</a>
+                    </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    // Search Function
+    document.getElementById("search").addEventListener("keyup", function() {
+      const filter = this.value.toLowerCase();
+      const rows = document.querySelectorAll("#masterlist tbody tr");
+      rows.forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(filter) ? "" : "none";
+      });
+    });
+
+    document.querySelectorAll("tr").forEach(row => {
+          if (row.querySelector(".status-badge.probation")) {
+            row.classList.add("highlight");
+          }
+        });
+  </script>
+
+</body>
+</html>

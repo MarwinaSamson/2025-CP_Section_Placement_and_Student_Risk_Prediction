@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learner Profile</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="logo/west_logo.jpg" alt="School Logo" class="logo">
+                <h2 class="school-name">ZNHS WEST</h2>
+            </div>
+            <nav class="nav">
+                <a href="Adviser_Landingpage.html"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+                <a href="masterlist.html" class="active"><i class="fa-solid fa-users"></i><span>Masterlist</span></a>
+                <a href="#"><i class="fa-solid fa-upload"></i><span>Uploads</span></a>
+                <a href="#"><i class="fa-solid fa-file-alt"></i><span>Reports</span></a>
+                <a href="#"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
+            </nav>
+            <div class="logout">
+                <a href="#"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a>
+            </div>
+        </aside>
+
+        <main class="main">
+            <header class="header">
+                <h1>Learner Profile</h1>
+                <div class="user-info">
+                    <div class="user-text">
+                        <span class="user-name">Salatan, Juliana Mae E.</span>
+                        <span class="user-role">Admin</span>
+                    </div>
+                    <img src="logo/miming.jfif" alt="Profile" class="user-avatar">
+                </div>
+            </header>
+
+            <div class="profile-details-card">
+                <section id="student-section" class="profile-section">
+                    <div class="section-header">
+                        <h2>Student Data</h2>
+                        <button class="update-btn" onclick="enableEdit('student')">Update Data</button>
+                    </div>
+                    <div id="student-view" class="section-content">
+                        <div class="student-data-layout">
+                            <div class="student-photo-container">
+                                <img src="logo/Itachi Uchiha❤️.jfif" alt="Student Photo" class="student-photo">
+                            </div>
+                            <div class="student-details-grid sdetails-grid">
+                                <div class="detail-item"><label>LRN Number:</label> <span data-key="lrn">12345678913</span></div>
+                               
+                                <div class="detail-item"><label>Last Name:</label>
+                                     <span data-key="lastname">Uchiha</span>
+                                </div>
+
+                                  <div class="detail-item"><label>First Name:</label> 
+                                    <span data-key="firstname">Itachi</span>
+                                </div>
+
+                                <div class="detail-item"><label>Gender:</label> 
+                                    <span data-key="gender">Male</span>
+                                </div>
+
+                                <div class="detail-item"><label>Age:</label> 
+                                    <span data-key="age">25</span>
+                                </div>
+
+                                <div class="detail-item"><label>Date of Birth:</label> 
+                                    <span data-key="dob">2000-06-12</span>
+                                </div>
+
+                                 <div class="detail-item"><label>Last School Attended:</label> 
+                                    <span data-key="last_school">Konoha Ninja Academy</span>
+                                </div>
+
+                                <div class="detail-item"><label>Previous Grade and Section:</label>
+                                     <span data-key="prev_grade">Grade 6 - Pearl</span>
+                                </div>
+
+                    
+                                <div class="detail-item"><label>School Year Last Attended:</label> 
+                                    <span data-key="last_sy">2019-2020</span>
+                                </div>
+
+                                <div class="detail-item"><label>Date Enrolled:</label> 
+                                    <span data-key="date_enrolled">2025-06-01</span>
+                                </div>
+
+                                <div class="detail-item"><label>Date of First Attendance:</label> 
+                                    <span data-key="date_attended">2025-06-01</span>
+                                </div>
+
+                                <div class="detail-item"><label>Current Grade Level:</label> 
+                                    <span data-key="grade">Grade 7</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                   <form id="student-form" class="profile-form hidden section-content" onsubmit="saveData(event, 'student')">
+                        <fieldset class="form-section">
+                            <legend>Personal Information</legend>
+                            <div class="form-group"><label>Last Name:</label><input type="text" name="lastname"></div>
+                            <div class="form-group"><label>First Name:</label><input type="text" name="firstname"></div>
+                            <div class="form-group"><label>Gender:</label><input type="text" name="gender"></div>
+                            <div class="form-group"><label>Date of Birth:</label><input type="date" name="dob"></div>
+                            <div class="form-group"><label>Age:</label><input type="number" name="age"></div>
+                        </fieldset>
+
+                        <fieldset class="form-section">
+                            <legend>Academic Information</legend>
+                            <div class="form-group"><label>LRN Number:</label><input type="text" name="lrn"></div>
+                            <div class="form-group"><label>Current Grade Level:</label><input type="text" name="grade"></div>
+                            <div class="form-group"><label>Date Enrolled:</label><input type="date" name="date_enrolled"></div>
+                            <div class="form-group"><label>Date of First Attendance:</label><input type="date" name="date_attended"></div>
+                            <div class="form-group"><label>Last School Attended:</label><input type="text" name="last_school"></div>
+                            <div class="form-group"><label>School Year Last Attended:</label><input type="text" name="last_sy"></div>
+                            <div class="form-group"><label>Previous Grade and Section:</label><input type="text" name="prev_grade"></div>
+                        </fieldset>
+
+                        <div class="form-actions">
+                            <button type="submit" class="save-btn">Save Changes</button>
+                            <button type="button" class="cancel-btn" onclick="cancelEdit('student')">Cancel</button>
+                        </div>
+                    </form>
+                </section>
+
+                <section id="parents-section" class="profile-section">
+                    <div class="section-header">
+                        <h2>Parents Data</h2>
+                        <button class="update-btn" onclick="enableEdit('parents')">Update Data</button>
+                    </div>
+                     <div id="parents-view" class="details-grid section-content">
+
+                       
+
+                        <div class="detail-item"><label>Father's Name:</label> 
+                            <span data-key="father_name">Fugaku Uchiha</span>
+                        </div>
+
+                        <div class="detail-item"><label>Date of Birth:</label> 
+                            <span data-key="father_dob">2000-06-12</span>
+                        </div>
+
+                        <div class="detail-item"><label>Age:</label> 
+                            <span data-key="father_age">25</span>
+                        </div>
+
+        
+                        <div class="detail-item"><label>Occupation:</label> 
+                            <span data-key="father_occupation">Police</span>
+                        </div> 
+                        
+                         <div class="detail-item"><label>Contact Number:</label> 
+                            <span data-key="father_contact">0987654321</span>
+                        </div>
+
+                         <div class="detail-item"><label>Mother's Name:</label> 
+                            <span data-key="mother_name">Mikoto Uchiha</span>
+                        </div>
+                         <div class="detail-item"><label>Date of Birth:</label> 
+                            <span data-key="mother_dob">2000-06-12</span>
+                        </div>
+
+                          <div class="detail-item"><label>Age:</label> 
+                            <span data-key="mother_age">25</span>
+                        </div>
+                        
+
+                        <div class="detail-item"><label>Occupation:</label> 
+                            <span data-key="mother_occupation">House Wife</span>
+                        </div>
+
+                        <div class="detail-item"><label>Contact Number:</label> 
+                            <span data-key="mother_contact">0987654321</span>
+                        </div>
+
+                       
+                        <div class="detail-item"><label>Current Address:</label> 
+                            <span data-key="address">Konoha</span>
+                        </div>
+
+                        <div class="detail-item"><label>Religion:</label> 
+                            <span data-key="religion">Uchihanism</span>
+                        </div>
+
+                        <div class="detail-item"><label>Dialect Spoken:</label> 
+                            <span data-key="dialect">Japanies</span>
+                        </div>
+
+                        <div class="detail-item"><label>Ethnicities:</label> 
+                            <span data-key="ethnicity">Japanies</span>
+                        </div>
+                    </div>
+                     <form id="parents-form" class="profile-form hidden section-content" onsubmit="saveData(event, 'parents')">
+                        <fieldset class="form-section">
+                            <legend>Father's Details</legend>
+                            <div class="form-group"><label>Full Name:</label><input type="text" name="father_name"></div>
+                            <div class="form-group"><label>Date of Birth:</label><input type="date" name="father_dob"></div>
+                            <div class="form-group"><label>Age:</label><input type="number" name="father_age"></div>
+                            <div class="form-group"><label>Occupation:</label><input type="text" name="father_occupation"></div>
+                            <div class="form-group"><label>Contact Number:</label><input type="text" name="father_contact"></div>
+                        </fieldset>
+
+                        <fieldset class="form-section">
+                            <legend>Mother's Details</legend>
+                            <div class="form-group"><label>Full Name:</label><input type="text" name="mother_name"></div>
+                            <div class="form-group"><label>Date of Birth:</label><input type="date" name="mother_dob"></div>
+                            <div class="form-group"><label>Age:</label><input type="number" name="mother_age"></div>
+                            <div class="form-group"><label>Occupation:</label><input type="text" name="mother_occupation"></div>
+                            <div class="form-group"><label>Contact Number:</label><input type="text" name="mother_contact"></div>
+                        </fieldset>
+                        
+                        <fieldset class="form-section">
+                            <legend>Family Details</legend>
+                            <div class="form-group"><label>Current Address:</label><input type="text" name="address"></div>
+                            <div class="form-group"><label>Religion:</label><input type="text" name="religion"></div>
+                            <div class="form-group"><label>Dialect Spoken:</label><input type="text" name="dialect"></div>
+                            <div class="form-group"><label>Ethnicities:</label><input type="text" name="ethnicity"></div>
+                        </fieldset>
+
+                        <div class="form-actions">
+                            <button type="submit" class="save-btn">Save Changes</button>
+                            <button type="button" class="cancel-btn" onclick="cancelEdit('parents')">Cancel</button>
+                        </div>
+                    </form>
+                </section>
+
+                 <section class="profile-section">
+                    <div class="section-header">
+                        <h2>Change History</h2>
+                    </div>
+                    <div class="section-content">
+                        <div class="history-item">
+                            <strong>Record Created</strong>
+                            <span>07/09/2025  10:30 AM</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <div id="toast" class="toast">Profile updated successfully!</div>
+  <script src="script.js"></script>
+  
+</body>
+</html>
