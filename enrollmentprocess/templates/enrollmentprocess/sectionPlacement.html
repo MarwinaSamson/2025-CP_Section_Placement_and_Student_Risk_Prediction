@@ -192,6 +192,7 @@
             <h2 class="page-title">Section Placement Result</h2>
             <p class="subtitle">Below are the programs and sections that the student qualifies for.</p>
 
+
             {% if error_message %}
                 <p style="color: red;">{{ error_message }}</p>
             {% endif %}
@@ -201,59 +202,67 @@
                 <input type="hidden" name="selected_program" id="selectedProgramInput">
 
                 <!-- Special Programs Section -->
-                <div class="programs-section">
-                    <h3 class="section-title">Special Programs</h3>
-                    <div class="programs-grid">
-                        <div class="program-card available" data-program="STE">
-                            <div class="program-icon">🎓</div>
-                            <h4>STE</h4>
-                            <p>Science Technology and Engineering</p>
-                        </div>
-                        <div class="program-card available" data-program="SPFL">
-                            <div class="program-icon">🗣️</div>
-                            <h4>SPFL</h4>
-                            <p>Special Program in Foreign Language</p>
-                        </div>
-                        <div class="program-card available" data-program="SPTVL">
-                            <div class="program-icon">🔧</div>
-                            <h4>SPTVL</h4>
-                            <p>Special Program in Technical Vocational Livelihood</p>
-                        </div>
-                        <div class="program-card {% if student.is_working_student %}available{% else %}disabled{% endif %}" data-program="OHSP">
-                            <div class="program-icon">📚</div>
-                            <h4>OHSP</h4>
-                            <p>Open High School Program</p>
-                        </div>
-                        <div class="program-card {% if student.is_sped %}available{% else %}disabled{% endif %}" data-program="SNED">
-                            <div class="program-icon">♿</div>
-                            <h4>SNED</h4>
-                            <p>Special Needs Education</p>
-                        </div>
-                    </div>
-                </div>
+                 <!-- Special Programs Section -->
+<div class="programs-section">
+    <h3 class="section-title">Special Programs</h3>
+    <div class="programs-grid">
+        <div class="program-card {% if recommendations.ste == 'Eligible' %}available{% else %}disabled{% endif %}" data-program="STE">
+            <div class="program-icon">🎓</div>
+            <h4>STE</h4>
+            <p>Science Technology and Engineering</p>
+        </div>
+        <div class="program-card {% if recommendations.spfl == 'Eligible' %}available{% else %}disabled{% endif %}" data-program="SPFL">
+            <div class="program-icon">🗣️</div>
+            <h4>SPFL</h4>
+            <p>Special Program in Foreign Language</p>
+        </div>
+        <div class="program-card {% if recommendations.sptve == 'Eligible' %}available{% else %}disabled{% endif %}" data-program="SPTVL">
+            <div class="program-icon">🔧</div>
+            <h4>SPTVL</h4>
+            <p>Special Program in Technical Vocational Livelihood</p>
+        </div>
+        <div class="program-card {% if student.is_working_student %}available{% else %}disabled{% endif %}" data-program="OHSP">
+            <div class="program-icon">📚</div>
+            <h4>OHSP</h4>
+            <p>Open High School Program</p>
+        </div>
+        <div class="program-card {% if student.is_sped %}available{% else %}disabled{% endif %}" data-program="SNED">
+            <div class="program-icon">♿</div>
+            <h4>SNED</h4>
+            <p>Special Needs Education</p>
+        </div>
+    </div>
+</div>
 
-                <!-- Regular Section -->
-                <div class="programs-section">
-                    <h3 class="section-title">Regular Section</h3>
-                    <div class="programs-grid regular-grid">
-                        <div class="program-card available large-card" data-program="TOP5">
-                            <div class="program-icon">🏆</div>
-                            <h4>Top 5 Sections</h4>
-                            <p>For students with high academic performance</p>
-                        </div>
-                        <div class="program-card available large-card" data-program="REGULAR">
-                            <div class="program-icon">📖</div>
-                            <h4>Regular Section</h4>
-                            <p>Standard academic program</p>
-                        </div>
-                    </div>
-                </div>
+<!-- Regular Section -->
+<div class="programs-section">
+    <h3 class="section-title">Regular Section</h3>
+    <div class="programs-grid regular-grid">
+        <div class="program-card {% if recommendations.top5 == 'Eligible' %}available{% else %}disabled{% endif %}" data-program="TOP5">
+            <div class="program-icon">🏆</div>
+            <h4>Top 5 Sections</h4>
+            <p>For students with high academic performance</p>
+        </div>
+        <div class="program-card available large-card" data-program="REGULAR">
+            <div class="program-icon">📖</div>
+            <h4>Regular Section</h4>
+            <p>Standard academic program</p>
+        </div>
+    </div>
+</div>
 
                 <!-- Qualification Status -->
                 <div class="qualification-status">
-                    <div class="status-icon">🎯</div>
-                    <p>Qualified for STE, SPFL, SPTVE, and Top 5.</p>
-                </div>
+    <div class="status-icon">🎯</div>
+    <p>
+        Qualified for:
+        {% for program, status in recommendations.items %}
+            {% if status == 'Eligible' %}
+                {{ program }}{% if not forloop.last %}, {% endif %}
+            {% endif %}
+        {% endfor %}
+    </p>
+</div>
 
                 <!-- Back Button -->
                 <div class="button-container">

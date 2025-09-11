@@ -56,18 +56,26 @@ function closeConfirmationModal() {
   selectedProgram = null
 }
 
-function confirmSelection() {
-  if (selectedProgram) {
-    // Close confirmation modal
-    closeConfirmationModal()
+// function confirmSelection() {
+//   if (selectedProgram) {
+//     // Close confirmation modal
+//     closeConfirmationModal()
 
-    // Show success modal
-    setTimeout(() => {
-      const successModal = document.getElementById("successModal")
-      successModal.style.display = "block"
-    }, 300)
-  }
+//     // Show success modal
+//     setTimeout(() => {
+//       const successModal = document.getElementById("successModal")
+//       successModal.style.display = "block"
+//     }, 300)
+//   }
+// }
+
+function confirmSelection() {
+    if (!selectedProgram) return;
+    document.getElementById('selectedProgramInput').value = selectedProgram; // use code, e.g. "STE"
+    document.getElementById('sectionPlacementForm').submit();
+    closeConfirmationModal();
 }
+
 
 function closeSuccessModal() {
   const modal = document.getElementById("successModal")

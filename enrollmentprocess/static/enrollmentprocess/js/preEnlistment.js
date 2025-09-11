@@ -177,29 +177,41 @@ document.addEventListener("DOMContentLoaded", () => {
     console.warn("4Ps checkbox NOT found!");
   }
 
-  /*** SPED & WORKING STUDENT RADIO TOGGLE ***/
-  function setupRadioControl(radioName, inputName) {
-    const radios = document.querySelectorAll(`input[name="${radioName}"]`);
-    const textInput = document.querySelector(`[name="${inputName}"]`);
 
-    if (!textInput || radios.length === 0) return;
+document.addEventListener('DOMContentLoaded', function() {
+    // Get radio buttons and inputs
+    const isSpedRadios = document.querySelectorAll('input[name="{{ form.is_sped.name }}"]');
+    const spedDetailsInput = document.getElementById('spedDetailsInput');
 
-    radios.forEach((radio) => {
-      radio.addEventListener("change", function () {
-        if (this.value === "True") {
-          textInput.disabled = false;
-          textInput.focus();
-        } else {
-          textInput.disabled = true;
-          textInput.value = "";
+    const isWorkingRadios = document.querySelectorAll('input[name="{{ form.is_working_student.name }}"]');
+    const workingDetailsInput = document.getElementById('workingDetailsInput');
+
+    function toggleInput(radios, input) {
+        let enabled = false;
+        radios.forEach(radio => {
+            if (radio.checked && radio.value === 'True') {
+                enabled = true;
+            }
+        });
+        input.disabled = !enabled;
+        if (!enabled) {
+            input.value = '';  // optionally clear input when disabled
         }
-      });
+    }
+
+    // Initial toggle on page load
+    toggleInput(isSpedRadios, spedDetailsInput);
+    toggleInput(isWorkingRadios, workingDetailsInput);
+
+    // Add event listeners
+    isSpedRadios.forEach(radio => {
+        radio.addEventListener('change', () => toggleInput(isSpedRadios, spedDetailsInput));
     });
-  }
 
-  // SPED section
-  setupRadioControl("is_sped", "sped_details");
+    isWorkingRadios.forEach(radio => {
+        radio.addEventListener('change', () => toggleInput(isWorkingRadios, workingDetailsInput));
+    });
+});
 
-  // Working Student section
-  setupRadioControl("is_working_student", "working_details");
+
 });

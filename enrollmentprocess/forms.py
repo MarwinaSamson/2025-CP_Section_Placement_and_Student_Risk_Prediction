@@ -32,11 +32,23 @@ class StudentForm(forms.ModelForm):
         required=True,
         label="Does the student need a Special Education Program?"
     )
+    # sped_details = forms.CharField(
+    #     max_length=255,
+    #     required=False,
+    #     widget=forms.TextInput(attrs={'class': 'fill-in-box', 'placeholder': 'Please specify...', 'disabled': 'disabled'})
+    # )
+    
     sped_details = forms.CharField(
-        max_length=255,
-        required=False,
-        widget=forms.TextInput(attrs={'class': 'fill-in-box', 'placeholder': 'Please specify...', 'disabled': 'disabled'})
-    )
+    max_length=255,
+    required=False,
+    widget=forms.TextInput(attrs={
+        'class': 'fill-in-box',
+        'placeholder': 'Please specify...',
+        'disabled': 'disabled',
+        'id': 'spedDetailsInput',
+    })
+)
+
 
     is_working_student = forms.ChoiceField(
         choices=[('True', 'YES'), ('False', 'NO')],
@@ -44,11 +56,22 @@ class StudentForm(forms.ModelForm):
         required=True,
         label="Is the student a Working Student?"
     )
+    # working_details = forms.CharField(
+    #     max_length=255,
+    #     required=False,
+    #     widget=forms.TextInput(attrs={'class': 'fill-in-box', 'placeholder': 'Please specify...', 'disabled': 'disabled'})
+    # )
     working_details = forms.CharField(
-        max_length=255,
-        required=False,
-        widget=forms.TextInput(attrs={'class': 'fill-in-box', 'placeholder': 'Please specify...', 'disabled': 'disabled'})
-    )
+    max_length=255,
+    required=False,
+    widget=forms.TextInput(attrs={
+        'class': 'fill-in-box',
+        'placeholder': 'Please specify...',
+        'disabled': 'disabled',
+        'id': 'workingDetailsInput',
+    })
+)
+
 
     class Meta:
         model = Student
