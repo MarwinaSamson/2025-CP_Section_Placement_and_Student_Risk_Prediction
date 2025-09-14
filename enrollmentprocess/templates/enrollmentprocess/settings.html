@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - ZNHS West</title>
+    <link rel="stylesheet" href="../css/admin.css">
+    <link rel="stylesheet" href="../css/settings.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <img src="../assets/westLogo.png" alt="ZNHS West Logo" class="sidebar-logo">
+                    <span class="sidebar-title">ZNHS WEST</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="nav-item ">
+                        <a href="admin.html" class="nav-link">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item ">
+                        <a href="sections.html" class="nav-link">
+                            <i class="fas fa-users"></i>
+                            <span>Sections</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="teachers.html" class="nav-link">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                            <span>Teachers</span>
+                        </a>
+                    </li>
+                    <li class="nav-item active">
+                        <a href="settings.html" class="nav-link">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="sidebar-footer">
+                <!-- Logout as link with onclick handler -->
+                <a href="#" class="logout-btn" onclick="handleLogout(); return false;">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="dashboard-header">
+                <div class="header-left">
+                    <h1>Settings</h1>
+                    <p>Manage system settings and configurations</p>
+                </div>
+                <div class="header-right">
+                    <div class="admin-profile">
+                        <span>Samson, Marwina D.</span>
+                        <span class="admin-role">Admin</span>
+                        <img src="../assets/spongebob.jpg" alt="Admin" class="profile-img">
+                    </div>
+                </div>
+            </header>
+
+            <!-- Settings Navigation Tabs -->
+            <div class="settings-tabs">
+                <button class="tab-btn active" data-tab="account">Account Management</button>
+                <button class="tab-btn" data-tab="content">Content Management</button>
+                <button class="tab-btn" data-tab="history">History Logs</button>
+            </div>
+
+            <!-- Account Management Section -->
+            <section id="account-tab" class="tab-content active">
+                <div class="section-header">
+                    <h2>All Users</h2>
+                    <div class="section-controls">
+                        <div class="search-container">
+                            <i class="fas fa-search"></i>
+                            <input type="text" placeholder="Search users..." id="userSearch">
+                        </div>
+                        <button class="filter-btn"><i class="fas fa-filter"></i> Filter</button>
+                        <button class="add-btn" onclick="openAddUserModal()"><i class="fas fa-plus"></i> Add New
+                            User</button>
+                    </div>
+                </div>
+
+                <div class="users-table-container">
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th>User Name</th>
+                                <th>Access</th>
+                                <th>Last Active</th>
+                                <th>Date Added</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <tr>
+                                <td>
+                                    <div class="user-info">
+                                        <img src="..//assets/kakashi.webp" alt="User" class="user-avatar">
+                                        <div>
+                                            <div class="user-name">Kakashi Hatake</div>
+                                            <div class="user-email">kakashi@znhswest.edu.ph</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="access-badge admin">Admin</span>
+                                    <span class="access-badge staff">Staff Expert</span>
+                                    <span class="access-badge adviser">Adviser</span>
+                                </td>
+                                <td>August 22, 2025</td>
+                                <td>August 22, 2024</td>
+                                <td>
+                                    <div class="actions-dropdown">
+                                        <button class="actions-btn" onclick="toggleDropdown(this)">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <div class="dropdown-menu">
+                                            <a href="#" onclick="viewProfile('kakashi')"><i class="fas fa-eye"></i> View
+                                                Profile</a>
+                                            <a href="#" onclick="editDetails('kakashi')"><i class="fas fa-edit"></i>
+                                                Edit Details</a>
+                                            <a href="#" onclick="changePermission('kakashi')"><i
+                                                    class="fas fa-user-cog"></i> Change Permission</a>
+                                            <a href="#" onclick="deleteUser('kakashi')" class="delete-action"><i
+                                                    class="fas fa-trash"></i> Delete User</a>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <!-- More user rows would be dynamically generated -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Content Management Section -->
+            <section id="content-tab" class="tab-content">
+                <div class="content-tabs">
+                    <button class="content-tab-btn active" data-content="header">Header</button>
+                    <button class="content-tab-btn" data-content="announcement">Announcement</button>
+                    <button class="content-tab-btn" data-content="services">Services</button>
+                    <button class="content-tab-btn" data-content="contact">Contact US</button>
+                    <button class="content-tab-btn" data-content="members">Members/Staff</button>
+                    <button class="content-tab-btn" data-content="footer">Footer</button>
+                </div>
+
+                <!-- Header Content -->
+                <div id="header-content" class="content-section active">
+                    <div class="content-header">
+                        <h3>HEADER</h3>
+                        <button class="add-new-btn"><i class="fas fa-plus"></i> Add New Logo</button>
+                    </div>
+                    <div class="logo-grid">
+                        <div class="logo-upload-card">
+                            <h4>School Logo</h4>
+                            <div class="upload-area">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Upload Photo</p>
+                                <input type="file" accept="image/*">
+                            </div>
+                        </div>
+                        <div class="logo-upload-card">
+                            <h4>Region IX Logo</h4>
+                            <div class="upload-area">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Upload Photo</p>
+                                <input type="file" accept="image/*">
+                            </div>
+                        </div>
+                        <div class="logo-upload-card">
+                            <h4>Zamboanga Peninsula</h4>
+                            <div class="upload-area">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Upload Photo</p>
+                                <input type="file" accept="image/*">
+                            </div>
+                        </div>
+                        <div class="logo-upload-card">
+                            <h4>Matatag Logo</h4>
+                            <div class="upload-area">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Upload Photo</p>
+                                <input type="file" accept="image/*">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="caption-editor">
+                        <h4>CAPTION</h4>
+                        <div class="text-editor">
+                            <div class="editor-toolbar">
+                                <button><i class="fas fa-bold"></i></button>
+                                <button><i class="fas fa-italic"></i></button>
+                                <button><i class="fas fa-underline"></i></button>
+                                <button><i class="fas fa-list-ul"></i></button>
+                                <button><i class="fas fa-list-ol"></i></button>
+                                <button><i class="fas fa-link"></i></button>
+                            </div>
+                            <div class="editor-content" contenteditable="true">
+                                <h2>Making The World a Better Place</h2>
+                                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quis ipsum turpis nibh
+                                    parturient donec. Ultrices porttitor nullam quis et in. Vitae quis tortor a odio
+                                    tincidunt.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Announcement Content -->
+                <div id="announcement-content" class="content-section">
+                    <div class="content-header">
+                        <h3>CONTENT</h3>
+                        <button class="add-new-btn"><i class="fas fa-plus"></i> Add Another Announcement</button>
+                    </div>
+                    <div class="upload-section">
+                        <h4>School Announcements</h4>
+                        <div class="upload-area large">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Upload Photo</p>
+                            <input type="file" accept="image/*">
+                        </div>
+                    </div>
+                    <div class="caption-editor">
+                        <h4>CAPTION</h4>
+                        <div class="text-editor">
+                            <div class="editor-toolbar">
+                                <button><i class="fas fa-bold"></i></button>
+                                <button><i class="fas fa-italic"></i></button>
+                                <button><i class="fas fa-underline"></i></button>
+                                <button><i class="fas fa-list-ul"></i></button>
+                                <button><i class="fas fa-list-ol"></i></button>
+                                <button><i class="fas fa-link"></i></button>
+                            </div>
+                            <div class="editor-content" contenteditable="true">
+                                <h2>Making The World a Better Place</h2>
+                                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quis ipsum turpis nibh
+                                    parturient donec. Ultrices porttitor nullam quis et in. Vitae quis tortor a odio
+                                    tincidunt.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact US Content -->
+                <div id="contact-content" class="content-section">
+                    <div class="content-header">
+                        <h3>CONTACT US</h3>
+                        <button class="add-new-btn"><i class="fas fa-plus"></i> Add Contact Info</button>
+                    </div>
+                    <div class="contact-form-editor">
+                        <div class="form-group">
+                            <label>School Address</label>
+                            <input type="text" value="R.T. Lim Boulevard Zamboanga City, Philippines"
+                                class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input type="text" value="+63 61 0086516" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Email Address</label>
+                            <input type="email" value="nationalhighschoolwest@gmail.com" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Facebook Page</label>
+                            <input type="url" value="https://web.facebook.com/znhs.west" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Operating Hours</label>
+                            <textarea class="form-control" rows="3">Monday to Friday: 7:00 AM - 5:00 PM
+                Saturday: 7:00 AM - 5:00 PM
+                Sunday: Closed</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Members/Staff Content -->
+                <div id="members-content" class="content-section">
+                    <div class="content-header">
+                        <h3>MEMBERS/STAFF</h3>
+                        <button class="add-new-btn"><i class="fas fa-plus"></i> Add Staff Member</button>
+                    </div>
+                    <div class="staff-grid">
+                        <div class="staff-card">
+                            <div class="staff-photo">
+                                <div class="upload-area">
+                                    <i class="fas fa-user"></i>
+                                    <p>Upload Photo</p>
+                                    <input type="file" accept="image/*">
+                                </div>
+                            </div>
+                            <div class="staff-info">
+                                <input type="text" placeholder="Staff Name" value="HON. SONY ANGARA"
+                                    class="form-control">
+                                <input type="text" placeholder="Position" value="DepEd Secretary" class="form-control">
+                            </div>
+                        </div>
+                        <div class="staff-card">
+                            <div class="staff-photo">
+                                <div class="upload-area">
+                                    <i class="fas fa-user"></i>
+                                    <p>Upload Photo</p>
+                                    <input type="file" accept="image/*">
+                                </div>
+                            </div>
+                            <div class="staff-info">
+                                <input type="text" placeholder="Staff Name" value="HON. SONY ANGARA"
+                                    class="form-control">
+                                <input type="text" placeholder="Position" value="DepEd Secretary" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Content -->
+                <div id="footer-content" class="content-section">
+                    <div class="content-header">
+                        <h3>FOOTER</h3>
+                        <button class="add-new-btn"><i class="fas fa-plus"></i> Update Footer</button>
+                    </div>
+                    <div class="footer-editor">
+                        <div class="form-group">
+                            <label>Copyright Text</label>
+                            <input type="text"
+                                value="Copyright © Zamboanga National Highschool West, All Rights Reserved."
+                                class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Additional Links</label>
+                            <div class="link-editor">
+                                <input type="text" placeholder="Link Text" value="Privacy Policy" class="form-control">
+                                <input type="url" placeholder="Link URL" value="#" class="form-control">
+                            </div>
+                            <div class="link-editor">
+                                <input type="text" placeholder="Link Text" value="Terms of Service"
+                                    class="form-control">
+                                <input type="url" placeholder="Link URL" value="#" class="form-control">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Social Media Links</label>
+                            <div class="social-links">
+                                <input type="url" placeholder="Facebook URL" value="https://web.facebook.com/znhs.west"
+                                    class="form-control">
+                                <input type="url" placeholder="Twitter URL" class="form-control">
+                                <input type="url" placeholder="Instagram URL" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- History Logs Section -->
+            <section id="history-tab" class="tab-content">
+                <div class="section-header">
+                    <h2>All Users</h2>
+                    <div class="section-controls">
+                        <div class="search-container">
+                            <i class="fas fa-search"></i>
+                            <input type="text" placeholder="Search activity..." id="historySearch">
+                        </div>
+                        <button class="filter-btn"><i class="fas fa-filter"></i> Filter</button>
+                    </div>
+                </div>
+
+                <div class="history-table-container">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>User Name</th>
+                                <th>Activity</th>
+                                <th>Date <i class="fas fa-sort"></i></th>
+                                <th>Time <i class="fas fa-sort"></i></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="user-info">
+                                        <img src="..//assets/kakashi.webp" alt="User" class="user-avatar small">
+                                        <div>
+                                            <div class="user-name">Kakashi Hatake</div>
+                                            <div class="user-role">System Administrator</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>Created a New User Account</td>
+                                <td>August 22, 2025</td>
+                                <td>10:29 am</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="user-info">
+                                        <img src="..//assets/sakamaru.webp" alt="User" class="user-avatar small">
+                                        <div>
+                                            <div class="user-name">Sakamaru Nara</div>
+                                            <div class="user-role">Subject Teacher</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>Update Student profile</td>
+                                <td>August 22, 2025</td>
+                                <td>10:29 am</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Add User Modal -->
+    <div class="modal" id="addUserModal">
+        <div class="modal-content">
+            <h2>Add New User</h2>
+            <span class="close-modal">&times;</span>
+
+            <form id="addUserForm">
+                <div class="form-group">
+                    <label for="firstName">First Name *</label>
+                    <input type="text" id="firstName" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="lastName">Last Name *</label>
+                    <input type="text" id="lastName" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address *</label>
+                    <input type="email" id="email" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="employeeId">Employee ID</label>
+                    <input type="text" id="employeeId" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label for="position">Position *</label>
+                    <select id="position" class="form-control" required>
+                        <option value="">Select Position</option>
+                        <option value="Administrator">Administrator</option>
+                        <option value="Subject Teacher">Subject Teacher</option>
+                        <option value="Class Adviser">Class Adviser</option>
+                        <option value="Staff">Staff</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="department">Department</label>
+                    <select id="department" class="form-control">
+                        <option value="">Select Department</option>
+                        <option value="STE">STE</option>
+                        <option value="SPFL">SPFL</option>
+                        <option value="SPTVE">SPTVE</option>
+                        <option value="Regular">Regular</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Access Permissions *</label>
+                    <div class="checkbox-group">
+                        <label for="adminAccess">Administrator Access</label>
+                        <input type="checkbox" id="adminAccess" name="permissions">
+
+                        <label for="staffExpertAccess">Staff Expert Access</label>
+                        <input type="checkbox" id="staffExpertAccess" name="permissions">
+
+                        <label for="adviserAccess">Adviser Access</label>
+                        <input type="checkbox" id="adviserAccess" name="permissions">
+
+                        <label for="teacherAccess">Teacher Access</label>
+                        <input type="checkbox" id="teacherAccess" name="permissions">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="userImage">User Image (Optional)</label>
+                    <input type="file" id="userImage" class="form-control" accept="image/*">
+                </div>
+
+                <div class="form-group">
+                    <label for="tempPassword">Temporary Password *</label>
+                    <input type="password" id="tempPassword" class="form-control" required>
+                    <small>User will be required to change this on first login</small>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn cancel-btn">Cancel</button>
+                    <button type="submit" class="btn add-btn">Add User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- User Profile Modal -->
+    <div id="userProfileModal" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3>Teacher Profile</h3>
+                <button class="close-btn" onclick="closeUserProfileModal()">&times;</button>
+            </div>
+            <div class="profile-content">
+                <div class="profile-section teacher-data">
+                    <h4>Teacher Data</h4>
+                    <div class="profile-info">
+                        <div class="profile-photo">
+                            <img src="../assets/kakashi.webp" alt="Teacher Photo">
+                        </div>
+                        <div class="profile-details">
+                            <div class="detail-row">
+                                <span class="label">Employee ID:</span>
+                                <span class="value">123456789</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Last Name:</span>
+                                <span class="value">Hatake</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">First Name:</span>
+                                <span class="value">Kakashi</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Middle Name:</span>
+                                <span class="value">Sensei</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Position:</span>
+                                <span class="value">Teacher - I</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Department:</span>
+                                <span class="value">STE</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Date of Birth:</span>
+                                <span class="value">June 01, 2000</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Age:</span>
+                                <span class="value">25</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-section contact-data">
+                    <h4>Contact Data</h4>
+                    <div class="contact-info">
+                        <div class="detail-row">
+                            <span class="label">Email:</span>
+                            <span class="value">kakashi@znhswest.edu.ph</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Phone:</span>
+                            <span class="value">+63 912 345 6789</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Address:</span>
+                            <span class="value">Leaf Village</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-section teaching-load">
+                    <h4>Teaching Load (Handled Classes)</h4>
+                    <table class="teaching-table">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Grade & Section</th>
+                                <th>Number of Students</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Physics</td>
+                                <td>Grade 9 - St. Anne</td>
+                                <td>45</td>
+                            </tr>
+                            <tr>
+                                <td>Science</td>
+                                <td>Grade 9 - St. John</td>
+                                <td>50</td>
+                            </tr>
+                            <tr>
+                                <td>Science</td>
+                                <td>Grade 9 - St. John</td>
+                                <td>50</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="profile-section change-history">
+                    <h4>Change History</h4>
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Actions</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Record Created</td>
+                                <td>07/08/2025</td>
+                                <td>9:30 am</td>
+                            </tr>
+                            <tr>
+                                <td>Updated Profile</td>
+                                <td>07/08/2025</td>
+                                <td>9:30 am</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/settings.js"></script>
+</body>
+
+</html>
