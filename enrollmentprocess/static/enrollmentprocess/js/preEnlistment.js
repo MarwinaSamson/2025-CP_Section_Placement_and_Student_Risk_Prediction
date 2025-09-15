@@ -133,24 +133,22 @@ document.addEventListener("DOMContentLoaded", () => {
     console.warn("Photo upload input NOT found!");
   }
 
-  /*** 4Ps CHECKBOX LOGIC (NO MANUAL ID NEEDED) ***/
+  /*** 4Ps CHECKBOX LOGIC ***/
   const checkboxes = document.querySelectorAll(".checkbox-options input[type='checkbox']");
   let fourPsCheckbox = null;
 
   checkboxes.forEach((checkbox) => {
     const labelText = checkbox.parentElement.textContent.trim().toLowerCase();
     if (labelText.includes("4 ps member")) {
-      fourPsCheckbox = checkbox; // Found the 4Ps checkbox
+      fourPsCheckbox = checkbox;
     }
   });
 
   if (fourPsCheckbox) {
     console.log("4Ps checkbox detected:", fourPsCheckbox);
 
-    // Select all other checkboxes except 4Ps
     const otherCheckboxes = Array.from(checkboxes).filter(cb => cb !== fourPsCheckbox);
 
-    // Behavior when 4Ps is toggled
     fourPsCheckbox.addEventListener("change", () => {
       if (fourPsCheckbox.checked) {
         otherCheckboxes.forEach(cb => cb.disabled = false);
@@ -162,7 +160,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // Allow only one non-4Ps checkbox to be selected at a time
     otherCheckboxes.forEach(checkbox => {
       checkbox.addEventListener("change", () => {
         if (checkbox.checked) {
@@ -178,40 +175,43 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Get radio buttons and inputs
-    const isSpedRadios = document.querySelectorAll('input[name="{{ form.is_sped.name }}"]');
-    const spedDetailsInput = document.getElementById('spedDetailsInput');
+  /*** PWD & WORKING STUDENT LOGIC ***/
+const spedDetails = document.getElementById("id_sped_details");
+const workingDetails = document.getElementById("id_working_details");
 
-    const isWorkingRadios = document.querySelectorAll('input[name="{{ form.is_working_student.name }}"]');
-    const workingDetailsInput = document.getElementById('workingDetailsInput');
+if (spedDetails) spedDetails.disabled = true;
+if (workingDetails) workingDetails.disabled = true;
 
-    function toggleInput(radios, input) {
-        let enabled = false;
-        radios.forEach(radio => {
-            if (radio.checked && radio.value === 'True') {
-                enabled = true;
-            }
-        });
-        input.disabled = !enabled;
-        if (!enabled) {
-            input.value = '';  // optionally clear input when disabled
+function handleRadioToggle(radioName, inputField) {
+  const radios = document.querySelectorAll(`input[name="${radioName}"]`);
+  radios.forEach(radio => {
+    radio.addEventListener("change", function () {
+      if (this.value === "1") {  // Changed from "True" or "yes" to "1"
+        inputField.disabled = false;
+        inputField.focus(); // 🔥 auto-highlight when enabled
+      } else {
+        inputField.disabled = true;
+        inputField.value = ""; // clear if disabled
+      }
+    });
+  });
+}
+
+if (spedDetails) {
+  handleRadioToggle("is_sped", spedDetails);
+}
+
+if (workingDetails) {
+  handleRadioToggle("is_working_student", workingDetails);
+}
+
+const lrnInput = document.getElementById("id_lrn");
+        if (lrnInput) {
+            lrnInput.setAttribute("maxlength", "12");
+            lrnInput.setAttribute("pattern", "\\d{12}");
+            lrnInput.setAttribute("title", "LRN must be exactly 12 digits.");
         }
-    }
 
-    // Initial toggle on page load
-    toggleInput(isSpedRadios, spedDetailsInput);
-    toggleInput(isWorkingRadios, workingDetailsInput);
-
-    // Add event listeners
-    isSpedRadios.forEach(radio => {
-        radio.addEventListener('change', () => toggleInput(isSpedRadios, spedDetailsInput));
-    });
-
-    isWorkingRadios.forEach(radio => {
-        radio.addEventListener('change', () => toggleInput(isWorkingRadios, workingDetailsInput));
-    });
-});
+}); // ✅ closes only once
 
 
-});

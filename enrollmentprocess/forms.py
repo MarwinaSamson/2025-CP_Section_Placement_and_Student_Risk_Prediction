@@ -27,7 +27,7 @@ class StudentForm(forms.ModelForm):
 
     # Custom fields for 'is_sped' and 'is_working_student' to handle radio buttons and text input
     is_sped = forms.ChoiceField(
-        choices=[('True', 'YES'), ('False', 'NO')],
+        choices=[('1', 'YES'), ('0', 'NO')],
         widget=forms.RadioSelect,
         required=True,
         label="Does the student need a Special Education Program?"
@@ -45,13 +45,14 @@ class StudentForm(forms.ModelForm):
         'class': 'fill-in-box',
         'placeholder': 'Please specify...',
         'disabled': 'disabled',
-        'id': 'spedDetailsInput',
+        'id': 'id_sped_details',
+
     })
 )
 
 
     is_working_student = forms.ChoiceField(
-        choices=[('True', 'YES'), ('False', 'NO')],
+        choices=[('1', 'YES'), ('0', 'NO')],
         widget=forms.RadioSelect,
         required=True,
         label="Is the student a Working Student?"
@@ -68,7 +69,7 @@ class StudentForm(forms.ModelForm):
         'class': 'fill-in-box',
         'placeholder': 'Please specify...',
         'disabled': 'disabled',
-        'id': 'workingDetailsInput',
+        'id': 'id_working_details',
     })
 )
 
@@ -104,6 +105,19 @@ class StudentForm(forms.ModelForm):
     def clean_enrolling_as(self):
         # Convert list of choices to a comma-separated string
         return ",".join(self.cleaned_data.get('enrolling_as', []))
+    
+    def clean_lrn(self):
+        lrn = self.cleaned_data.get('lrn')
+
+        # Ensure it's only digits
+        if not lrn.isdigit():
+            raise forms.ValidationError("LRN must contain numbers only.")
+
+        # Ensure exactly 12 digits
+        if len(lrn) != 12:
+            raise forms.ValidationError("LRN must be exactly 12 digits long.")
+
+        return lrn
 
     def clean(self):
         cleaned_data = super().clean()
@@ -113,8 +127,8 @@ class StudentForm(forms.ModelForm):
         working_details = cleaned_data.get('working_details')
 
         # Convert 'is_sped' and 'is_working_student' to boolean
-        cleaned_data['is_sped'] = (is_sped == 'True')
-        cleaned_data['is_working_student'] = (is_working_student == 'True')
+        cleaned_data['is_sped'] = (is_sped == '1')
+        cleaned_data['is_working_student'] = (is_working_student == '1')
 
         if cleaned_data['is_sped'] and not sped_details:
             self.add_error('sped_details', "Please specify details for Special Education Program.")

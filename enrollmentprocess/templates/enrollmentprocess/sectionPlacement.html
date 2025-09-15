@@ -326,6 +326,17 @@
         // to handle modal display and card clicks.
     </script>
     <script src="{% static 'enrollmentprocess/js/sectionPlacement.js' %}"></script>
+
+    {% if show_success_modal %}
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const successModal = document.getElementById("successModal");
+    if (successModal) {
+      successModal.style.display = "block";
+    }
+  });
+</script>
+{% endif %}
 </body>
 
 </html>

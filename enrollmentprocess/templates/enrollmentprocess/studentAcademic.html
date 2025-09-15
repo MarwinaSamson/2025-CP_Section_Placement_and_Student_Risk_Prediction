@@ -366,11 +366,34 @@
             </div>
 
             <div class="form-section">
-                <h3>Other Details</h3>
+    <h3>Other Details</h3>
 
-                {# is_working_student and work_type are now populated from Student model, not directly input here #}
-                {# is_pwd and disability_type are now populated from Student model, not directly input here #}
+    <!-- Working Student -->
+<div class="form-group">
+    <label for="workingStudent">Is the Student a Working Student?</label>
+    <input type="text" id="workingStudent" value="{{ is_working_student }}" readonly class="form-control">
+</div>
 
+<div class="form-group">
+    <label for="workingDetails">If YES, what type of work?</label>
+    <input type="text" id="workingDetails" value="{{ working_details }}" readonly class="form-control">
+</div>
+
+<!-- PWD -->
+<div class="form-group">
+    <label for="pwd">Is the Student a PWD?</label>
+    <input type="text" id="pwd" value="{{ is_pwd }}" readonly class="form-control">
+</div>
+
+<div class="form-group">
+    <label for="disabilityType">If YES, please specify the disability type:</label>
+    <input type="text" id="disabilityType" value="{{ disability_type }}" readonly class="form-control">
+</div>
+
+
+    
+</div>
+                
                 <div class="form-group checkbox-group">
                     <label class="checkbox-container">
                         {{ form.agreed_to_terms }}

@@ -150,3 +150,26 @@ class StudentAcademic(models.Model):
     class Meta:
         verbose_name_plural = "Student Academic Data"
 
+
+class SectionPlacement(models.Model):
+    PROGRAM_CHOICES = [
+        ('STE', 'Science Technology and Engineering'),
+        ('SPFL', 'Special Program in Foreign Language'),
+        ('SPTVL', 'Special Program in Technical Vocational Livelihood'),
+        ('TOP5', 'Top 5 Sections'),
+    ]
+
+    student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name='section_placements')
+    selected_program = models.CharField(max_length=10, choices=PROGRAM_CHOICES, verbose_name="Selected Program/Section")
+    placement_date = models.DateTimeField(auto_now_add=True, verbose_name="Placement Date")
+    # eligibility_snapshot = models.JSONField(blank=True, null=True, verbose_name="Eligibility Data Snapshot")
+    # notes = models.TextField(blank=True, null=True, verbose_name="Additional Notes")
+
+    class Meta:
+        verbose_name = "Section Placement"
+        verbose_name_plural = "Section Placements"
+        ordering = ['-placement_date']
+        unique_together = ('student', 'selected_program')  # Optional: prevent duplicate placements for same program
+
+    def __str__(self):
+        return f"{self.student} - {self.get_selected_program_display()} ({self.placement_date.strftime('%Y-%m-%d')})"

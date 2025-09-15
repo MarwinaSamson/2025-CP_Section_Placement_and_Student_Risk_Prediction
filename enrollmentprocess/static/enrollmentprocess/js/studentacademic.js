@@ -117,3 +117,45 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    const workingStudentSelect = document.getElementById('workingStudent');
+    const workTypeGroup = document.getElementById('workTypeGroup');
+    const workTypeSelect = document.getElementById('workType');
+
+    const disabilitySelect = document.getElementById('disability');
+    const disabilityTypeGroup = document.getElementById('disabilityTypeGroup');
+    const disabilityTypeSelect = document.getElementById('disabilityType');
+
+    function toggleWorkType() {
+        if (workingStudentSelect.value === 'yes') {
+            workTypeGroup.style.display = 'block';
+            workTypeSelect.disabled = false;
+        } else {
+            workTypeGroup.style.display = 'none';
+            workTypeSelect.disabled = true;
+            workTypeSelect.value = '';
+        }
+    }
+
+    function toggleDisabilityType() {
+        if (disabilitySelect.value === 'yes') {
+            disabilityTypeGroup.style.display = 'block';
+            disabilityTypeSelect.disabled = false;
+        } else {
+            disabilityTypeGroup.style.display = 'none';
+            disabilityTypeSelect.disabled = true;
+            disabilityTypeSelect.value = '';
+        }
+    }
+
+    // Initial toggle on page load
+    toggleWorkType();
+    toggleDisabilityType();
+
+    // Add event listeners
+    workingStudentSelect.addEventListener('change', toggleWorkType);
+    disabilitySelect.addEventListener('change', toggleDisabilityType);
+});
+
