@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sections Management - ZNHS West</title>
+    <link rel="stylesheet" href="../css/sections.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <img src="../assets/westLogo.png" alt="ZNHS West Logo" class="sidebar-logo">
+                    <span class="sidebar-title">ZNHS WEST</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="nav-item ">
+                        <a href="admin.html" class="nav-link">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item active">
+                        <a href="sections.html" class="nav-link">
+                            <i class="fas fa-users"></i>
+                            <span>Sections</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="teachers.html" class="nav-link">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                            <span>Teachers</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="settings.html" class="nav-link">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="sidebar-footer">
+                <!-- Logout as link with onclick handler -->
+                <a href="#" class="logout-btn" onclick="handleLogout(); return false;">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="sections-header">
+                <div class="header-left">
+                    <h1>List of Programs and Sections</h1>
+                    <div class="grade-selector">
+                        <label for="gradeLevel">Grade Level:</label>
+                        <select id="gradeLevel" class="grade-dropdown">
+                            <option value="7">Grade 7</option>
+                            <option value="8">Grade 8</option>
+                            <option value="9">Grade 9</option>
+                            <option value="10">Grade 10</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="header-right">
+                    <div class="search-container">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search sections..." class="search-input">
+                    </div>
+
+                    <button class="add-section-btn" onclick="openAddSectionModal()">
+                        <i class="fas fa-plus"></i>
+                        Add Section
+                    </button>
+
+                    <div class="admin-profile">
+                        <div class="profile-info">
+                            <span class="admin-name">Samson, Marwina D.</span>
+                            <span class="admin-role">Admin</span>
+                        </div>
+                        <div class="profile-avatar">
+                            <img src="..//assets/spongebob.jpg" alt="Admin" class="avatar-img">
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Program Tabs -->
+            <section class="program-tabs">
+                <div class="tabs-container">
+                    <button class="tab-btn active" data-program="STE">STE</button>
+                    <button class="tab-btn" data-program="SPFL">SPFL</button>
+                    <button class="tab-btn" data-program="SPTVE">SPTVE</button>
+                    <button class="tab-btn" data-program="OHSP">OHSP</button>
+                    <button class="tab-btn" data-program="SNED">SNED</button>
+                    <button class="tab-btn" data-program="TOP5">TOP 5</button>
+                    <button class="tab-btn" data-program="REGULAR">REGULAR</button>
+                </div>
+            </section>
+
+
+            <section class="sections-grid" id="sectionsGrid">
+                <!-- Section cards will be dynamically loaded here -->
+            </section>
+        </main>
+    </div>
+
+
+    <div id="addSectionModal" class="modal">
+        <div class="modal-content">
+            <h2>ADD SECTION</h2>
+            <form id="addSectionForm">
+                <div class="form-group">
+                    <label for="sectionName">Section Name:</label>
+                    <input type="text" id="sectionName" name="sectionName" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="adviserName">Adviser Name:</label>
+                    <select id="adviserName" name="adviserName" required>
+                        <option value="">Select Adviser</option>
+                        <option value="Pain">Pain</option>
+                        <option value="Chrollo">Chrollo</option>
+                        <option value="Itachi">Itachi</option>
+                        <option value="Madara">Madara</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Location:</label>
+                    <div class="location-inputs">
+                        <div class="location-field">
+                            <label for="buildingNumber">Building Number:</label>
+                            <select id="buildingNumber" name="buildingNumber" required>
+                                <option value="">Select Building</option>
+                                <option value="1">Building 1</option>
+                                <option value="2">Building 2</option>
+                                <option value="3">Building 3</option>
+                            </select>
+                        </div>
+                        <div class="location-field">
+                            <label for="roomNumber">Room Number:</label>
+                            <select id="roomNumber" name="roomNumber" required>
+                                <option value="">Select Room</option>
+                                <option value="101">Room 101</option>
+                                <option value="102">Room 102</option>
+                                <option value="103">Room 103</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="button" class="btn-back" onclick="closeAddSectionModal()">BACK</button>
+                    <button type="submit" class="btn-add">ADD</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Subject Teacher Modal -->
+    <div id="addSubjectTeacherModal" class="modal">
+        <div class="modal-content subject-teacher-modal">
+            <h2>ADD SUBJECT TEACHER</h2>
+            <div class="section-info">
+                <span>Section: <span id="currentSection">Akatsuki</span> | Adviser: <span
+                        id="currentAdviser">Pain</span></span>
+            </div>
+
+            <div class="subjects-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Teacher's Name</th>
+                            <th>Day</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Mathematics</td>
+                            <td>
+                                <select name="mathTeacher">
+                                    <option value="Juan Dela Cruz" selected>Juan Dela Cruz</option>
+                                    <option value="Maria Santos">Maria Santos</option>
+                                </select>
+                            </td>
+                            <td>
+                                <select name="mathDay">
+                                    <option value="Daily" selected>Daily</option>
+                                    <option value="MWF">MWF</option>
+                                    <option value="TTH">TTH</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="time" name="mathTime" value="08:00">
+                                <span class="time-separator">-</span>
+                                <input type="time" name="mathTimeEnd" value="09:00">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>English</td>
+                            <td>
+                                <select name="englishTeacher">
+                                    <option value="">Select Teacher</option>
+                                    <option value="Juan Dela Cruz">Juan Dela Cruz</option>
+                                    <option value="Maria Santos">Maria Santos</option>
+                                </select>
+                            </td>
+                            <td>
+                                <select name="englishDay">
+                                    <option value="MWF" selected>MWF</option>
+                                    <option value="TTH">TTH</option>
+                                    <option value="Daily">Daily</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="time" name="englishTime">
+                                <span class="time-separator">-</span>
+                                <input type="time" name="englishTimeEnd">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Science</td>
+                            <td>
+                                <select name="scienceTeacher">
+                                    <option value="">Select Teacher</option>
+                                    <option value="Juan Dela Cruz">Juan Dela Cruz</option>
+                                    <option value="Maria Santos">Maria Santos</option>
+                                </select>
+                            </td>
+                            <td>
+                                <select name="scienceDay">
+                                    <option value="MWF" selected>MWF</option>
+                                    <option value="TTH">TTH</option>
+                                    <option value="Daily">Daily</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="time" name="scienceTime">
+                                <span class="time-separator">-</span>
+                                <input type="time" name="scienceTimeEnd">
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="modal-buttons">
+                <button type="button" class="btn-back" onclick="closeSubjectTeacherModal()">BACK</button>
+                <button type="button" class="btn-add" onclick="saveSubjectTeachers()">ADD</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Update Section Modal -->
+    <div id="updateSectionModal" class="modal">
+        <div class="modal-content">
+            <h2>UPDATE SECTION</h2>
+            <form id="updateSectionForm">
+                <div class="form-group">
+                    <label for="updateSectionName">Section Name:</label>
+                    <input type="text" id="updateSectionName" name="sectionName" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="updateAdviserName">Section Teacher:</label>
+                    <select id="updateAdviserName" name="adviserName" required>
+                        <option value="">Select Teacher</option>
+                        <option value="Pain">Pain</option>
+                        <option value="Chrollo">Chrollo</option>
+                        <option value="Itachi">Itachi</option>
+                        <option value="Madara">Madara</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="updateLocation">Location:</label>
+                    <input type="text" id="updateLocation" name="location" placeholder="e.g., Bldg 1 Room 101" required>
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="button" class="btn-back" onclick="closeUpdateSectionModal()">BACK</button>
+                    <button type="submit" class="btn-add">UPDATE</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/sections.js"></script>
+</body>
+
+</html>

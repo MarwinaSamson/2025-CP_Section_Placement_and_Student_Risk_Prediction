@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logout - ZNHS West</title>
+    <link rel="stylesheet" href="../css/logout.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+       
+    </style>
+</head>
+
+<body>
+    <div class="logout-container">
+        <img src="../assets/westLogo.png" alt="ZNHS West Logo" class="school-logo">
+
+        <div class="logout-icon">
+            <i class="fas fa-sign-out-alt"></i>
+        </div>
+
+        <h1 class="logout-title">Logout Successful</h1>
+        <p class="logout-message">You have been successfully logged out of the ZNHS West Admin Dashboard.</p>
+
+        <div class="logout-info">
+            <h3><i class="fas fa-info-circle"></i> Session Information</h3>
+            <p><strong>Admin:</strong> Samson, Marwina D.</p>
+            <p><strong>Last Login:</strong> <span id="currentDateTime"></span></p>
+            <p><strong>Session Duration:</strong> <span id="sessionDuration"></span></p>
+        </div>
+
+        <div class="action-buttons">
+            <a href="login.html" class="btn btn-primary">
+                <i class="fas fa-sign-in-alt"></i>
+                Login Again
+            </a>
+        </div>
+
+        <p class="footer-text">
+            Thank you for using ZNHS West Admin Dashboard<br>
+            <i class="fas fa-shield-alt"></i> Your session has been securely terminated
+        </p>
+    </div>
+</body>
+
+<script src="../js/logout.js"></script>
+
+</html>
