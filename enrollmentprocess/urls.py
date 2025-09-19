@@ -19,6 +19,7 @@ from .views import (
     StudentNonAcademicView,
     StudentAcademicView,
     SectionPlacementView,
+    login_view
 )
 from django.views.generic import TemplateView # For static login.html
 
@@ -30,6 +31,7 @@ urlpatterns = [
     path('academic-data/<int:student_id>/', StudentAcademicView.as_view(), name='student_academic'),
     path('section-placement/<int:student_id>/', SectionPlacementView.as_view(), name='section_placement'),
     path('login.html', TemplateView.as_view(template_name='login.html'), name='login'), # Static login page
+    path('login/', login_view, name='login'),
 ]
 
  

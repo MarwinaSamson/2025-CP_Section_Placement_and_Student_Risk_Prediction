@@ -1,127 +1,4 @@
-# from django.shortcuts import render, redirect, get_object_or_404
 
-# def homepage(request):
-#         return render(request, 'enrollmentprocess/index.html') 
-    
-# def student_data(request):
-#         return render(request, 'enrollmentprocess/studentData.html') 
-    
-# def family_data(request):
-#         return render(request, 'enrollmentprocess/familyData.html') 
-    
-# def student_non_academic(request):
-#         return render(request, 'enrollmentprocess/studentNonAcademic.html')
-
-# def student_academic(request):
-#         return render(request, 'enrollmentprocess/studentAcademic.html')
-    
-# def section_placement(request):
-#     return render(request, 'enrollmentprocess/sectionPlacement.html')
-
-# class SectionPlacementView(TemplateView):
-#     template_name = 'enrollmentprocess/sectionPlacement.html'
-
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         student = get_object_or_404(Student, pk=self.kwargs['student_id'])
-#         context['student'] = student
-#         context['is_pwd'] = student.is_sped
-#         context['is_working_student'] = student.is_working_student
-
-#         try:
-#             academic = student.studentacademic
-#         except StudentAcademic.DoesNotExist:
-#             context['error_message'] = "Academic data not found for this student."
-#             return context
-
-#         input_data = {
-#             'dost_exam_result': academic.dost_exam_result,  # raw string, e.g. 'passed'
-#             'filipino grade': academic.filipino,
-#             'English grade': academic.english,
-#             'mathematics grade': academic.mathematics,
-#             'science grade': academic.science,
-#             'araling panlipunan grade': academic.araling_panlipunan,
-#             'Edukasyon sa pagpapakatao grade': academic.edukasyon_pagpapakatao,
-#             'Edukasyong panglipunan at pangkabuhayan grade': academic.edukasyon_pangkabuhayan,
-#             'MAPEH grade': academic.mapeh,
-#             'Average grade': academic.overall_average,
-#         }
-
-#         recommendations = predict_program_eligibility(input_data)
-#         context['recommendations'] = recommendations
-
-#         return context
-
-#     def post(self, request, *args, **kwargs):
-#         student = get_object_or_404(Student, pk=self.kwargs['student_id'])
-#         selected_program = request.POST.get('selected_program')
-
-#         if selected_program:
-#             student.section_placement = selected_program
-#             student.save()
-#             return redirect(reverse('section_placement', kwargs={'student_id': student.pk}))
-
-#         context = self.get_context_data(**kwargs)
-#         context['error_message'] = "Please select a program/section."
-#         return self.render_to_response(context)
-
-
-
-# class SectionPlacementView(TemplateView):
-#     template_name = 'enrollmentprocess/sectionPlacement.html'
-
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         student = get_object_or_404(Student, pk=self.kwargs['student_id'])
-#         context['student'] = student
-#         context['is_pwd'] = student.is_sped
-#         context['is_working_student'] = student.is_working_student
-
-#         try:
-#             academic = student.studentacademic
-#         except StudentAcademic.DoesNotExist:
-#             context['error_message'] = "Academic data not found for this student."
-#             return context
-
-#         input_data = {
-#             'dost_exam_result': academic.dost_exam_result,
-#             'filipino grade': academic.filipino,
-#             'English grade': academic.english,
-#             'mathematics grade': academic.mathematics,
-#             'science grade': academic.science,
-#             'araling panlipunan grade': academic.araling_panlipunan,
-#             'Edukasyon sa pagpapakatao grade': academic.edukasyon_pagpapakatao,
-#             'Edukasyong panglipunan at pangkabuhayan grade': academic.edukasyon_pangkabuhayan,
-#             'MAPEH grade': academic.mapeh,
-#             'Average grade': academic.overall_average,
-#         }
-
-#         recommendations = predict_program_eligibility(input_data)
-#         context['recommendations'] = recommendations
-
-#         return context
-
-#     def post(self, request, *args, **kwargs):
-#         student = get_object_or_404(Student, pk=self.kwargs['student_id'])
-#         selected_program = request.POST.get('selected_program')
-
-#         if selected_program:
-#             # Save selected program in Student model (optional)
-#             student.section_placement = selected_program
-#             student.save()
-
-#             # Create SectionPlacement record if not exists
-#             SectionPlacement.objects.get_or_create(
-#                 student=student,
-#                 selected_program=selected_program,
-#             )
-
-#             return redirect(reverse('section_placement', kwargs={'student_id': student.pk}))
-
-#         context = self.get_context_data(**kwargs)
-#         context['error_message'] = "Please select a program/section."
-#         return self.render_to_response(context)
-    
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import CreateView, TemplateView, View
 from django.urls import reverse_lazy, reverse
@@ -133,7 +10,7 @@ from .model_utils import predict_program_eligibility
 
 
 class IndexView(TemplateView):
-    template_name = 'enrollmentprocess/index.html'
+    template_name = 'enrollmentprocess/landingpage.html'
 
 class StudentDataView(CreateView):
     model = Student
@@ -303,3 +180,6 @@ class SectionPlacementView(TemplateView):
         context['error_message'] = "Please select a program/section."
         return self.render_to_response(context)
 
+# LoginView can be added here if needed, or use Django's built-in auth views.
+def login_view(request):
+    return render(request, 'enrollmentprocess/login.html')  # Adjust path if your template is in a subfolder
