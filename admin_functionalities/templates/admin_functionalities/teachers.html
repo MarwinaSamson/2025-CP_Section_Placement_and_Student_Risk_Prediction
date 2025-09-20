@@ -4,8 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
     <title>Teachers List - ZNHS West</title>
-    <link rel="stylesheet" href="..//css/teachers.css">
+    <link rel="stylesheet" href="{% static 'admin_functionalities/css/teachers.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- Added libraries for PDF and Excel export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -26,26 +27,26 @@
 
             <nav class="sidebar-nav">
                 <ul>
-                    <li class="nav-item">
-                        <a href="admin.html" class="nav-link">
+                    <li class="nav-item ">
+                        <a href="{% url 'admin_functionalities:dashboard' %}" class="nav-link">
                             <i class="fas fa-tachometer-alt"></i>
                             <span>Dashboard</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="sections.html" class="nav-link">
+                        <a href="{% url 'admin_functionalities:sections' %}" class="nav-link">
                             <i class="fas fa-users"></i>
                             <span>Sections</span>
                         </a>
                     </li>
-                    <li class="nav-item active">
-                        <a href="teachers.html" class="nav-link">
+                    <li class="nav-item">
+                        <a href="{% url 'admin_functionalities:teachers' %}" class="nav-link">
                             <i class="fas fa-chalkboard-teacher"></i>
                             <span>Teachers</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="settings.html" class="nav-link">
+                        <a href="{% url 'admin_functionalities:settings' %}" class="nav-link">
                             <i class="fas fa-cog"></i>
                             <span>Settings</span>
                         </a>
@@ -330,7 +331,7 @@
         </div>
     </div>
 
-    <script src="../js/teachers.js"></script>
+    <script src="{% static 'admin_functionalities/js/teachers.js' %}"></script>
 </body>
 
 </html>

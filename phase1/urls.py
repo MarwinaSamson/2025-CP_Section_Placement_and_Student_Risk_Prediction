@@ -8,6 +8,8 @@ from django.conf.urls.static import static
 urlpatterns = [
         path("admin/", admin.site.urls),
         path("", include("enrollmentprocess.urls")), 
+        path("admin-functionalities/", include("admin_functionalities.urls")),
+        path("", include("django.contrib.auth.urls")),
     ]
     
 if settings.DEBUG:

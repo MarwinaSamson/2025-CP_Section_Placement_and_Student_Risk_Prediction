@@ -1,23 +1,19 @@
-// Dashboard functionality
 document.addEventListener("DOMContentLoaded", () => {
   // Update dashboard date
-  updateDashboardDate()
-
+  updateDashboardDate();
   // Handle dropdown changes
-  setupDropdownHandlers()
-
-  setupLogoutHandler()
-
-  const programRows = document.querySelectorAll(".program-row")
-
+  setupDropdownHandlers();
+  // Setup logout handler
+  setupLogoutHandler();
+  const programRows = document.querySelectorAll(".program-row");
   programRows.forEach((row) => {
     row.addEventListener("click", () => {
-      const program = row.getAttribute("data-program")
-      console.log("Clicking program row:", program)
-      window.location.href = `sections.html?program=${program}`
-    })
-  })
-})
+      const program = row.getAttribute("data-program");
+      console.log("Clicking program row:", program);
+      window.location.href = `sections.html?program=${program}`;
+    });
+  });
+});
 
 /**
  * Updates the dashboard date and school year display.
@@ -96,28 +92,24 @@ function showNotification(message, type) {
 }
 
 function setupLogoutHandler() {
-  const logoutBtn = document.querySelector(".logout-btn")
+  const logoutBtn = document.querySelector(".logout-btn");
   if (logoutBtn) {
     logoutBtn.addEventListener("click", (e) => {
-      e.preventDefault()
-      handleLogout()
-    })
+      e.preventDefault(); // Prevent default link navigation
+      // Clear session/local storage if you use it
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("username");
+      localStorage.removeItem("loginTime");
+      // Show logout notification
+      showNotification("Logging out...", "info");
+      // Redirect to logout URL after 1 second
+      setTimeout(() => {
+        window.location.href = logoutUrl; // Use the URL passed from Django template
+      }, 1000);
+    });
   }
 }
 
-function handleLogout() {
-  // Clear all session data
-  localStorage.removeItem("isLoggedIn")
-  localStorage.removeItem("username")
-  localStorage.removeItem("loginTime")
-
-  // Show notification and redirect
-  showNotification("Logging out...", "info")
-
-  setTimeout(() => {
-    window.location.href = "logout.html"
-  }, 1000)
-}
 
 // Sidebar navigation
 document.querySelectorAll(".nav-link").forEach((link) => {
