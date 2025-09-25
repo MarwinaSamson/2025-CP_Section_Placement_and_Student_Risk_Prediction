@@ -158,6 +158,14 @@ class SectionPlacement(models.Model):
         ('SPTVL', 'Special Program in Technical Vocational Livelihood'),
         ('TOP5', 'Top 5 Sections'),
     ]
+    
+    STATUS_CHOICES = [
+    ('pending', 'Pending'),
+    ('approved', 'Approved'),
+    ('rejected', 'Rejected'),
+]
+    status = models.CharField(max_length=20, default='pending', choices=STATUS_CHOICES)
+
 
     student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name='section_placements')
     selected_program = models.CharField(max_length=10, choices=PROGRAM_CHOICES, verbose_name="Selected Program/Section")

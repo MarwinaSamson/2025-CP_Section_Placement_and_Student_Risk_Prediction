@@ -1,5 +1,5 @@
 from django import forms
-from .models import Student, Family, StudentNonAcademic, StudentAcademic
+from .models import Student, Family, StudentNonAcademic, StudentAcademic, SectionPlacement
 
 class StudentForm(forms.ModelForm):
     # Custom fields for 'enrolling_as' to handle multiple checkboxes
@@ -101,7 +101,7 @@ class StudentForm(forms.ModelForm):
             'photo': forms.FileInput(attrs={'id': 'photo-upload', 'class': 'file-input'}),
             
         }
-
+    
     def clean_enrolling_as(self):
         # Convert list of choices to a comma-separated string
         return ",".join(self.cleaned_data.get('enrolling_as', []))
@@ -538,3 +538,16 @@ class StudentAcademicForm(forms.ModelForm):
 
         return cleaned_data
 
+
+class SectionPlacementForm(forms.ModelForm):
+    class Meta:
+        model = SectionPlacement
+        fields = ['status', 'selected_program']
+        widgets = {
+            'status': forms.Select(choices=[('pending', 'Pending'), ('approved', 'Approved'), ('rejected', 'Rejected')]),
+            'selected_program': forms.Select(choices=[
+                ('ste', 'STE'), ('spfl', 'SPFL'), ('sptve', 'SPTVE'), 
+                ('top5', 'TOP 5'), ('hetero', 'HETERO'), ('ohsp', 'OHSP'), ('regular', 'Regular')
+            ]),
+            'placement_date': forms.DateInput(attrs={'type': 'date'}),
+        }

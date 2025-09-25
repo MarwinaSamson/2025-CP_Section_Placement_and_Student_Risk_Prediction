@@ -1,0 +1,246 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>STE Program – Student Record</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background-color: #f4f6f9;
+      margin: 0;
+      color: #333;
+    }
+
+    header {
+      background-color: #2c3e50;
+      color: #fff;
+      padding: 1rem 2rem;
+      text-align: center;
+      font-size: 1.5rem;
+    }
+
+    .container {
+      padding: 20px;
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    h2 {
+      margin-top: 30px;
+      margin-bottom: 15px;
+      border-left: 5px solid #3498db;
+      padding-left: 10px;
+      color: #2c3e50;
+    }
+
+    /* Card Style */
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+    }
+
+    .card img {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 15px;
+    }
+
+    .card h3 {
+      margin: 0 0 10px;
+      font-size: 1.2rem;
+      color: #2c3e50;
+    }
+
+    .card p {
+      margin: 4px 0;
+      font-size: 0.9rem;
+      color: #555;
+    }
+
+    .tag {
+      display: inline-block;
+      margin: 4px 4px 0 0;
+      padding: 4px 8px;
+      font-size: 0.8rem;
+      border-radius: 8px;
+      color: #fff;
+    }
+
+    .tag.sped { background-color: #e67e22; }
+    .tag.working { background-color: #27ae60; }
+    .tag.pwd { background-color: #c0392b; }
+
+    /* Requirements Table */
+    .requirements-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    .requirements-table th, .requirements-table td {
+      padding: 10px;
+      text-align: center;
+      border-bottom: 1px solid #eee;
+    }
+
+    .requirements-table th {
+      background: #3498db;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .req-btn {
+      border: none;
+      padding: 6px 10px;
+      margin: 2px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .req-btn.check {
+      background: #27ae60;
+      color: #fff;
+    }
+
+    .req-btn.cross {
+      background: #c0392b;
+      color: #fff;
+    }
+
+    .req-btn.active {
+      outline: 3px solid #333;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    👩‍🔬 STE Program – Student Record
+  </header>
+
+  <div class="container">
+
+    <!-- Student Info -->
+    <h2>Student</h2>
+    <div class="card">
+      <img src="student_photos/sample.jpg" alt="Student Photo">
+      <h3>Doe, John</h3>
+      <p><b>LRN:</b> 123456789012</p>
+      <p><b>Age:</b> 13 | <b>Gender:</b> Male</p>
+      <p><b>Last School:</b> ABC Elementary</p>
+      <div>
+        <span class="tag sped">SPED</span>
+        <span class="tag working">Working</span>
+      </div>
+    </div>
+
+    <!-- Family Info -->
+    <h2>Family Background</h2>
+    <div class="card">
+      <h3>Guardian: Jane Doe</h3>
+      <p><b>Occupation:</b> Engineer</p>
+      <p><b>Contact:</b> 09123456789</p>
+      <p><b>Address:</b> Quezon City</p>
+    </div>
+
+    <!-- Academic Performance -->
+    <h2>Academic Performance</h2>
+    <div class="card">
+      <h3>Grade 6</h3>
+      <p><b>Math:</b> 89</p>
+      <p><b>English:</b> 92</p>
+      <p><b>Science:</b> 90</p>
+      <p><b>Average:</b> 90%</p>
+    </div>
+
+    <!-- Requirements -->
+    <h2>Requirements</h2>
+    <div class="card">
+      <table class="requirements-table">
+        <thead>
+          <tr>
+            <th>Enrollment Form</th>
+            <th>Grade 6</th>
+            <th>DOST Exam</th>
+            <th>Report Card</th>
+            <th>Good Moral</th>
+            <th>Birth Certificate</th>
+            <th>Reading Assessment</th>
+            <th>Interview</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <button class="req-btn check">✔</button>
+              <button class="req-btn cross">✖</button>
+            </td>
+            <td>
+              <button class="req-btn check">✔</button>
+              <button class="req-btn cross">✖</button>
+            </td>
+            <td>
+              <button class="req-btn check">✔</button>
+              <button class="req-btn cross">✖</button>
+            </td>
+            <td>
+              <button class="req-btn check">✔</button>
+              <button class="req-btn cross">✖</button>
+            </td>
+            <td>
+              <button class="req-btn check">✔</button>
+              <button class="req-btn cross">✖</button>
+            </td>
+            <td>
+              <button class="req-btn check">✔</button>
+              <button class="req-btn cross">✖</button>
+            </td>
+            <td>
+              <button class="req-btn check">✔</button>
+              <button class="req-btn cross">✖</button>
+            </td>
+            <td>
+              <button class="req-btn check">✔</button>
+              <button class="req-btn cross">✖</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Placement -->
+    <h2>Placement Records</h2>
+    <div class="card">
+      <h3>STE – Section A</h3>
+      <p><b>Status:</b> Enrolled</p>
+    </div>
+
+  </div>
+
+  <script>
+    // Allow only one active (✔ or ✖) per requirement
+    document.querySelectorAll(".requirements-table td").forEach(cell => {
+      const buttons = cell.querySelectorAll(".req-btn");
+      buttons.forEach(btn => {
+        btn.addEventListener("click", () => {
+          buttons.forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+        });
+      });
+    });
+  </script>
+</body>
+</html>

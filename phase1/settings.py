@@ -42,6 +42,10 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+# NEW: Allow same-origin iframes (for modal; DENY blocks everything)
+SECURE_FRAME_DENY = False  # Or set to True only in production
+X_FRAME_OPTIONS = 'SAMEORIGIN'  # Allows iframes from same site (e.g., your modal)
+
 ROOT_URLCONF = "phase1.urls"
 
 TEMPLATES = [
@@ -132,3 +136,5 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 LOGIN_URL = '/admin-functionalities/login/'
 LOGIN_REDIRECT_URL = '/admin-functionalities/dashboard/'
 LOGOUT_REDIRECT_URL = '/admin-functionalities/login/'
+
+AUTH_USER_MODEL = "admin_functionalities.CustomUser"

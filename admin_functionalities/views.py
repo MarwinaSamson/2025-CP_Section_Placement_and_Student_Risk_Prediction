@@ -1,8 +1,199 @@
 # admin_functionalities/views.py
 
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from enrollmentprocess.models import Student, SectionPlacement, StudentAcademic
+from django.http import HttpResponseForbidden
+from django.db.models import Prefetch
+from django.db.models import Count
+from .models import Notification
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from django.utils import timezone
+from enrollmentprocess.models import Student, Family, StudentNonAcademic, StudentAcademic, SectionPlacement
+from enrollmentprocess.forms import StudentForm, FamilyForm, StudentNonAcademicForm, StudentAcademicForm, SectionPlacementForm
+import json
+
+# NEW: Generic helper (unchanged)
+def get_or_create_related(model, student, defaults=None):
+    """Generic helper: Get or create related instance."""
+    if defaults is None:
+        defaults = {}
+    try:
+        instance, created = model.objects.get_or_create(student=student, defaults=defaults)
+        return instance
+    except Exception as e:
+        print(f"Error in get_or_create for {model.__name__}: {e}")  # Temp debug
+        return model(student=student)  # Fallback empty instance
+
+# UPDATED: Family helper (based on FamilyForm fields)
+def get_family_or_create(student):
+    return get_or_create_related(Family, student, defaults={
+        # Father fields
+        'father_family_name': '',
+        'father_first_name': '',
+        'father_middle_name': '',
+        'father_age': 0,
+        'father_occupation': '',
+        'father_dob': None,
+        'father_contact_number': '',
+        'father_email': '',
+        
+        # Mother fields
+        'mother_family_name': '',
+        'mother_first_name': '',
+        'mother_middle_name': '',
+        'mother_age': 0,
+        'mother_occupation': '',
+        'mother_dob': None,
+        'mother_contact_number': '',
+        'mother_email': '',
+        
+        # Guardian fields
+        'guardian_family_name': '',
+        'guardian_first_name': '',
+        'guardian_middle_name': '',
+        'guardian_age': 0,
+        'guardian_occupation': '',
+        'guardian_dob': None,
+        'guardian_address': '',
+        'guardian_relationship': '',
+        'guardian_contact_number': '',
+        'guardian_email': '',
+        
+        # File field
+        'parent_photo': None,
+        
+        # Any other Family fields (e.g., if you have more like 'student_address' or relations, add here)
+    })
+
+# UPDATED: StudentNonAcademic helper (based on StudentNonAcademicForm fields; 'other' fields processed in form clean)
+def get_non_academic_or_create(student):
+    return get_or_create_related(StudentNonAcademic, student, defaults={
+        # Choice/Radio fields (use '' as default; form choices will handle)
+        'study_hours': '',  # e.g., 'less_than_1'
+        'study_place': '',  # Comma-separated after clean (e.g., 'Bedroom,Library')
+        'study_with': '',   # e.g., 'never'
+        'live_with': '',    # Comma-separated (e.g., 'Parents,Siblings')
+        'parent_help': '',  # e.g., 'never'
+        'highest_education': '',  # e.g., 'Did not finish high school'
+        'marital_status': '',     # e.g., 'Married'
+        'house_type': '',         # e.g., 'Apartment'
+        'quiet_place': '',        # e.g., 'Yes'
+        'study_area': '',         # e.g., 'Very_quiet'
+        'transport_mode': '',     # e.g., 'Walk'
+        'travel_time': '',        # e.g., 'Less than 15 minutes'
+        'access_resources': '',   # Comma-separated (e.g., 'books & materials,Internet')
+        'computer_use': '',       # e.g., 'Never'
+        'confidence_level': '',   # e.g., 'Very_confident'
+        
+        # Text fields
+        'hobbies': '',
+        'personality_traits': '',  # Comma-separated (e.g., 'shy,outgoing')
+        
+        # Any other fields (e.g., if model has more like 'internet_access', add here)
+    })
+
+# UPDATED: StudentAcademic helper (based on StudentAcademicForm fields; grades default to 0.0, overall_average computed)
+def get_academic_or_create(student):
+    return get_or_create_related(StudentAcademic, student, defaults={
+        # Copied from student
+        'lrn': student.lrn if hasattr(student, 'lrn') else '',
+        
+        # Choice/Select fields
+        'dost_exam_result': '',  # e.g., 'passed'
+        
+        # File field
+        'report_card': None,
+        
+        # Grade fields (NumberInput, default 0.0; form clean validates 75-100 on edit)
+        'mathematics': 0.0,
+        'araling_panlipunan': 0.0,
+        'english': 0.0,
+        'edukasyon_pagpapakatao': 0.0,
+        'science': 0.0,
+        'edukasyon_pangkabuhayan': 0.0,
+        'filipino': 0.0,
+        'mapeh': 0.0,
+        
+        # Checkbox
+        'agreed_to_terms': False,
+        
+        # Computed (not in defaults; set in form clean)
+        # 'overall_average': 0.0,  # Handled in StudentAcademicForm.clean()
+        
+        # Any other fields (e.g., if model has 'is_working_student' or 'work_type', add: 'is_working_student': False, 'work_type': '')
+    })
+
+# UPDATED: SectionPlacement helper (based on SectionPlacementForm fields; placement_date auto-set in view)
+def get_placement_or_create(student):
+    return get_or_create_related(SectionPlacement, student, defaults={
+        # Choice/Select fields
+        'status': 'pending',  # Default from your choices
+        'selected_program': 'regular',  # Default from your choices (e.g., 'regular' for non-special)
+        
+        # Date field (auto-set on save, but default here for create)
+        'placement_date': timezone.now().date(),
+        
+        # Any other fields (e.g., if model has 'notes' or 'reason', add: 'notes': '')
+    })
+
+   # NEW: Main edit view for modal (add this function)
+@login_required
+@require_http_methods(["GET", "POST"])
+def student_edit_view(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+
+    if not request.user.is_staff:
+        messages.error(request, 'Access denied: Admin only.')
+        return render(request, 'admin_functionalities/error.html', {'error': 'Permission denied.'})
+
+    saved = False
+
+    if request.method == 'POST':
+        student_form = StudentForm(request.POST, request.FILES, instance=student, user=request.user)
+        family_form = FamilyForm(request.POST, request.FILES, instance=get_family_or_create(student), user=request.user)
+        non_academic_form = StudentNonAcademicForm(request.POST, instance=get_non_academic_or_create(student), user=request.user)
+        academic_form = StudentAcademicForm(request.POST, request.FILES, instance=get_academic_or_create(student), user=request.user)
+        placement_form = SectionPlacementForm(request.POST, instance=get_placement_or_create(student), user=request.user)
+
+        if all(form.is_valid() for form in [student_form, family_form, non_academic_form, academic_form, placement_form]):
+            student_form.save()
+            family_form.save()
+            non_academic_form.save()
+            academic_form.save()
+            placement_form.save()
+            messages.success(request, f'Student {student.first_name} {student.last_name} updated successfully!')
+            saved = True
+        else:
+            saved = False
+            # Optional: Log errors for debug
+            print("Form errors:", {f: f.errors for f in [student_form, family_form, non_academic_form, academic_form, placement_form]})
+
+    else:  # GET
+        # UPDATED: Pass user to each form
+        student_form = StudentForm(instance=student, user=request.user)
+        family_form = FamilyForm(instance=get_family_or_create(student), user=request.user)
+        non_academic_form = StudentNonAcademicForm(instance=get_non_academic_or_create(student), user=request.user)
+        academic_form = StudentAcademicForm(instance=get_academic_or_create(student), user=request.user)
+        placement_form = SectionPlacementForm(instance=get_placement_or_create(student), user=request.user)
+        saved = False
+
+    context = {
+        'student': student,
+        'student_form': student_form,
+        'family_form': family_form,
+        'non_academic_form': non_academic_form,
+        'academic_form': academic_form,
+        'placement_form': placement_form,
+        'saved': saved,
+    }
+    return render(request, 'admin_functionalities/student_edit.html', context)
+
+   
 
 def admin_login(request):
     if request.user.is_authenticated:
@@ -23,11 +214,15 @@ def admin_login(request):
     
 @login_required
 def custom_logout(request):
-    admin_name = request.user.get_full_name() or request.user.username
-    last_login = request.user.last_login
+    # Fix: Use username directly (avoids get_full_name() error)
+    admin_name = request.user.username
+    
+    last_login = request.user.last_login  # Assumes your CustomUser  has this field
     # Example session duration placeholder; replace with real calculation if needed
     session_duration = "2h 0m"
-    logout(request)  # Log out the user
+    
+    logout(request)  # Log out the user (clears session)
+    
     context = {
         'admin_name': admin_name,
         'last_login': last_login,
@@ -37,7 +232,119 @@ def custom_logout(request):
 
 @login_required
 def admin_dashboard(request):
-    return render(request, 'admin_functionalities/admin-dashboard.html')
+    # Debug prints (remove after fixing)
+    print("\n=== DEBUG: Complete Students Check ===")
+    total_students = Student.objects.count()
+    print(f"Total Students: {total_students}")
+
+    # Check partial completions
+    with_family = Student.objects.filter(family_data__isnull=False).count()
+    print(f"With Family Form: {with_family}")
+
+    with_academic = Student.objects.filter(studentacademic__isnull=False).count()
+    print(f"With Academic Form: {with_academic}")
+
+    with_non_academic = Student.objects.filter(studentnonacademic__isnull=False).count()
+    print(f"With Non-Academic Form: {with_non_academic}")
+
+    with_program_model = Student.objects.filter(section_placements__isnull=False).count()
+    print(f"With Program (SectionPlacement Model): {with_program_model}")
+
+    with_program_field = Student.objects.filter(section_placement__isnull=False).count()
+    print(f"With Program (section_placement CharField): {with_program_field}")
+
+    # OPTION 1: Complete = All forms + SectionPlacement model (strict, for placed students)
+    complete_students_model = Student.objects.filter(
+        family_data__isnull=False,  # Family form filled
+        studentacademic__isnull=False,  # Academic form filled
+        studentnonacademic__isnull=False,  # Non-academic form filled
+        section_placements__isnull=False  # Program chosen (via model)
+    ).prefetch_related(
+        Prefetch('studentacademic'),
+        Prefetch('studentnonacademic'),
+        Prefetch('section_placements', queryset=SectionPlacement.objects.order_by('-placement_date'))
+    ).order_by('-section_placements__placement_date')[:50]  # Newest first, limit 50
+
+    complete_count_model = complete_students_model.count()
+    print(f"Complete (Using Model): {complete_count_model}")
+
+    # OPTION 2: Complete = All forms + section_placement CharField (if no separate model used)
+    complete_students_field = Student.objects.filter(
+        family_data__isnull=False,  # Family form filled
+        studentacademic__isnull=False,  # Academic form filled
+        studentnonacademic__isnull=False,  # Non-academic form filled
+        section_placement__isnull=False  # Program chosen (via CharField)
+    ).prefetch_related(
+        Prefetch('studentacademic'),
+        Prefetch('studentnonacademic')
+    ).order_by('-id')[:50]  # Order by ID (newest), limit 50
+
+    complete_count_field = complete_students_field.count()
+    print(f"Complete (Using CharField): {complete_count_field}")
+ 
+ # NEW: Program mapping for friendly names
+    PROGRAM_DISPLAY_NAMES = {
+        'ste': 'STE program',
+        'spfl': 'SPFL program',
+        'sptve': 'SPTVE program',
+        'sned': 'SNED program',
+        'top5': 'TOP 5 Regular class',  # Matches your example
+        'regular': 'Regular class',
+        # Add more as needed, e.g., 'top5': 'TOP 5 Section'
+    }
+    
+    unread_enrollments = Notification.objects.filter(
+        notification_type='student_enrollment',
+        is_read=False
+    ).values('program').annotate(count=Count('id')).order_by('-count')
+    
+    notifications = []
+    for item in unread_enrollments:
+        program_code = item['program'].lower()  # Normalize to lowercase for mapping
+        count = item['count']
+        
+        # Get friendly display name (fallback to "program" if not mapped)
+        display_name = PROGRAM_DISPLAY_NAMES.get(program_code, f"{program_code.upper()} program")
+        
+        # Get sample message (latest student) – Use __iexact for case-insensitivity
+        latest_notif = Notification.objects.filter(
+            program__iexact=program_code,  # FIXED: Case-insensitive
+            is_read=False
+        ).order_by('-created_at').first()
+        
+        # Get IDs – Use __iexact
+        notification_ids = list(Notification.objects.filter(
+            program__iexact=program_code,  # FIXED: Case-insensitive
+            is_read=False
+        ).values_list('id', flat=True))
+        
+        notifications.append({
+            'title': 'New Enrollment Requests',
+            'message': f'{count} new enrollment request{"s" if count > 1 else ""} for {display_name}',
+            'type': 'student_enrollment',
+            'program': program_code,
+            'display_program': display_name,
+            'count': count,
+            'icon': 'fas fa-user-plus',
+            'sample_message': latest_notif.message if latest_notif else '',
+            'notification_ids': notification_ids,  # List for join in template
+            'program_slug': program_code,  # NEW/FIXED: Add this for data-program-slug (e.g., 'ste')
+        })
+    
+    total_unread = sum(item['count'] for item in unread_enrollments)
+
+    
+    context = {
+        'total_students': total_students,
+        'complete_students': complete_students_model,  # Change to complete_students_field if needed
+        'complete_count': complete_count_model,  # For template display
+         'notifications': notifications,
+        'total_unread': total_unread,
+    }
+
+    print("=== END DEBUG ===\n")
+    return render(request, 'admin_functionalities/admin-dashboard.html', context)
+
 
 @login_required
 def settings_view(request):
@@ -50,6 +357,85 @@ def sections_view(request):
     return render(request, 'admin_functionalities/sections.html', {'active_page': 'sections'})
 
 @login_required
+def enrollment_view(request):
+    # Get filters from URL params
+    program_filter = request.GET.get('program', None)  # e.g., 'ste' or None (all)
+    status_filter = request.GET.get('status', 'pending')  # Default pending; can expand later
+    
+    # Base query: All enrollments (not just pending – for full filtering)
+    queryset = SectionPlacement.objects.select_related('student').order_by('-id')  # Or '-placement_date'
+    
+    # Apply program filter if specified
+    if program_filter:
+        queryset = queryset.filter(selected_program__iexact=program_filter)
+    
+    # Apply status filter (for future; now defaults to pending but passes all for JS)
+    if status_filter != 'all':
+        queryset = queryset.filter(status=status_filter)
+    
+    # Fetch data as list of dicts for template
+    enrollments = list(queryset.values(
+        'id',
+        'student__id',
+        'student__lrn',
+        'student__first_name',
+        'student__middle_name',
+        'student__last_name',
+        'selected_program',
+        'status',  # For data-status
+        'placement_date'  # Or 'placement_date' if exists
+    ))
+    
+    # Stats (overall across all programs; adjust to filtered if needed)
+    total_requests = SectionPlacement.objects.count()
+    approved = SectionPlacement.objects.filter(status='approved').count()
+    pending = SectionPlacement.objects.filter(status='pending').count()
+    rejected = SectionPlacement.objects.filter(status='rejected').count()
+    
+    # Program display mapping
+    PROGRAM_DISPLAY_NAMES = {
+        'ste': 'STE',
+        'spfl': 'SPFL',
+        'sptve': 'SPTVE',
+        'top5': 'TOP 5',
+        'hetero': 'HETERO',  # Assuming 'hetero' for regular/hetero
+        'ohsp': 'OHSP',
+        'regular': 'Regular',
+        # Add more as needed
+    }
+    display_name = PROGRAM_DISPLAY_NAMES.get(program_filter.lower() if program_filter else None, 'All Programs')
+    is_filtered = bool(program_filter)
+    
+    context = {
+        'enrollments': enrollments,
+        'total_requests': total_requests,
+        'approved': approved,
+        'pending': pending,
+        'rejected': rejected,
+        'program_filter': program_filter or 'all',
+        'status_filter': status_filter,
+        'display_name': display_name,
+        'is_filtered': is_filtered,
+    }
+    return render(request, 'admin_functionalities/enrollment-management.html', context)
+
+
+
 def teachers_view(request):
     # Add context if needed
     return render(request, 'admin_functionalities/teachers.html')
+
+@csrf_exempt
+def mark_notification_read(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            ids = data.get('ids', [])
+            if ids:
+                Notification.objects.filter(id__in=ids).update(is_read=True)
+                return JsonResponse({'success': True, 'marked': len(ids)})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    return JsonResponse({'success': False}, status=400)
+
+

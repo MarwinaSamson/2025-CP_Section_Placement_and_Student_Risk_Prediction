@@ -32,6 +32,7 @@ urlpatterns = [
     path('section-placement/<int:student_id>/', SectionPlacementView.as_view(), name='section_placement'),
     path('login.html', TemplateView.as_view(template_name='login.html'), name='login'), # Static login page
     path('login/', login_view, name='login'),
+    
 ]
 
  

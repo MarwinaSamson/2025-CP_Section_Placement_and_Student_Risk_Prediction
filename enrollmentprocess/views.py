@@ -7,6 +7,7 @@ from .forms import StudentForm, FamilyForm, StudentNonAcademicForm, StudentAcade
 from django.http import HttpResponseRedirect
 from django.db import transaction
 from .model_utils import predict_program_eligibility
+from admin_functionalities.models import Notification 
 
 
 class IndexView(TemplateView):
@@ -171,6 +172,26 @@ class SectionPlacementView(TemplateView):
                 student=student,
                 selected_program=selected_program,
             )
+            
+             # NEW: Check if student is complete and trigger notification
+            is_complete = (
+                student.family_data is not None and  # Family form filled
+                StudentAcademic.objects.filter(student=student).exists() and  # Academic exists (already checked in GET)
+                StudentNonAcademic.objects.filter(student=student).exists() and  # Non-academic form filled
+                SectionPlacement.objects.filter(student=student).exists()  # Placement confirmed (just saved)
+            )
+            
+            if is_complete:
+                # Create Notification for Admin (trigger on confirm/submit)
+                program = selected_program
+                student_name = f"{student.first_name} {student.middle_name or ''} {student.last_name}".strip()
+                Notification.objects.create(
+                    title="New Enrollment Submission",
+                    message=f"{student_name} confirmed and submitted for {program} program.",
+                    notification_type='student_enrollment',
+                    program=program,
+                    related_student=student,
+                )
 
             # Redirect back with success flag to trigger modal
             url = reverse('section_placement', kwargs={'student_id': student.pk})

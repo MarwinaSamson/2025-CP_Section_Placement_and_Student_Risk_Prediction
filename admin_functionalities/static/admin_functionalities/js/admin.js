@@ -128,3 +128,11 @@ document.querySelectorAll(".nav-link").forEach((link) => {
     // Allow the default link behavior to proceed
   })
 })
+
+  document.querySelectorAll('.has-submenu').forEach(item => {
+      item.addEventListener('click', (e) => {
+          e.preventDefault();
+          item.classList.toggle('active');
+      });
+  });
+  

@@ -307,6 +307,12 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a href="{% url 'admin_functionalities:enrollment' %}" class="nav-link">
+                            <i class="fas fa-clipboard-list"></i>
+                            <span>Enrollment</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a href="{% url 'admin_functionalities:settings' %}" class="nav-link">
                             <i class="fas fa-cog"></i>
                             <span>Settings</span>
@@ -365,28 +371,33 @@
 
             <section class="dashboard-content">
                 <section class="enrollment-requests">
-                    <div class="enrollment-header">
-                        <i class="fas fa-bell enrollment-bell"></i>
-                        <h2>New Enrollment Requests</h2>
-                    </div>
+    <div class="enrollment-header">
+        <i class="fas fa-bell enrollment-bell"></i>
+        <h2>New Enrollment Submissions</h2>
+        {% if total_unread > 0 %}
+            <span class="notification-badge">{{ total_unread }}</span>
+        {% endif %}
+    </div>
 
-                    <div class="enrollment-cards">
-                        <div class="enrollment-card">
-                            <i class="fas fa-user-plus enrollment-icon"></i>
-                            <span class="enrollment-text">4 new enrollment requests for SNED program</span>
-                        </div>
+    <div class="enrollment-cards">
+        {% for notification in notifications %}
+<div class="enrollment-card student-notification"
+             data-ids="{{ notification.notification_ids|join:',' }}"
+             data-program-slug="{{ notification.program_slug }}"
+             title="{{ notification.sample_message }}"
+             onclick="openNotification(this)">
+            <i class="{{ notification.icon }} enrollment-icon"></i>
+            <span class="enrollment-text">{{ notification.message }}</span>
+        </div>
+        {% empty %}
+            <div class="enrollment-card no-notifications">
+                <i class="fas fa-check-circle enrollment-icon"></i>
+                <span class="enrollment-text">No new confirmed submissions.</span>
+            </div>
+        {% endfor %}
+    </div>
+</section>
 
-                        <div class="enrollment-card">
-                            <i class="fas fa-user-plus enrollment-icon"></i>
-                            <span class="enrollment-text">3 new enrollment requests for SPFL program</span>
-                        </div>
-
-                        <div class="enrollment-card">
-                            <i class="fas fa-user-plus enrollment-icon"></i>
-                            <span class="enrollment-text">7 new enrollment requests for Regular Section</span>
-                        </div>
-                    </div>
-                </section>
 
                 <!-- Quick Statistics Section -->
                 <section class="card quick-statistics">
@@ -511,15 +522,135 @@
                             </tr>
                         </tbody>
                     </table>
+                    
+                    <div class="card-header">
+                        <h2>Complete Student Registrations</h2>
+                        <p>Students with all details (personal, family, academic, non-academic, and program placement).</p>
+                    </div>
+                    {% if complete_students %}
+                        <table class="data-table">  <!-- Matches your CSS class for tables -->
+                            <thead>
+                                <tr>
+                                    <th>Full Name</th>
+                                    <th>Registration Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in complete_students %}
+                                    <tr>
+                                        <td>{{ student.first_name }} {% if student.middle_name %}{{ student.middle_name }} {% endif %}{{ student.last_name }}</td>
+                                        <td>{{ student.section_placements.first.placement_date|date:"Y-m-d" }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p class="no-data">No complete students found. Add data via <a href="/admin/">Admin Panel</a>.</p>
+                    {% endif %}
+                </section>
+            </section>
                 </section>
             </section>
         </main>
     </div>
 
     <!-- Use static tag for JS -->
-    <script>
-      const logoutUrl = "{% url 'admin_functionalities:logout' %}";
-    </script>
+    
+     
+
+    <!-- Add this script block just before the admin.js load, at the end of <body> -->
+<script>
+    // Django URLs (server-rendered)
+    const MARK_READ_URL = "{% url 'admin_functionalities:mark_notification_read' %}";
+    const ENROLLMENT_URL = "{% url 'admin_functionalities:enrollment' %}";
+
+    // getCookie for CSRF
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // openNotification function (with debug logs)
+    function openNotification(element) {
+        console.log('=== CLICK DEBUG START ===');
+        console.log('Program slug:', element.dataset.programSlug);  // Should log 'ste', etc.
+        console.log('Raw IDs:', element.dataset.ids);  // Should log '1,2,3,...'
+        
+        const ids = element.dataset.ids.split(',').filter(id => id.trim());
+        const programSlug = element.dataset.programSlug;
+        if (!ids.length) {
+            console.error('No valid IDs found');
+            alert('No notifications to mark – refresh page');
+            return;
+        }
+        
+        console.log('Sending POST to:', MARK_READ_URL);
+        console.log('With IDs:', ids);
+        
+        fetch(MARK_READ_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ ids: ids })
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Response data:', data);
+            if (data.success) {
+                // Hide card
+                element.style.opacity = '0';
+                setTimeout(() => {
+                    element.remove();
+                    console.log('Card hidden and removed');
+                }, 300);
+                
+                // Redirect (filtered if program_slug present)
+                const redirectTo = programSlug ? `${ENROLLMENT_URL}?program=${programSlug}` : ENROLLMENT_URL;
+                console.log('Redirecting to:', redirectTo);
+                window.location.href = redirectTo;
+                
+                // Update badge
+                const badge = document.querySelector('.notification-badge');
+                if (badge) {
+                    let count = parseInt(badge.textContent) - (data.marked || ids.length);
+                    if (count <= 0) {
+                        badge.style.display = 'none';  // Or badge.remove()
+                    } else {
+                        badge.textContent = count;
+                    }
+                    console.log('Badge updated to:', count);
+                }
+            } else {
+                console.error('API failed:', data.error);
+                alert('Error marking as read: ' + (data.error || 'Unknown'));
+            }
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            alert('Request failed: ' + error.message + '\nCheck browser console.');
+        });
+        console.log('=== CLICK DEBUG END ===');
+    }
+</script>
+
 
     <script src="{% static 'admin_functionalities/js/admin.js' %}"></script>
 </body>

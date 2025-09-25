@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Edit Student - {{ student.first_name }} {{ student.last_name }}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'admin_functionalities/css/admin.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .edit-container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        .accordion { border: 1px solid #ddd; margin-bottom: 10px; border-radius: 4px; overflow: hidden; }
+        .accordion-header { 
+            background: #f8f9fa; padding: 15px; cursor: pointer; font-weight: bold; 
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .accordion-header:hover { background: #e9ecef; }
+        .accordion-content { padding: 15px; display: none; background: white; }
+        .accordion.open .accordion-content { display: block; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .form-input[readonly] { background: #f5f5f5; }
+        .errorlist { color: red; list-style: none; padding: 0; margin: 5px 0; }
+        .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px; font-size: 16px; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-primary:hover { background: #0056b3; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-secondary:hover { background: #545b62; }
+        .messages { padding: 10px; margin-bottom: 20px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .chevron { transition: transform 0.3s; }
+        .accordion.open .chevron { transform: rotate(180deg); }
+    </style>
+</head>
+<body>
+    <div class="edit-container">
+        <h1>Edit Student: {{ student.last_name }}, {{ student.first_name }} (ID: {{ student.id }})</h1>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="messages {{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- Student Information -->
+            <div class="accordion open">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <span>Student Information</span>
+                    <i class="fas fa-chevron-down chevron"></i>
+                </div>
+                <div class="accordion-content">
+                    {% for field in student_form %}
+                        <div class="form-group">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <ul class="errorlist">{% for error in field.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                            {% endif %}
+                            {% if field.help_text %}<small style="color: #666;">{{ field.help_text }}</small>{% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Family/Guardian -->
+            <div class="accordion">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <span>Family/Guardian Information</span>
+                    <i class="fas fa-chevron-down chevron"></i>
+                </div>
+                <div class="accordion-content">
+                    {% for field in family_form %}
+                        <div class="form-group">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <ul class="errorlist">{% for error in field.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Non-Academic -->
+            <div class="accordion">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <span>Non-Academic Profile</span>
+                    <i class="fas fa-chevron-down chevron"></i>
+                </div>
+                <div class="accordion-content">
+                    {% for field in non_academic_form %}
+                        <div class="form-group">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <ul class="errorlist">{% for error in field.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Academic -->
+            <div class="accordion">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <span>Academic Information</span>
+                    <i class="fas fa-chevron-down chevron"></i>
+                </div>
+                <div class="accordion-content">
+                    {% for field in academic_form %}
+                        <div class="form-group">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <ul class="errorlist">{% for error in field.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    <div class="form-group">
+                        <label>Overall Average (Auto-Calculated):</label>
+                        <input type="text" value="{{ academic_form.instance.overall_average|floatformat:2|default:'0.00' }}" readonly class="form-input">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Placement -->
+            <div class="accordion open">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <span>Enrollment Placement (Admin-Only)</span>
+                    <i class="fas fa-chevron-down chevron"></i>
+                </div>
+                <div class="accordion-content">
+                    {% for field in placement_form %}
+                        <div class="form-group">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <ul class="errorlist">{% for error in field.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    <div class="form-group">
+                        <label>Placement Date (Auto-Set):</label>
+                        <input type="text" value="{{ placement_form.instance.placement_date|date:'Y-m-d'|default:'Not Set' }}" readonly class="form-input">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div style="text-align: right; margin-top: 20px;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save All Changes</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Accordion Toggle
+        function toggleAccordion(header) {
+            const accordion = header.parentElement;
+            accordion.classList.toggle('open');
+        }
+
+        // Make LRN and Student Photo Read-Only (Admin can't change core ID/photo)
+        document.addEventListener('DOMContentLoaded', function() {
+            const lrnField = document.getElementById('id_lrn');
+            if (lrnField) lrnField.readOnly = true;
+            
+            const photoField = document.querySelector('input[type="file"][name*="photo"]');  // Adjust selector if needed
+            if (photoField) photoField.disabled = true;  // Or readOnly for text inputs
+            
+            // Open sections by default (Student and Placement)
+            document.querySelectorAll('.accordion.open').forEach(acc => acc.classList.add('open'));
+        });
+
+        // Auto-Close on Save Success (if saved=True from view)
+        {% if saved %}
+            setTimeout(function() {
+                // Send message to parent modal to close
+                if (window.parent && window.parent.postMessage) {
+                    window.parent.postMessage({ type: 'SAVE_SUCCESS', action: 'closeModal' }, '*');
+                } else {
+                    alert('Saved successfully! Closing...');
+                    window.close();  // Fallback if not in iframe
+                }
+            }, 2000);  // 2s delay for message visibility
+        {% endif %}
+
+        // Cancel: Close modal (send message to parent)
+        function closeModal() {
+            if (window.parent && window.parent.postMessage) {
+                window.parent.postMessage({ type: 'CANCEL', action: 'closeModal' }, '*');
+            } else {
+                window.history.back();  // Fallback
+            }
+        }
+    </script>
+</body>
+</html>

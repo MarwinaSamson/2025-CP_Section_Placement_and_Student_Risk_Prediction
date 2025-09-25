@@ -23,6 +23,13 @@ urlpatterns = [
     path('settings/', views.settings_view, name='settings'),
     path('sections/', views.sections_view, name='sections'),
     path('teachers/', views.teachers_view, name='teachers'),
+    path('enrollment/', views.enrollment_view, name='enrollment'),
+    path('mark-read/', views.mark_notification_read, name='mark_notification_read'),
+    path('enrollment/student/<int:student_id>/edit/', views.student_edit_view, name='student_edit'),
+        
+        
+       
+  
 ]
 
     
