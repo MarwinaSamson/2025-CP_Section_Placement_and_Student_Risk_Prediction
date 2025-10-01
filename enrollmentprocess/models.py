@@ -157,7 +157,9 @@ class SectionPlacement(models.Model):
         ('SPFL', 'Special Program in Foreign Language'),
         ('SPTVL', 'Special Program in Technical Vocational Livelihood'),
         ('TOP5', 'Top 5 Regular Class'),
-        ('HETERO', 'Hetero Regular class')
+        ('HETERO', 'Hetero Regular class'),
+        ('OHSP', 'Open High School Program'),
+        ('SNED', 'Special Needs Education Program'),
         
     ]
     
