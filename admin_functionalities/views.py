@@ -16,6 +16,21 @@ from django.utils import timezone
 from enrollmentprocess.models import Student, Family, StudentNonAcademic, StudentAcademic, SectionPlacement
 from enrollmentprocess.forms import StudentForm, FamilyForm, StudentNonAcademicForm, StudentAcademicForm, SectionPlacementForm
 import json
+from django.contrib.auth.mixins import UserPassesTestMixin
+from django.views.generic import UpdateView
+from django.urls import reverse_lazy
+from django.db import transaction
+from .models import StudentRequirements
+from .forms import StudentRequirementsForm
+from enrollmentprocess.forms import (
+    StudentForm,
+    FamilyForm,
+    StudentNonAcademicForm,
+    StudentAcademicForm,
+    SectionPlacementForm,
+    
+)
+
 
 # NEW: Generic helper (unchanged)
 def get_or_create_related(model, student, defaults=None):
@@ -130,18 +145,28 @@ def get_academic_or_create(student):
 
 # UPDATED: SectionPlacement helper (based on SectionPlacementForm fields; placement_date auto-set in view)
 def get_placement_or_create(student):
-    return get_or_create_related(SectionPlacement, student, defaults={
-        # Choice/Select fields
-        'status': 'pending',  # Default from your choices
-        'selected_program': 'regular',  # Default from your choices (e.g., 'regular' for non-special)
-        
-        # Date field (auto-set on save, but default here for create)
-        'placement_date': timezone.now().date(),
-        
-        # Any other fields (e.g., if model has 'notes' or 'reason', add: 'notes': '')
-    })
+       try:
+           # Try get first (assumes unique, but if multiples, take latest)
+           placement = SectionPlacement.objects.filter(student=student).latest('id')  # Or .order_by('-created_at')
+        #    print(f"DEBUG: Found existing placement {placement.id} for student {student.id}")
+           return placement
+       except SectionPlacement.DoesNotExist:
+           pass
+       
+       # Create if none
+       placement = SectionPlacement.objects.create(
+           student=student,
+           status='pending',
+           selected_program='regular'  # Defaults
+       )
+       print(f"DEBUG: Created new placement {placement.id} for student {student.id}")
+       return placement
+   
+   # Do similar for other helpers (get_family_or_create, etc.) if they error too.
+   
 
    # NEW: Main edit view for modal (add this function)
+
 @login_required
 @require_http_methods(["GET", "POST"])
 def student_edit_view(request, student_id):
@@ -151,49 +176,51 @@ def student_edit_view(request, student_id):
         messages.error(request, 'Access denied: Admin only.')
         return render(request, 'admin_functionalities/error.html', {'error': 'Permission denied.'})
 
-    saved = False
+    # get or create requirements record
+    requirements, _ = StudentRequirements.objects.get_or_create(student=student)
 
-    if request.method == 'POST':
+    if request.method == "POST":
         student_form = StudentForm(request.POST, request.FILES, instance=student, user=request.user)
         family_form = FamilyForm(request.POST, request.FILES, instance=get_family_or_create(student), user=request.user)
         non_academic_form = StudentNonAcademicForm(request.POST, instance=get_non_academic_or_create(student), user=request.user)
         academic_form = StudentAcademicForm(request.POST, request.FILES, instance=get_academic_or_create(student), user=request.user)
         placement_form = SectionPlacementForm(request.POST, instance=get_placement_or_create(student), user=request.user)
+        requirements_form = StudentRequirementsForm(request.POST, instance=requirements)
 
-        if all(form.is_valid() for form in [student_form, family_form, non_academic_form, academic_form, placement_form]):
-            student_form.save()
-            family_form.save()
-            non_academic_form.save()
-            academic_form.save()
-            placement_form.save()
-            messages.success(request, f'Student {student.first_name} {student.last_name} updated successfully!')
-            saved = True
+        if all(form.is_valid() for form in [student_form, family_form, non_academic_form, academic_form, placement_form, requirements_form]):
+            try:
+                with transaction.atomic():
+                    student_form.save()
+                    family_form.save()
+                    non_academic_form.save()
+                    academic_form.save()
+                    placement_form.save()
+                    requirements_form.save()
+                messages.success(request, f"Student {student.first_name} {student.last_name} updated successfully!")
+                return redirect("admin_functionalities:student_edit", student_id=student.id)
+            except Exception as e:
+                messages.error(request, f"Error saving data: {e}")
         else:
-            saved = False
-            # Optional: Log errors for debug
-            print("Form errors:", {f: f.errors for f in [student_form, family_form, non_academic_form, academic_form, placement_form]})
-
-    else:  # GET
-        # UPDATED: Pass user to each form
+            messages.error(request, "Please correct the errors below.")
+    else:
         student_form = StudentForm(instance=student, user=request.user)
         family_form = FamilyForm(instance=get_family_or_create(student), user=request.user)
         non_academic_form = StudentNonAcademicForm(instance=get_non_academic_or_create(student), user=request.user)
         academic_form = StudentAcademicForm(instance=get_academic_or_create(student), user=request.user)
         placement_form = SectionPlacementForm(instance=get_placement_or_create(student), user=request.user)
-        saved = False
+        requirements_form = StudentRequirementsForm(instance=requirements)
 
     context = {
-        'student': student,
-        'student_form': student_form,
-        'family_form': family_form,
-        'non_academic_form': non_academic_form,
-        'academic_form': academic_form,
-        'placement_form': placement_form,
-        'saved': saved,
+        "student": student,
+        "student_form": student_form,
+        "family_form": family_form,
+        "non_academic_form": non_academic_form,
+        "academic_form": academic_form,
+        "placement_form": placement_form,
+        "requirements_form": requirements_form,
+        "is_admin": request.user.is_staff,
     }
-    return render(request, 'admin_functionalities/student_edit.html', context)
-
-   
+    return render(request, "admin_functionalities/student_edit.html", context)
 
 def admin_login(request):
     if request.user.is_authenticated:
@@ -439,3 +466,60 @@ def mark_notification_read(request):
     return JsonResponse({'success': False}, status=400)
 
 
+# NEW VIEWS SEPARATED
+class AdminRequiredMixin(UserPassesTestMixin):
+    def test_func(self):
+        return self.request.user.is_staff
+
+class StudentAcademicUpdateView(AdminRequiredMixin, UpdateView):
+    model = StudentAcademic
+    form_class = StudentAcademicForm
+    template_name = 'enrollmentprocess/studentAcademic.html'  # reuse same template
+
+    def get_object(self, queryset=None):
+        student = get_object_or_404(Student, pk=self.kwargs['student_id'])
+        return get_object_or_404(StudentAcademic, student=student)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user  # Pass user to form for permissions
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        student = get_object_or_404(Student, pk=self.kwargs['student_id'])
+        form = context['form']
+
+        # Pre-fill LRN and lock it
+        form.fields['lrn'].initial = student.lrn
+        form.fields['lrn'].widget.attrs['readonly'] = True
+
+        # Pass student info to template
+        context['student_id'] = self.kwargs['student_id']
+        context['is_working_student'] = "YES" if student.is_working_student else "NO"
+        context['working_details'] = student.working_details or "N/A"
+        context['is_pwd'] = "YES" if student.is_sped else "NO"
+        context['disability_type'] = student.sped_details or "N/A"
+        return context
+
+    def form_valid(self, form):
+        student = get_object_or_404(Student, pk=self.kwargs['student_id'])
+        form.instance.student = student
+
+        # Enforce values from Student model
+        form.instance.is_working_student = student.is_working_student
+        form.instance.work_type = student.working_details if student.is_working_student else None
+        form.instance.is_pwd = student.is_sped
+        form.instance.disability_type = student.sped_details if student.is_sped else None
+
+        # Ensure LRN matches
+        if form.cleaned_data['lrn'] != student.lrn:
+            form.add_error('lrn', "LRN does not match the student's record.")
+            return self.form_invalid(form)
+
+        # Compute overall average if applicable
+        form.instance.overall_average = form.cleaned_data.get('overall_average', 0.0)
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('admin_dashboard')  # or wherever admin should go after editing

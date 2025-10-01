@@ -186,7 +186,7 @@ function handleRadioToggle(radioName, inputField) {
   const radios = document.querySelectorAll(`input[name="${radioName}"]`);
   radios.forEach(radio => {
     radio.addEventListener("change", function () {
-      if (this.value === "1") {  // Changed from "True" or "yes" to "1"
+      if (this.value === "True") {  // Changed from "True" or "yes" to "1"
         inputField.disabled = false;
         inputField.focus(); // 🔥 auto-highlight when enabled
       } else {

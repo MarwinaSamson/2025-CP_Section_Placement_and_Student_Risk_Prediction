@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, Notification
+from .models import CustomUser, Notification, StudentRequirements
+from .forms import StudentRequirementsForm
 
 @admin.register(CustomUser )
 class CustomUserAdmin(UserAdmin):
@@ -29,3 +30,10 @@ class CustomUserAdmin(UserAdmin):
 class NotificationAdmin(admin.ModelAdmin):
     list_display = ('title', 'program', 'is_read', 'created_at')
     list_filter = ('notification_type', 'program', 'is_read')
+
+class StudentRequirementsInline(admin.StackedInline):
+    model = StudentRequirements
+    form = StudentRequirementsForm
+    can_delete = False
+    verbose_name_plural = 'Enrollment Requirements'
+    fk_name = 'student'

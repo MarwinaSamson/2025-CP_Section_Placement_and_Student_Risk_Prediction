@@ -156,7 +156,9 @@ class SectionPlacement(models.Model):
         ('STE', 'Science Technology and Engineering'),
         ('SPFL', 'Special Program in Foreign Language'),
         ('SPTVL', 'Special Program in Technical Vocational Livelihood'),
-        ('TOP5', 'Top 5 Sections'),
+        ('TOP5', 'Top 5 Regular Class'),
+        ('HETERO', 'Hetero Regular class')
+        
     ]
     
     STATUS_CHOICES = [

@@ -1,6 +1,7 @@
  # admin_functionalities/urls.py
 from django.urls import path
 from . import views
+from .views import StudentAcademicUpdateView
 
 app_name = 'admin_functionalities' # Namespace for your app's URLs
 

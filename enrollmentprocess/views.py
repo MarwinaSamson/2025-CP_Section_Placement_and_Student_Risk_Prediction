@@ -32,6 +32,15 @@ class StudentDataView(CreateView):
         form.instance.sped_details = form.cleaned_data.get('sped_details')
         form.instance.working_details = form.cleaned_data.get('working_details')
         return super().form_valid(form)
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        print(f"DEBUG: Before setting instance, instance is: {kwargs.get('instance')}")
+        kwargs['instance'] = None
+        print(f"DEBUG: After setting instance, instance is: {kwargs.get('instance')}")
+        kwargs['user'] = self.request.user
+        return kwargs
+
 
 class FamilyDataView(CreateView):
     model = Family

@@ -4,6 +4,7 @@ from django.utils import timezone
 from enrollmentprocess.models import Student
 
 
+
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, email, password=None, first_name='', last_name='', middle_name='', **extra_fields):
         if not email:
@@ -77,3 +78,14 @@ class Notification(models.Model):
     
     def __str__(self):
         return f"{self.title} - {self.program}"
+
+# Requirements model
+class StudentRequirements(models.Model):
+    student = models.OneToOneField('enrollmentprocess.Student', on_delete=models.CASCADE, related_name='requirements')
+    birth_certificate = models.BooleanField(default=False)
+    good_moral = models.BooleanField(default=False)
+    interview_done = models.BooleanField(default=False)
+    reading_assessment_done = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
+    def __str__(self):
+        return f"Requirements for {self.student}"
