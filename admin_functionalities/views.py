@@ -2,10 +2,10 @@
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from enrollmentprocess.models import Student, SectionPlacement, StudentAcademic
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, JsonResponse
 from django.db.models import Prefetch
 from django.db.models import Count
 from .models import Notification
@@ -21,6 +21,10 @@ from django.views.generic import UpdateView
 from django.urls import reverse_lazy
 from django.db import transaction
 from .models import StudentRequirements
+from django.views import View
+from django.shortcuts import render
+from .forms import AddUserForm
+from django.contrib.auth import get_user_model
 from .forms import StudentRequirementsForm
 from enrollmentprocess.forms import (
     StudentForm,
@@ -84,6 +88,8 @@ def get_family_or_create(student):
         
         # Any other Family fields (e.g., if you have more like 'student_address' or relations, add here)
     })
+
+CustomUser = get_user_model()
 
 # UPDATED: StudentNonAcademic helper (based on StudentNonAcademicForm fields; 'other' fields processed in form clean)
 def get_non_academic_or_create(student):
@@ -523,3 +529,4 @@ class StudentAcademicUpdateView(AdminRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return reverse_lazy('admin_dashboard')  # or wherever admin should go after editing
+

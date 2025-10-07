@@ -33,9 +33,42 @@
         .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         .chevron { transition: transform 0.3s; }
         .accordion.open .chevron { transform: rotate(180deg); }
+
+        .close-btn {
+    position: fixed;
+    top: 20px;
+    right: 25px;
+    font-size: 28px;
+    color: #333;
+    text-decoration: none;
+    z-index: 1000;
+    transition: color 0.2s;
+    }
+
+    .close-btn:hover {
+        color: #ff4d4d; /* red hover */
+    }
+
+    /* add near other styles in the file */
+    .mismatch {
+        background: #fff0f0;
+        border-left: 4px solid #ff4d4d;
+        padding-left: 8px;
+    }
+    .mismatch small {
+        display: block;
+        color: #b30000;
+        margin-top: 6px;
+    }
+
     </style>
 </head>
 <body>
+     <!-- Close Button -->
+    <a href="{% url 'admin_functionalities:enrollment' %}" class="close-btn">
+        <i class="fas fa-times"></i>
+    </a>
+
     <div class="edit-container">
         <h1>Edit Student: {{ student.last_name }}, {{ student.first_name }} (ID: {{ student.id }})</h1>
 
@@ -47,6 +80,15 @@
 
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
+
+            {% comment %} Put this at the top of the Academic Information accordion-content {% endcomment %}
+            {% with mismatches=academic_form.instance.mismatch_fields %}
+                {% if mismatches %}
+                    <div class="messages error">
+                        ⚠️ Warning: Grade mismatches detected for this student. Please verify the uploaded report card.
+                    </div>
+                {% endif %}
+            {% endwith %}
 
             <!-- Student Information -->
             <div class="accordion open">
@@ -162,14 +204,79 @@
                     <div class="form-group">{{ academic_form.dost_exam_result.label_tag }} {{ academic_form.dost_exam_result }}</div>
                     <div class="form-group">{{ academic_form.report_card.label_tag }} {{ academic_form.report_card }}</div>
 
-                    <div class="form-group">{{ academic_form.mathematics.label_tag }} {{ academic_form.mathematics }}</div>
+                    {% comment %} <div class="form-group">{{ academic_form.mathematics.label_tag }} {{ academic_form.mathematics }}</div>
                     <div class="form-group">{{ academic_form.araling_panlipunan.label_tag }} {{ academic_form.araling_panlipunan }}</div>
                     <div class="form-group">{{ academic_form.english.label_tag }} {{ academic_form.english }}</div>
                     <div class="form-group">{{ academic_form.edukasyon_pagpapakatao.label_tag }} {{ academic_form.edukasyon_pagpapakatao }}</div>
                     <div class="form-group">{{ academic_form.science.label_tag }} {{ academic_form.science }}</div>
                     <div class="form-group">{{ academic_form.edukasyon_pangkabuhayan.label_tag }} {{ academic_form.edukasyon_pangkabuhayan }}</div>
                     <div class="form-group">{{ academic_form.filipino.label_tag }} {{ academic_form.filipino }}</div>
-                    <div class="form-group">{{ academic_form.mapeh.label_tag }} {{ academic_form.mapeh }}</div>
+                    <div class="form-group">{{ academic_form.mapeh.label_tag }} {{ academic_form.mapeh }}</div> {% endcomment %}
+
+                    <div class="{% if mismatches.mathematics %}form-group mismatch{% else %}form-group{% endif %}">
+                        {{ academic_form.mathematics.label_tag }} {{ academic_form.mathematics }}
+                        {% if mismatches.mathematics %}
+                            <small>
+                                Entered: {{ mismatches.mathematics.entered }} — OCR: {{ mismatches.mathematics.ocr }}
+                            </small>
+                        {% endif %}
+                    </div>
+                    <div class="{% if mismatches.araling_panlipunan %}form-group mismatch{% else %}form-group{% endif %}">
+                        {{ academic_form.araling_panlipunan.label_tag }} {{ academic_form.araling_panlipunan }}
+                        {% if mismatches.araling_panlipunan %}
+                            <small>
+                                Entered: {{ mismatches.araling_panlipunan.entered }} — OCR: {{ mismatches.araling_panlipunan.ocr }}
+                            </small>
+                        {% endif %}
+                    </div>
+                    <div class="{% if mismatches.english %}form-group mismatch{% else %}form-group{% endif %}">
+                        {{ academic_form.english.label_tag }} {{ academic_form.english }}
+                        {% if mismatches.english %}
+                            <small>
+                                Entered: {{ mismatches.english.entered }} — OCR: {{ mismatches.english.ocr }}
+                            </small>
+                        {% endif %}
+                    </div>
+                    <div class="{% if mismatches.edukasyon_pagpapakatao %}form-group mismatch{% else %}form-group{% endif %}">
+                        {{ academic_form.edukasyon_pagpapakatao.label_tag }} {{ academic_form.edukasyon_pagpapakatao }}
+                        {% if mismatches.edukasyon_pagpapakatao %}
+                            <small>
+                                Entered: {{ mismatches.edukasyon_pagpapakatao.entered }} — OCR: {{ mismatches.edukasyon_pagpapakatao.ocr }}
+                            </small>
+                        {% endif %}
+                    </div>
+                    <div class="{% if mismatches.science %}form-group mismatch{% else %}form-group{% endif %}">
+                        {{ academic_form.science.label_tag }} {{ academic_form.science }}
+                        {% if mismatches.science %}
+                            <small>
+                                Entered: {{ mismatches.science.entered }} — OCR: {{ mismatches.science.ocr }}
+                            </small>
+                        {% endif %}
+                    </div>
+                    <div class="{% if mismatches.edukasyon_pangkabuhayan %}form-group mismatch{% else %}form-group{% endif %}">
+                        {{ academic_form.edukasyon_pangkabuhayan.label_tag }} {{ academic_form.edukasyon_pangkabuhayan }}
+                        {% if mismatches.edukasyon_pangkabuhayan %}
+                            <small>
+                                Entered: {{ mismatches.edukasyon_pangkabuhayan.entered }} — OCR: {{ mismatches.edukasyon_pangkabuhayan.ocr }}
+                            </small>
+                        {% endif %}
+                    </div>
+                    <div class="{% if mismatches.filipino %}form-group mismatch{% else %}form-group{% endif %}">
+                        {{ academic_form.filipino.label_tag }} {{ academic_form.filipino }}
+                        {% if mismatches.filipino %}
+                            <small>
+                                Entered: {{ mismatches.filipino.entered }} — OCR: {{ mismatches.filipino.ocr }}
+                            </small>
+                        {% endif %}
+                    </div>
+                     <div class="{% if mismatches.mapeh %}form-group mismatch{% else %}form-group{% endif %}">
+                        {{ academic_form.mapeh.label_tag }} {{ academic_form.mapeh }}
+                        {% if mismatches.mapeh %}
+                            <small>
+                                Entered: {{ mismatches.mapeh.entered }} — OCR: {{ mismatches.mapeh.ocr }}
+                            </small>
+                        {% endif %}
+                    </div>
 
                     <div class="form-group">{{ academic_form.is_working_student.label_tag }} {{ academic_form.is_working_student }}</div>
                     <div class="form-group">{{ academic_form.work_type.label_tag }} {{ academic_form.work_type }}</div>

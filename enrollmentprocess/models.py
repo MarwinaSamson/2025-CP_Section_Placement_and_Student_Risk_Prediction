@@ -143,7 +143,8 @@ class StudentAcademic(models.Model):
     is_pwd = models.BooleanField(default=False, verbose_name="Is a Person With Disability")
     disability_type = models.CharField(max_length=100, blank=True, null=True, verbose_name="Type of Disability")
     agreed_to_terms = models.BooleanField(default=False, verbose_name="Agreed to School Policies and Terms")
-
+    mismatch_fields = models.JSONField(default=dict, blank=True, null=True, verbose_name="Detected mismatched fields")
+        
     def __str__(self):
         return f"Academic Data for {self.student.first_name} {self.student.last_name}"
 

@@ -1,0 +1,50 @@
+{
+    "filipino": [
+        731,
+        178,
+        66,
+        63
+    ],
+    "english": [
+        737,
+        254,
+        68,
+        66
+    ],
+    "science": [
+        739,
+        331,
+        68,
+        74
+    ],
+    "mathematics": [
+        731,
+        418,
+        75,
+        69
+    ],
+    "araling_panlipunan": [
+        735,
+        506,
+        69,
+        82
+    ],
+    "mapeh": [
+        733,
+        596,
+        0,
+        0
+    ],
+    "edukasyon_pangkabuhayan": [
+        728,
+        1058,
+        68,
+        82
+    ],
+    "edukasyon_pagpapakatao": [
+        720,
+        1200,
+        68,
+        88
+    ]
+}

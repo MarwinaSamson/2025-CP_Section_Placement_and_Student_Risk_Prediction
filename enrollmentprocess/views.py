@@ -8,6 +8,7 @@ from django.http import HttpResponseRedirect
 from django.db import transaction
 from .model_utils import predict_program_eligibility
 from admin_functionalities.models import Notification 
+from .model_utils import extract_grades_from_image, SUBJECT_MAPPING  # Import from utils
 
 
 class IndexView(TemplateView):
@@ -126,7 +127,95 @@ class StudentAcademicView(CreateView):
         return super().form_valid(form)
     
     def get_success_url(self): return reverse_lazy('section_placement', kwargs={'student_id': self.kwargs['student_id']})
- 
+    def form_valid(self, form):
+        student = get_object_or_404(Student, pk=self.kwargs['student_id'])
+        form.instance.student = student
+
+        # Enforce values from Student
+        form.instance.is_working_student = student.is_working_student
+        form.instance.work_type = student.working_details if student.is_working_student else None
+        form.instance.is_pwd = student.is_sped
+        form.instance.disability_type = student.sped_details if student.is_sped else None
+
+        # Ensure LRN matches
+        if form.cleaned_data['lrn'] != student.lrn:
+            form.add_error('lrn', "LRN does not match the student's record.")
+            return self.form_invalid(form)
+
+        # Set overall_average if provided (you may compute it instead)
+        form.instance.overall_average = form.cleaned_data.get('overall_average', 0.0)
+
+        # First save the form / instance (super will call form.save())
+        response = super().form_valid(form)  # This sets self.object
+
+        # Now extract OCR grades from the saved file (self.object.report_card)
+        mismatches = {}
+        try:
+            report_field = self.object.report_card
+            if report_field:
+                # Use the storage path if available, else pass the file-like object
+                ocr_source = None
+                try:
+                    ocr_source = report_field.path  # Works with local FileSystemStorage
+                except Exception:
+                    # Fallback to file-like object
+                    ocr_source = report_field
+
+                ocr_grades = extract_grades_from_image(ocr_source)
+
+                # Fields to compare - keys should match your SUBJECT_MAPPING keys
+                compare_fields = [
+                    'mathematics', 'araling_panlipunan', 'english',
+                    'edukasyon_pagpapakatao', 'science',
+                    'edukasyon_pangkabuhayan', 'filipino', 'mapeh'
+                ]
+                TOLERANCE = 0.5  # Tolerance for small OCR/rounding differences
+
+                for field_name in compare_fields:
+                    entered = getattr(self.object, field_name, None)
+                    ocr_value = ocr_grades.get(field_name)
+                    if entered is not None and ocr_value is not None:
+                        try:
+                            if abs(float(entered) - float(ocr_value)) > TOLERANCE:
+                                mismatches[field_name] = {
+                                    'entered': float(entered),
+                                    'ocr': float(ocr_value)
+                                }
+                        except Exception:
+                            # If conversion fails, mark as mismatch for manual check
+                            mismatches[field_name] = {
+                                'entered': entered,
+                                'ocr': ocr_value
+                            }
+
+        except Exception as e:
+            print("OCR/verification error:", e)
+            # Do not block saving; just continue
+
+        # Save mismatch details into the JSONField
+        self.object.mismatch_fields = mismatches or {}
+        self.object.save(update_fields=['mismatch_fields'])
+
+        # Optional: Create a Notification so admin sees this in their queue
+        try:
+            if mismatches:
+                student_name = f"{student.first_name} {student.last_name}".strip()
+                fields = ", ".join(mismatches.keys())
+                Notification.objects.create(
+                    title="Grade mismatch detected",
+                    message=f"Possible grade mismatch for {student_name}. Fields: {fields}"
+                )
+        except Exception as e:
+            print("Notification creation failed:", e)
+
+        return response
+
+
+    def get_success_url(self):
+        # Redirect to section placement with the current student_id (from URL kwargs)
+        return reverse_lazy('section_placement', kwargs={'student_id': self.kwargs['student_id']})
+
+
 
 
 class SectionPlacementView(TemplateView):

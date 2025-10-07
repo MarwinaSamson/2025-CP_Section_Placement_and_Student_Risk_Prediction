@@ -8,7 +8,7 @@ const sectionsData = {
       location: "Bldg 1 Room 101",
       students: 35,
       maxStudents: 40,
-      avatar: "../assets/kakashi.webp",
+      avatar: "{% static 'admin_functionalities/assets/kakashi.webp'%}",
     },
     {
       id: 2,
@@ -17,7 +17,7 @@ const sectionsData = {
       location: "Bldg 1 Room 102",
       students: 38,
       maxStudents: 40,
-      avatar: "../assets/secretary.png",
+      avatar: "{% static 'admin_functionalities/assets/secretary.png'%}",
     },
   ],
   SPFL: [
