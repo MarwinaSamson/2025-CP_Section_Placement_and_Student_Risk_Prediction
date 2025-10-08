@@ -34,6 +34,7 @@
             <h2>ENROLLMENT FORM</h2>
             <p>School Year 2025-2026</p>
         </div>
+<<<<<<< Updated upstream
 
         <div class="form-content">
             <div class="form-left">
@@ -66,10 +67,142 @@
                         <label><input type="radio" name="working" value="yes"> YES</label>
                         <input type="text" class="fill-in-box">
                         <label><input type="radio" name="working" value="no"> NO</label>
+=======
+
+        <form method="POST"
+            action="{% if student_id %}{% url 'student_data' student_id=student_id %}{% else %}{% url 'student_data' %}{% endif %}"
+            enctype="multipart/form-data" id="studentDataForm" novalidate>
+            {% csrf_token %}
+
+            {% if form.errors %}
+            <ul class="errorlist">
+                {% for field in form %}
+                {% for error in field.errors %}
+                <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            <div class="form-content">
+                <div class="form-left">
+                    <div class="form-field">
+                        <label for="{{ form.lrn.id_for_label }}">LRN Number:</label>
+                        {{ form.lrn }}
+                        <div class="validation-message" id="lrn-validation">LRN must be exactly 12 digits.</div>
+                        {% if form.lrn.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.lrn.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-field checkbox-group">
+                        <p>{{ form.enrolling_as.label }}</p>
+                        <div class="checkbox-options">
+                            {% for checkbox in form.enrolling_as %}
+                            <label>{{ checkbox.tag }} {{ checkbox.choice_label }}</label>
+                            {% endfor %}
+                        </div>
+                        {% if form.enrolling_as.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.enrolling_as.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-field radio-input">
+                        <p>{{ form.is_sped.label }}</p>
+                        <div class="radio-options">
+                            {% for radio in form.is_sped %}
+                            <label>{{ radio.tag }} {{ radio.choice_label }}</label>
+                            {% endfor %}
+                        </div>
+                        {{ form.sped_details }}
+                        {% if form.is_sped.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.is_sped.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                        {% if form.sped_details.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.sped_details.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-field radio-input">
+                        <p>{{ form.is_working_student.label }}</p>
+                        <div class="radio-options">
+                            {% for radio in form.is_working_student %}
+                            <label>{{ radio.tag }} {{ radio.choice_label }}</label>
+                            {% endfor %}
+                        </div>
+                        {{ form.working_details }}
+                        {% if form.is_working_student.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.is_working_student.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                        {% if form.working_details.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.working_details.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-right">
+                    <div class="image-upload-box">
+                        <p>UPLOAD STUDENT 1x1 PICTURE</p>
+                        <label for="photo-upload" class="upload-area" id="upload-area-label">
+                            <div class="upload-icon-container">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                            </div>
+                            <div class="preview-container">
+                                {% if existing_photo %}
+                                <img id="photo-preview" src="{{ existing_photo }}" alt="Current Photo" style="display: block;">
+                                {% else %}
+                                <img id="photo-preview" src="#" alt="Photo Preview" style="display: none;">
+                                {% endif %}
+                            </div>
+                        </label>
+                        {{ form.photo }}
+                        <div class="file-validation-message" id="photo-validation">
+                            {% if existing_photo %}
+                            Current photo is uploaded. Upload new one to replace.
+                            {% else %}
+                            Please upload a student 1x1 picture.
+                            {% endif %}
+                        </div>
+                        {% if form.photo.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.photo.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+>>>>>>> Stashed changes
                     </div>
                 </div>
             </div>
 
+<<<<<<< Updated upstream
             <div class="form-right">
                 <div class="image-upload-box">
                     <p>UPLOAD STUDENT 1x1 PICTURE</p>
@@ -134,6 +267,172 @@
                         <option value="">Select</option>
                     </select>
                 </div>
+=======
+            <div class="student-info-section">
+                <h3 class="section-title">A. Student's Information Data <span class="subtitle">(Please fill in the
+                        complete and correct details)</span></h3>
+                <div class="grid-container">
+                    <div class="grid-item full-width">
+                        <label>NAME:</label>
+                        <div class="name-fields">
+                            {{ form.last_name }}
+                            {{ form.first_name }}
+                            {{ form.middle_name }}
+                        </div>
+                        {% if form.last_name.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.last_name.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                        {% if form.first_name.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.first_name.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                        {% if form.middle_name.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.middle_name.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+
+                    <div class="grid-item full-width">
+                        <label for="{{ form.address.id_for_label }}">Present Home Address:</label>
+                        {{ form.address }}
+                        {% if form.address.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.address.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+
+                    <div class="grid-item">
+                        <label for="{{ form.gender.id_for_label }}">Gender:</label>
+                        {{ form.gender }}
+                        {% if form.gender.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.gender.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+
+                    <div class="grid-item">
+                        <label for="{{ form.date_of_birth.id_for_label }}">Date of Birth:</label>
+                        <div class="birthdate-container">
+                            {{ form.date_of_birth }}
+                            <span class="age-display" id="student-age-display">Age: --</span>
+                        </div>
+                        {% if form.date_of_birth.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.date_of_birth.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+
+                    <div class="grid-item">
+                        <label for="{{ form.place_of_birth.id_for_label }}">Place of Birth:</label>
+                        {{ form.place_of_birth }}
+                        {% if form.place_of_birth.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.place_of_birth.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+
+                    <div class="grid-item">
+                        <label for="{{ form.religion.id_for_label }}">Religion:</label>
+                        {{ form.religion }}
+                        {% if form.religion.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.religion.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+
+                    <div class="grid-item">
+                        <label for="{{ form.dialect_spoken.id_for_label }}">Mother Tongue:</label>
+                        {{ form.dialect_spoken }}
+                        {% if form.dialect_spoken.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.dialect_spoken.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+
+                    <div class="grid-item">
+                        <label for="{{ form.ethnic_tribe.id_for_label }}">Ethnic Tribe:</label>
+                        {{ form.ethnic_tribe }}
+                        {% if form.ethnic_tribe.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.ethnic_tribe.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="grid-container second-row">
+                    <div class="grid-item full-width">
+                        <label for="{{ form.last_school_attended.id_for_label }}">Name of Last School Attended:</label>
+                        {{ form.last_school_attended }}
+                        {% if form.last_school_attended.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.last_school_attended.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+
+                    <div class="grid-item">
+                        <label for="{{ form.previous_grade_section.id_for_label }}">Previous Grade and Section:</label>
+                        {{ form.previous_grade_section }}
+                        {% if form.previous_grade_section.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.previous_grade_section.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+
+                    <div class="grid-item">
+                        <label for="{{ form.last_school_year.id_for_label }}">School Year Last Attended:</label>
+                        {{ form.last_school_year }}
+                        {% if form.last_school_year.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.last_school_year.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-footer">
+                <a href="{% url 'homepage' %}" class="back-btn" role="button">Back to Home</a>
+                <button type="submit" form="studentDataForm" class="next-btn">Next Form</button>
+>>>>>>> Stashed changes
             </div>
             <div class="grid-container second-row">
                 <div class="grid-item full-width">
@@ -156,7 +455,11 @@
         </div>
     </main>
 
+<<<<<<< Updated upstream
     <script src="../../static/enrollmentprocess/js/preEnlistment.js" defer></script>
+=======
+    <script src="{% static 'enrollmentprocess/js/preEnlistment.js' %}" defer></script>
+>>>>>>> Stashed changes
 </body>
 
 </html>
