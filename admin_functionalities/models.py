@@ -239,6 +239,7 @@
 
 from django.contrib.auth.models import AbstractBaseUser , PermissionsMixin, BaseUserManager
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.exceptions import ValidationError
 from enrollmentprocess.models import Student
 from django.db import models
 from django.utils import timezone
@@ -247,39 +248,30 @@ from datetime import date
 
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self, username, email, password=None, first_name='', last_name='', middle_name='', **extra_fields):
+    def create_user(self, username, email, password=None, **extra_fields):
         if not email:
             raise ValueError('The Email field must be set')
-
         email = self.normalize_email(email)
-        user = self.model(
-            username=username,
-            email=email,
-            first_name=first_name,
-            last_name=last_name,
-            middle_name=middle_name,
-            **extra_fields
-        )
+        username = email  # Set username to email for simplicity (unique via email)
+        user = self.model(username=username, email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, username, email, password, first_name='', last_name='', middle_name='', **extra_fields):
+    def create_superuser(self, username, email, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('is_active', True)
-        extra_fields.setdefault('is_staff', True)  # Required for admin permissions
 
-        if extra_fields.get('is_superuser') is not True:
-            raise ValueError('Superuser must have is_superuser=True.')
         if extra_fields.get('is_staff') is not True:
             raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
 
-        return self.create_user(username, email, password, first_name, last_name, middle_name, **extra_fields)
-
+        return self.create_user(username, email, password, **extra_fields)
 
 class CustomUser (AbstractBaseUser , PermissionsMixin):
     id = models.BigAutoField(primary_key=True)
-    username = models.CharField(max_length=150, unique=True)
+    username = models.CharField(max_length=150, unique=True)  # Set to email in create_user
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=30, blank=True)
     middle_name = models.CharField(max_length=30, blank=True)
@@ -291,14 +283,37 @@ class CustomUser (AbstractBaseUser , PermissionsMixin):
     is_staff = models.BooleanField(default=False)  # Required for admin permissions
     force_password_change = models.BooleanField(default=False, verbose_name="Force Password Change on First Login")
 
+    # NEW: Essentials for admin creation (position/department for all users)
+    employee_id = models.CharField(max_length=50, blank=True, null=True, verbose_name="Employee ID")
+    position = models.CharField(max_length=100, blank=True, verbose_name="Position")  # e.g., 'Teacher', 'Administrative'
+    department = models.CharField(max_length=100, blank=True, null=True, verbose_name="Department")  # Optional
+
+    # NEW: Role flags for subtypes (especially teachers)
+    is_staff_expert = models.BooleanField(default=False, verbose_name="Staff Expert Access")  # For Staff Administrative
+    is_teacher = models.BooleanField(default=False, verbose_name="General Teacher Role")  # Umbrella for Teacher position
+    is_subject_teacher = models.BooleanField(default=False, verbose_name="Subject Teacher Access")  # Subtype
+    is_adviser = models.BooleanField(default=False, verbose_name="Adviser Access")  # Subtype
+
+
+
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
 
     objects = CustomUserManager()
 
+    def clean(self):
+        super().clean()
+        if self.email and self.username != self.email:
+            raise ValidationError('Username must match email for consistency.')
+
     def __str__(self):
         full_name = f"{self.first_name} {self.middle_name} {self.last_name}".strip()
         return full_name if full_name else self.username
+
+    class Meta:
+        verbose_name = "User "
+        verbose_name_plural = "Users"
+
 
 
 class Notification(models.Model):

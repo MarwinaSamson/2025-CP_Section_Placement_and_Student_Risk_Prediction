@@ -21,15 +21,15 @@ urlpatterns = [
     path('login/', views.admin_login, name='login'),
     path('logout/', views.custom_logout, name='logout'),
     path('dashboard/', views.admin_dashboard, name='dashboard'),
-    path('settings/', views.settings_view, name='settings'),
     path('sections/', views.sections_view, name='sections'),
     path('teachers/', views.teachers_view, name='teachers'),
     path('enrollment/', views.enrollment_view, name='enrollment'),
     path('mark-read/', views.mark_notification_read, name='mark_notification_read'),
     path('enrollment/student/<int:student_id>/edit/', views.student_edit_view, name='student_edit'),
-        
-        
-       
+    
+    # ALL SETTINGS RELATED PATHS ARE HERE   
+    path('settings/', views.settings_view, name='settings'),   
+    path('settings/add-user/', views.AddUserView.as_view(), name='add_user'),   
   
 ]
 

@@ -1,39 +1,46 @@
 # admin_functionalities/views.py
 
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.http import JsonResponse, HttpResponseForbidden
 from django.contrib import messages
-from enrollmentprocess.models import Student, SectionPlacement, StudentAcademic
-from django.http import HttpResponseForbidden, JsonResponse
-from django.db.models import Prefetch
-from django.db.models import Count
-from .models import Notification
-from django.http import JsonResponse
+from django.contrib.auth import authenticate, login, logout, get_user_model
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.mixins import UserPassesTestMixin
+from django.middleware.csrf import get_token
+from django.db import transaction
+from django.db.models import Prefetch, Count
+from django.urls import reverse_lazy
+from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from django.utils import timezone
-from enrollmentprocess.models import Student, Family, StudentNonAcademic, StudentAcademic, SectionPlacement
-from enrollmentprocess.forms import StudentForm, FamilyForm, StudentNonAcademicForm, StudentAcademicForm, SectionPlacementForm
-import json
-from django.contrib.auth.mixins import UserPassesTestMixin
 from django.views.generic import UpdateView
-from django.urls import reverse_lazy
-from django.db import transaction
-from .models import StudentRequirements
-from django.views import View
-from django.shortcuts import render
-from .forms import AddUserForm
-from django.contrib.auth import get_user_model
-from .forms import StudentRequirementsForm
+
+# App-specific imports
+from .models import Notification, StudentRequirements, CustomUser , AddUserLog, Teacher
+from .forms import AddUserForm, StudentRequirementsForm
+
+from enrollmentprocess.models import (
+    Student,
+    Family,
+    StudentNonAcademic,
+    StudentAcademic,
+    SectionPlacement,
+)
+
 from enrollmentprocess.forms import (
     StudentForm,
     FamilyForm,
     StudentNonAcademicForm,
     StudentAcademicForm,
     SectionPlacementForm,
-    
 )
+
+# Standard library
+import json
+from django.http import JsonResponse
+
 
 
 # NEW: Generic helper (unchanged)
@@ -380,11 +387,6 @@ def admin_dashboard(request):
 
 
 @login_required
-def settings_view(request):
-    # Add any context data if needed
-    return render(request, 'admin_functionalities/settings.html')
-
-@login_required
 def sections_view(request):
     # Add context if needed
     return render(request, 'admin_functionalities/sections.html', {'active_page': 'sections'})
@@ -530,3 +532,125 @@ class StudentAcademicUpdateView(AdminRequiredMixin, UpdateView):
     def get_success_url(self):
         return reverse_lazy('admin_dashboard')  # or wherever admin should go after editing
 
+
+# ALL SETTINGS RELATED VIEWS ARE HERE
+@method_decorator(login_required, name='dispatch')
+# class AddUserView(View):
+#       def get(self, request):  # NEW: Handle GET (if direct access to /add-user/, redirect to settings)
+#         return redirect('admin_functionalities:settings')
+
+#       def post(self, request):
+#         print(f"=== DEBUG: POST received in AddUser View! Raw POST data: {dict(request.POST)} ===")  # KEY: Shows all form data (e.g., position='Administrative')
+#         print(f"=== DEBUG: FILES present: {bool(request.FILES)} (userImage: {request.FILES.get('userImage', 'None')}) ===")  # Check file if needed
+
+#         form = AddUserForm(request.POST, request.FILES)  # Process form
+#         print(f"=== DEBUG: Form errors: {form.errors} ===")  # KEY: Exact validation errors (e.g., {'position': ['This field is required.']})
+#         print(f"=== DEBUG: Form cleaned_data (if partial): {form.cleaned_data} ===")  # Shows valid fields
+
+#         if form.is_valid():
+#             print("=== DEBUG: Form VALID – Saving user... ===")
+#             try:
+#                 result = form.save(created_by_user=request.user)
+#                 print(f"=== DEBUG: SUCCESS – User created! ID={result['user'].id}, Position={result['user'].position}, Roles: is_teacher={result['user'].is_teacher}, is_subject_teacher={result['user'].is_subject_teacher}, is_adviser={result['user'].is_adviser} ===")
+#                 messages.success(request, 'User  added successfully! Please refresh the page to see the new user.')
+#                 return redirect('admin_functionalities:settings')  # Redirect to settings (reloads table, closes modal implicitly)
+#             except Exception as save_err:
+#                 print(f"=== DEBUG: Save ERROR: {save_err} ===")
+#                 messages.error(request, f'Error saving user: {str(save_err)}')
+#                 return redirect('admin_functionalities:settings')
+#         else:
+#             print("=== DEBUG: Form INVALID – Redirecting with errors ===")
+#             # For regular form, show errors via messages (terminal + browser flash)
+#             error_msg = 'Please correct the form errors (check terminal for details).'
+#             for field, errs in form.errors.items():
+#                 error_msg += f' {field}: {", ".join(errs)}'
+#             messages.error(request, error_msg)
+#             # Re-fetch context for redirect
+#             users = CustomUser .objects.filter(is_active=True).order_by('-id')[:20]
+#             logs = AddUserLog.objects.select_related('user').order_by('-date', '-time')[:20]
+#             context = {
+#                 'active_page': 'settings',
+#                 'users': users,
+#                 'logs': logs,
+#                 'form': form,  # Pass form (errors bound; but modal needs JS to show – terminal has details)
+#             }
+#             return render(request, 'admin_functionalities/settings.html', context) 
+class AddUserView(View):
+    def get(self, request):  # Handle direct GET (redirect to settings)
+        return redirect('admin_functionalities:settings')
+
+    def post(self, request):
+        print(f"=== DEBUG: POST received in AddUser  View! Raw POST data: {dict(request.POST)} ===")
+        print(f"=== DEBUG: FILES present: {bool(request.FILES)} (userImage: {request.FILES.get('userImage', 'None')}) ===")
+
+        form = AddUserForm(request.POST, request.FILES)
+        print(f"=== DEBUG: Form errors: {form.errors} ===")
+        print(f"=== DEBUG: Form cleaned_data (if partial): {form.cleaned_data} ===")
+
+        if form.is_valid():
+            print("=== DEBUG: Form VALID – Saving user... ===")
+            try:
+                result = form.save(created_by_user=request.user)
+                print(f"=== DEBUG: SUCCESS – User created! ID={result['user'].id}, Position={result['user'].position}, Roles: is_teacher={result['user'].is_teacher}, is_subject_teacher={result['user'].is_subject_teacher}, is_adviser={result['user'].is_adviser} ===")
+                # JSON for AJAX: Success + data for JS (e.g., reload table)
+                return JsonResponse({
+                    'success': True, 
+                    'message': 'User  added successfully!', 
+                    'user_id': result['user'].id,
+                    'position': result['user'].position  # Optional for JS
+                })
+            except Exception as save_err:
+                print(f"=== DEBUG: Save ERROR: {save_err} ===")
+                return JsonResponse({'success': False, 'error': str(save_err)}, status=500)
+        else:
+            print("=== DEBUG: Form INVALID – Returning JSON errors ===")
+            # JSON for AJAX: Errors dict (JS can show field-specific alerts)
+            return JsonResponse({
+                'success': False, 
+                'errors': form.errors,  # e.g., {'password': ['Must be 8+ chars'], '__all__': ['Username mismatch']}
+                'message': 'Please correct the errors below.'
+            }, status=400)
+
+
+@login_required
+def settings_view(request):
+    # Dynamic context for tables
+    users = CustomUser .objects.filter(is_active=True).order_by('-id')[:20]  # Last 20 active users
+    logs = AddUserLog.objects.select_related('user').order_by('-date', '-time')[:20]  # Last 20 logs
+    context = {
+        'active_page': 'settings',
+        'users': users,
+        'logs': logs,
+    }
+    return render(request, 'admin_functionalities/settings.html', context)
+
+@login_required
+def get_user_profile(request, user_id):
+    try:
+        user = CustomUser .objects.get(id=user_id, is_active=True)
+        teacher = getattr(user, 'teacher_profile', None)  # None OK
+
+        profile_data = {
+            'full_name': f"{user.first_name} {user.last_name}",
+            'email': user.email,
+            'employee_id': user.employee_id or 'Not provided',
+            'position': user.position or 'Not specified',
+            'department': user.department or 'Not provided',
+            'profile_photo': (teacher.profile_photo.url if teacher and teacher.profile_photo else None),
+            'date_of_birth': (teacher.date_of_birth.strftime('%B %d, %Y') if teacher and teacher.date_of_birth else 'Not provided – Update your profile'),
+            'gender': (teacher.gender if teacher else 'Not provided – Update your profile'),
+            'phone_number': (teacher.phone if teacher and teacher.phone else user.phone_number or 'Not provided – Update your profile'),  # Fallback if added to CustomUser  later
+            'address': (teacher.address if teacher and teacher.address else user.address or 'Not provided – Update your profile'),  # Same
+            'age': (teacher.age if teacher and teacher.age else 'Not provided – Update your profile'),
+            'is_subject_teacher': user.is_subject_teacher,  # NEW: Direct from model
+            'is_adviser': user.is_adviser,  # NEW
+            'roles_summary': f"Subject Teacher: {'Yes' if user.is_subject_teacher else 'No'} | Adviser: {'Yes' if user.is_adviser else 'No'}" if user.is_teacher else 'N/A (Non-Teacher Role)',  # NEW: For modal
+            'subjects_taught': (teacher.subjects_taught if teacher else 'To be assigned – Update your profile'),
+            'classes_handled': (teacher.classes_handled if teacher else 'To be assigned – Update your profile'),
+            'change_history': list(AddUserLog.objects.filter(user=user).values('action', 'date', 'time')[:3]) or [
+                {'action': 'Account Created', 'date': user.date_joined.strftime('%m/%d/%Y'), 'time': user.date_joined.strftime('%I:%M %p')}
+            ],
+        }
+        return JsonResponse({'success': True, 'data': profile_data})
+    except CustomUser .DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'User  not found'}, status=404)

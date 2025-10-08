@@ -184,17 +184,26 @@
 
 .access-badge.admin {
     background: #e3f2fd;
-    color: #1976d2;
+    color: #c2185b;
+    
 }
 
 .access-badge.staff {
     background: #e8f5e8;
-    color: #2e7d32;
+    color: #59a05d;
 }
 
 .access-badge.adviser {
     background: #fce4ec;
-    color: #c2185b;
+    color: #1976d2;
+}
+.access-badge.teacher {
+    background: #fff3e0;
+    color: #f57c00;
+}
+.access-badge.subject-teacher {
+    background: #f3e5f5;
+    color: #11b648;
 }
 
 /* Actions Dropdown */
@@ -854,3 +863,4 @@
         margin: 2% auto;
     }
 }
+

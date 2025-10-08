@@ -2,6 +2,8 @@ from django import forms
 from .models import StudentRequirements
 from django.contrib.auth import get_user_model
 from .models import Teacher, AddUserLog, ChangeHistory
+from django.core.exceptions import ValidationError
+
 
 
 
@@ -21,123 +23,121 @@ class StudentRequirementsForm(forms.ModelForm):
             'reading_assessment_done': forms.CheckboxInput(),
         }
 
-CustomUser = get_user_model()  # Gets your CustomUser
 
-class AddUserForm(forms.Form):
-    """
-    Form for adding users via modal. Creates CustomUser + optional Teacher + AddUserLog.
-    """
-    # User fields
-    first_name = forms.CharField(max_length=30, label="First Name", required=True)
-    last_name = forms.CharField(max_length=30, label="Last Name", required=True)
-    email = forms.EmailField(label="Email Address", required=True)
-    password = forms.CharField(  # Renamed from temp_password
-        widget=forms.PasswordInput,
-        label="Password *",
-        required=True,
-        help_text="Admin-provided password. User must change it on first login."
-    )
-    employee_id = forms.CharField(max_length=20, required=False, label="Employee ID")
+CustomUser = get_user_model()
+
+class AddUserForm(forms.ModelForm):
+    password = forms.CharField(widget=forms.PasswordInput(), label="Temporary Password *", required=True)
     position = forms.ChoiceField(
         choices=[
             ('', 'Select Position'),
-            ('Administrator', 'Administrator'),
-            ('Subject Teacher', 'Subject Teacher'),
-            ('Class Adviser', 'Class Adviser'),
-            ('Staff', 'Staff'),
+            ('Administrative', 'Administrative'),
+            ('Staff Administrative', 'Staff Administrative'),
+            ('Teacher', 'Teacher'),  # Umbrella – subtypes via checkboxes
         ],
-        label="Position",
-        required=True
+        required=True,
+        error_messages={'required': 'Please select a position.'}
     )
     department = forms.ChoiceField(
         choices=[
             ('', 'Select Department'),
-            ('STE', 'STE'),
-            ('SPFL', 'SPFL'),
-            ('SPTVE', 'SPTVE'),
-            ('Regular', 'Regular'),
+            ('English Department', 'English Department'),
+            ('Mathematics Department', 'Mathematics Department'),
+            ('Filipino Department', 'Filipino Department'),
+            ('Science Department', 'Science Department'),
+            ('MAPEH Department', 'MAPEH Department'),
+            ('ARPAN Department', 'ARPAN Department'),
+            ('Values Department', 'Values Department'),
+            ('TLE Department', 'TLE Department'),
         ],
-        required=False,
-        label="Department"
+        required=False
     )
-    user_image = forms.ImageField(required=False, label="User Image")
-
-    # Permissions (checkboxes)
-    admin_access = forms.BooleanField(required=False, label="Administrator Access")
-    staff_expert_access = forms.BooleanField(required=False, label="Staff Expert Access")
+    # Access checkboxes: Core + subtypes for teachers
+    admin_access = forms.BooleanField(required=False, label="Administrative Access")
+    staff_expert_access = forms.BooleanField(required=False, label="Staff Administrative Access")
+    subject_teacher_access = forms.BooleanField(required=False, label="Subject Teacher Access")
     adviser_access = forms.BooleanField(required=False, label="Adviser Access")
-    teacher_access = forms.BooleanField(required=False, label="Teacher Access")
+
+    class Meta:
+        model = CustomUser  
+        fields = ['first_name', 'last_name', 'email', 'employee_id', 'position', 'department']
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control', 'required': True}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control', 'required': True}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'required': True}),
+            'employee_id': forms.TextInput(attrs={'class': 'form-control'}),
+            # No HiddenInput needed – ChoiceField renders <select>
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # NEW: Pre-set username = email on instance to pass clean() (before validation)
+        if self.instance.pk is None and self.data:  # New instance + POST data
+            email = self.data.get('email', '').strip()
+            if email:
+                self.instance.username = email  # Sync for clean()
 
     def clean_email(self):
-        email = self.cleaned_data['email']
-        if CustomUser.objects.filter(username=email).exists():  # username = email
-            raise forms.ValidationError("Email already registered.")
+        email = self.cleaned_data['email'].strip() if self.cleaned_data.get('email') else ''
+        if not email:
+            raise ValidationError('Email is required.')
+        if CustomUser  .objects.filter(email__iexact=email).exists():
+            raise ValidationError('A user with this email already exists.')
+        # Sync username again for safety
+        self.instance.username = email
         return email
 
-    def clean_employee_id(self):
-        emp_id = self.cleaned_data['employee_id']
-        if emp_id and Teacher.objects.filter(employee_id=emp_id).exists():
-            raise forms.ValidationError("Employee ID already in use.")
-        return emp_id
+    def clean_position(self):
+        position = self.cleaned_data.get('position', '').strip()
+        if not position or position == '':
+            raise ValidationError('Position is required.')
+        return position
+
+    def clean_department(self):
+        dept = self.cleaned_data.get('department', '').strip()
+        return dept or ''
+
+    def clean_password(self):
+        password = self.cleaned_data.get('password', '').strip()
+        if len(password) < 6:  # Keep 6; or change to 5 for '01111'
+            raise ValidationError('Password must be at least 6 characters long.')
+        return password
 
     def save(self, created_by_user=None):
         cleaned_data = self.cleaned_data
-        # Create CustomUser (username = email, password hashed automatically)
-        user = CustomUser.objects.create_user(
-            username=cleaned_data['email'],
+        position = cleaned_data['position']
+        print(f"=== Admin Creation: Position={position}, Email={cleaned_data['email']} ===")
+
+        # Ensure username synced (manager will override, but safe)
+        self.instance.username = cleaned_data['email']
+
+        # Create user with new fields (no personal data yet)
+        user = CustomUser  .objects.create_user(
+            username=cleaned_data['email'],  # Manager sets it
             email=cleaned_data['email'],
-            password=cleaned_data['password'],  # Plain text → hashed via set_password()
+            password=cleaned_data['password'],
             first_name=cleaned_data['first_name'],
             last_name=cleaned_data['last_name'],
-            middle_name='',  # Not in modal
-            is_staff=cleaned_data['admin_access'] or cleaned_data['staff_expert_access'],
-            is_superuser=cleaned_data['admin_access'],
-            is_active=True
+            middle_name='',  # Empty for now
+            employee_id=cleaned_data.get('employee_id', ''),
+            position=position,  # New field
+            department=cleaned_data.get('department', ''),
+            # Roles: Auto-set based on position + checkboxes
+            is_superuser=cleaned_data.get('admin_access', False),
+            is_staff=cleaned_data.get('staff_expert_access', False) or cleaned_data.get('admin_access', False),
+            is_staff_expert=cleaned_data.get('staff_expert_access', False),
+            is_teacher=(position == 'Teacher'),  # Auto for Teacher position
+            is_subject_teacher=(position == 'Teacher' and cleaned_data.get('subject_teacher_access', False)),
+            is_adviser=(position == 'Teacher' and cleaned_data.get('adviser_access', False)),
+            force_password_change=True,  # Always for new users
         )
         user.save()
+        print(f"CustomUser   created: {user.email} (Position: {position}, is_teacher: {user.is_teacher}, is_subject_teacher: {user.is_subject_teacher}, is_adviser: {user.is_adviser})")
 
-        # Force password change on first login
-        user.force_password_change = True
-        user.save(update_fields=['force_password_change'])
+        # Log (assuming AddUser Log exists)
+        
+        action = f"Created a New User Account ({position})"
+        AddUserLog.objects.create(user=created_by_user or user, action=action)
+        print(f"Log created: {action}")
 
-        teacher = None
-        position = cleaned_data['position']
-        # Create Teacher if teacher-related position
-        if position in ['Subject Teacher', 'Class Adviser']:
-            teacher = Teacher.objects.create(
-                user=user,
-                employee_id=cleaned_data['employee_id'] or '',
-                first_name=cleaned_data['first_name'],
-                last_name=cleaned_data['last_name'],
-                middle_name='',
-                email=cleaned_data['email'],
-                position=position,
-                department=cleaned_data['department'] or '',
-                is_subject_teacher=(position == 'Subject Teacher' or cleaned_data['teacher_access']),
-                is_adviser=(position == 'Class Adviser' or cleaned_data['adviser_access']),
-                profile_photo=cleaned_data.get('user_image'),
-                # Other fields blank: gender, DOB, phone, address
-            )
-            # Log to ChangeHistory
-            ChangeHistory.objects.create(
-                teacher=teacher,
-                action='created',
-                description=f'Created by admin {created_by_user.username if created_by_user else "Unknown"}'
-            )
-
-        # Log to AddUserLog with role booleans
-        AddUserLog.objects.create(
-            user=created_by_user,  # Admin who added
-            action=f"Created a New User Account ({position})",
-            description=f'Added by admin {created_by_user.username if created_by_user else "Unknown"}',
-            affected_first_name=user.first_name,
-            affected_last_name=user.last_name,
-            affected_email=user.email,
-            affected_employee_id=cleaned_data['employee_id'] or '',
-            affected_is_admin=cleaned_data['admin_access'],
-            affected_is_staff_expert=cleaned_data['staff_expert_access'],
-            affected_is_adviser=cleaned_data['adviser_access'],
-            affected_is_teacher=cleaned_data['teacher_access']
-        )
-
-        return {'user': user, 'teacher': teacher}
+        return {'user': user}
