@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Non-Academic Survey</title>
-    {% load static %}
     <link rel="stylesheet" href="../../static/enrollmentprocess/css/preEnlistment.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
@@ -14,7 +13,7 @@
 
     <header class="header">
         <div class="logo-section">
-            <img src="{% static 'assets/westLogo.png' %}" alt="School Logo" class="logo">
+            <img src="../assets/westLogo.png" alt="School Logo" class="logo">
             <div class="school-info">
                 <h1>Zamboanga National High School West</h1>
                 <p>R.T. Lim Boulevard Zamboanga City, Philippines</p>
@@ -22,9 +21,9 @@
             </div>
         </div>
         <div class="header-icons">
-            <img src="{% static 'assets/deped1.png' %}" alt="Logo 2" class="logo">
-            <img src="{% static 'assets/deped2.png' %}" alt="SRIC" class="logo">
-            <img src="{% static 'assets/deped3.png' %}" alt="DepEd Logo" class="logo">
+            <img src="../assets/deped1.png" alt="Logo 2" class="logo">
+            <img src="../assets/deped2.png" alt="SRIC" class="logo">
+            <img src="../assets/deped3.png" alt="DepEd Logo" class="logo">
         </div>
     </header>
 
@@ -45,31 +44,28 @@
                 <div class="form-field checkbox-group">
                     <p>How many hours do you spend studying or doing homework each day?</p>
                     <div class="checkbox-options" data-single="true">
-                        <label><input type="radio" name="study_hours" value="less_than_1" required> Less than 1 hour</label>
-                        <label><input type="radio" name="study_hours" value="1_2_hours"> 1-2 hours</label>
-                        <label><input type="radio" name="study_hours" value="2_3_hours"> 2-3 hours</label>
-                        <label><input type="radio" name="study_hours" value="more_than_3"> More than 3 hours</label>
+                        <label><input type="checkbox" name="study_hours"> Less than 1 hour</label>
+                        <label><input type="checkbox" name="study_hours"> 1-2 hours</label>
+                        <label><input type="checkbox" name="study_hours"> 2-3 hours</label>
+                        <label><input type="checkbox" name="study_hours"> More than 3 hours</label>
                     </div>
                 </div>
                 <div class="form-field checkbox-group">
                     <p>Where do you usually study? (Check all that apply)</p>
                     <div class="checkbox-options">
-                        <label><input type="checkbox" name="study_place" value="Bedroom"> Bedroom</label>
-                        <label><input type="checkbox" name="study_place" value="Living Room"> Living room</label>
-                        <label><input type="checkbox" name="study_place" value="Library"> Library</label>
-                        <label>
-                            <input type="checkbox" name="study_place" value="other"> Other:
-                            <input type="text" name="study_place_other" placeholder="Please specify">
-                        </label>
+                        <label><input type="checkbox" name="study_place"> Bedroom</label>
+                        <label><input type="checkbox" name="study_place"> Living room</label>
+                        <label><input type="checkbox" name="study_place"> Library</label>
+                        <label>Other: <input type="text"></label>
                     </div>
                 </div>
-                <div class="form-field checkbox-group" >
+                <div class="form-field checkbox-group">
                     <p>How often do you study with friends or classmates?</p>
                     <div class="checkbox-options" data-single="true">
-                        <label><input type="radio" name="study_with" value="never" required> Never</label>
-                        <label><input type="radio" name="study_with" value="sometimes"> Sometimes</label>
-                        <label><input type="radio" name="study_with" value="often"> Often</label>
-                        <label><input type="radio" name="study_with" value="always"> Always</label>
+                        <label><input type="checkbox" name="study-with"> Never</label>
+                        <label><input type="checkbox" name="study-with"> Sometimes</label>
+                        <label><input type="checkbox" name="study-with"> Often</label>
+                        <label><input type="checkbox" name="study-with"> Always</label>
                     </div>
                 </div>
             </div>
@@ -91,10 +87,10 @@
                 <div class="form-field radio-input">
                     <p>Do your parents or guardians help you with your schoolwork?</p>
                     <div class="radio-options" data-single="true">
-                        <label><input type="radio" name="parent_help" value="never" required> Never</label>
-                        <label><input type="radio" name="parent_help" value="sometimes"> Sometimes</label>
-                        <label><input type="radio" name="parent_help" value="often"> Often</label>
-                        <label><input type="radio" name="parent_help" value="always"> Always</label>
+                        <label><input type="radio" name="help"> Never</label>
+                        <label><input type="radio" name="help"> Sometimes</label>
+                        <label><input type="radio" name="help"> Often</label>
+                        <label><input type="radio" name="help"> Always</label>
                     </div>
                 </div>
                 <div class="form-field radio-input">
@@ -128,13 +124,10 @@
                 <div class="form-field checkbox-group">
                     <p>What type of house do you live in?</p>
                     <div class="checkbox-options" data-single="true">
-                        <label><input type="radio" name="house_type" value="Apartment" required> Apartment</label>
-                        <label><input type="radio" name="house_type" value="House"> House</label>
-                        <label><input type="radio" name="house_type" value="Shared_housing"> Shared housing</label>
-                        <label>
-                            <input type="radio" name="house_type" value="other"> Other:
-                            <input type="text" name="house_type_other" placeholder="Please specify">
-                        </label>
+                        <label><input type="checkbox"> Apartment</label>
+                        <label><input type="checkbox"> House</label>
+                        <label><input type="checkbox"> Shared housing</label>
+                        <label>Other: <input type="text"></label>
                     </div>
                 </div>
                 <div class="form-field radio-input">
@@ -159,23 +152,20 @@
                 <div class="form-field checkbox-group">
                     <p>How do you usually get to school?</p>
                     <div class="checkbox-options" data-single="true">
-                        <label><input type="radio" name="transport_mode" value="Walk" required> Walk</label>
-                        <label><input type="radio" name="transport_mode" value="Bicycle"> Bicycle</label>
-                        <label><input type="radio" name="transport_mode" value="Public transport"> Public transport (e.g., jeepney, tricycle)</label>
-                        <label><input type="radio" name="transport_mode" value="Family vehicle"> Family vehicle</label>
-                        <label>
-                            <input type="radio" name="transport_mode" value="other"> Other:
-                            <input type="text" name="transport_mode_other" placeholder="Please specify">
-                        </label>
+                        <label><input type="checkbox"> Walk</label>
+                        <label><input type="checkbox"> Bicycle</label>
+                        <label><input type="checkbox"> Public transport (e.g., jeepney, tricycle)</label>
+                        <label>Family vehicle</label>
+                        <label>Others: <input type="text"></label>
                     </div>
                 </div>
                 <div class="form-field radio-input">
                     <p>How long does it take you to get to school?</p>
                     <div class="radio-options" >
-                       <label><input type="radio" name="travel_time" value="Less than 15 minutes" required> Less than 15 minutes</label>
-                        <label><input type="radio" name="travel_time" value="15-30 minutes"> 15-30 minutes</label>
-                        <label><input type="radio" name="travel_time" value="30-60 minutes"> 30-60 minutes</label>
-                        <label><input type="radio" name="travel_time" value="More than 1 hour"> More than 1 hour</label>
+                        <label><input type="radio" name="travel_time"> Less than 15 minutes</label>
+                        <label><input type="radio" name="travel_time"> 15-30 minutes</label>
+                        <label><input type="radio" name="travel_time"> 30-60 minutes</label>
+                        <label><input type="radio" name="travel_time"> More than 1 hour</label>
                     </div>
                 </div>
             </div>
@@ -233,56 +223,8 @@
         </div>
 
         <div class="form-footer">
-            <a href="{% url 'family_data'  %}" class="back-btn" role="button">Back</a>
-            <button type="submit" class="next-btn">Next Form</button>
-        </div>
-    </form>
-    </main>
-
-
-    <script src="{% static 'enrollmentprocess/js/studentnonacademic.js' %}" defer></script>
-
-</body>
-
-</html>   
-
- {% endcomment %}
-
-
- <!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Non-Academic Survey</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'enrollmentprocess/css/preEnlistment.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-</head>
-
-<body>
-
-    <header class="header">
-        <div class="logo-section">
-            <img src="{% static 'assets/westLogo.png' %}" alt="School Logo" class="logo">
-            <div class="school-info">
-                <h1>Zamboanga National High School West</h1>
-                <p>R.T. Lim Boulevard Zamboanga City, Philippines</p>
-                <p>School I.D: 303942</p>
-            </div>
-        </div>
-        <div class="header-icons">
-            <img src="{% static 'assets/deped1.png' %}" alt="Logo 2" class="logo">
-            <img src="{% static 'assets/deped2.png' %}" alt="SRIC" class="logo">
-            <img src="{% static 'assets/deped3.png' %}" alt="DepEd Logo" class="logo">
-        </div>
-    </header>
-
-    <main class="form-container">
-        <div class="form-header">
-            <h2>ENROLLMENT FORM</h2>
-            <p>School Year 2025-2026</p>
+            <a href="{% url 'family_data' %}" class="back-btn" role="button">Back</a>
+            <a href="{% url 'student_academic_2' %}" class="next-btn" role="button">Next Form</a>
         </div>
         <form method="POST" action="{% url 'student_non_academic' student_id=student_id %}" id="nonAcademicForm">
             {% csrf_token %}
@@ -559,9 +501,6 @@
             </div>
         </form>
     </main>
-
-    <script src="{% static 'enrollmentprocess/js/studentnonacademic.js' %}" defer></script>
-
 </body>
 
 </html>

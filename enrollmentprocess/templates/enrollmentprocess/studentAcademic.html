@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -6,19 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Academic Data - Step 2</title>
-    {% load static %}
-    <script>
-        // Define the redirect URL in the template
-        const redirectUrl = "{% url 'section_placement' student_id=student_id %}";
-    </script>
-    <link rel="stylesheet" href="{% static 'enrollmentprocess/css/studentAcademic.css' %}">
+    <link rel="stylesheet" href="../../static/enrollmentprocess/css/studentAcademic.css">
 </head>
 
 <body>
-
     <div class="header">
         <div class="logo-container">
-            <img src="{% static 'assets/westLogo.png' %}" alt="School Logo" class="logo">
+            <img src="..//assets/westLogo.png" alt="School Logo" class="logo">
             <div class="school-info">
                 <h1>Zamboanga National High School West</h1>
                 <p>Barangay Tumaga, Zamboanga City, Philippines</p>
@@ -26,12 +19,11 @@
             </div>
         </div>
         <div class="government-logos">
-            <img src="{% static 'assets/deped1.png' %}" alt="DepEd Logo">
-            <img src="{% static 'assets/deped2.png' %}" alt="Matatag Logo">
-            <img src="{% static 'assets/deped3.png' %}" alt="Philippines Flag">
+            <img src="../assets/deped1.png" alt="DepEd Logo">
+            <img src="../assets/deped2.png" alt="Matatag Logo">
+            <img src="../assets/deped3.png" alt="Philippines Flag">
         </div>
     </div>
-
 
     <div class="navigation-steps">
         <div class="step completed">Step 1: Enrollment</div>
@@ -45,46 +37,42 @@
                 student Grade 6 Card)</p>
         </div>
 
-
-        <form method="POST" action="{% url 'student_academic' student_id=student_id %}"
-            enctype="multipart/form-data" id="academicForm2" class="academic-form">
-            {% csrf_token %}
-            {% if form.errors %}
-                <ul class="errorlist">
-                    {% for field in form %}
-                        {% for error in field.errors %}
-                            <li>{{ field.label }}: {{ error }}</li>
-                        {% endfor %}
-                    {% endfor %}
-                    {% for error in form.non_field_errors %}
-                        <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-
+        <form id="academicForm2" class="academic-form">
             <div class="form-section">
                 <h3>Basic Information</h3>
 
                 <div class="form-group">
-                    <label for="{{ form.lrn.id_for_label }}">LRN Number</label>
-                    {{ form.lrn }}
-                    {% if form.lrn.errors %}<ul class="errorlist">{% for error in form.lrn.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    <label for="lrnNumber">LRN Number</label>
+                    <input type="text" id="lrnNumber" name="lrnNumber" value="Enter LRN Number" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="{{ form.dost_exam_result.id_for_label }}">DOST Exam Result</label>
-                    {{ form.dost_exam_result }}
-                    {% if form.dost_exam_result.errors %}<ul class="errorlist">{% for error in form.dost_exam_result.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    <label for="dostExam">DOST Exam Result</label>
+                    <select id="dostExam" name="dostExam" required>
+                        <option value="">-- Select Result --</option>
+                        <option value="passed">Passed</option>
+                        <option value="failed">Failed</option>
+                        <option value="not-taken">Not Taken</option>
+                    </select>
                 </div>
 
-                <div class="form-group file-upload">
-                    <label for="{{ form.report_card.id_for_label }}">Upload Grade 6 Report Card</label>
+
+                <div class="form-group file-upload" id="dostProofGroup" style="display: none;">
+                    <label for="dostProof">Upload DOST Exam Proof</label>
                     <div class="file-input-container">
-                        {{ form.report_card }}
+                        <input type="file" id="dostProof" name="dostProof" accept=".pdf,.jpg,.jpeg,.png">
                         <button type="button" class="file-button">Choose File</button>
                         <span class="file-name">No file chosen</span>
                     </div>
-                    {% if form.report_card.errors %}<ul class="errorlist">{% for error in form.report_card.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                </div>
+
+                <div class="form-group file-upload">
+                    <label for="reportCard">Upload Grade 6 Report Card</label>
+                    <div class="file-input-container">
+                        <input type="file" id="reportCard" name="reportCard" accept=".pdf,.jpg,.jpeg,.png" required>
+                        <button type="button" class="file-button">Choose File</button>
+                        <span class="file-name">No file chosen</span>
+                    </div>
                 </div>
             </div>
 
@@ -93,109 +81,128 @@
 
                 <div class="subjects-grid">
                     <div class="form-group">
-                        <label for="{{ form.mathematics.id_for_label }}">Mathematics</label>
-                        {{ form.mathematics }}
-                        {% if form.mathematics.errors %}<ul class="errorlist">{% for error in form.mathematics.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        <label for="mathematics">Mathematics</label>
+                        <input type="number" id="mathematics" name="mathematics" min="75" max="100" step="0.01"
+                            placeholder="Grade">
                     </div>
 
                     <div class="form-group">
-                        <label for="{{ form.araling_panlipunan.id_for_label }}">Araling Panlipunan</label>
-                        {{ form.araling_panlipunan }}
-                        {% if form.araling_panlipunan.errors %}<ul class="errorlist">{% for error in form.araling_panlipunan.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        <label for="aralingPanlipunan">Araling Panlipunan</label>
+                        <input type="number" id="aralingPanlipunan" name="aralingPanlipunan" min="75" max="100"
+                            step="0.01" placeholder="Grade">
                     </div>
 
                     <div class="form-group">
-                        <label for="{{ form.english.id_for_label }}">English</label>
-                        {{ form.english }}
-                        {% if form.english.errors %}<ul class="errorlist">{% for error in form.english.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        <label for="english">English</label>
+                        <input type="number" id="english" name="english" min="75" max="100" step="0.01"
+                            placeholder="Grade">
                     </div>
 
                     <div class="form-group">
-                        <label for="{{ form.edukasyon_pagpapakatao.id_for_label }}">Edukasyon sa Pagpapakatao</label>
-                        {{ form.edukasyon_pagpapakatao }}
-                        {% if form.edukasyon_pagpapakatao.errors %}<ul class="errorlist">{% for error in form.edukasyon_pagpapakatao.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        <label for="edukasyonPagpapakatao">Edukasyon sa Pagpapakatao</label>
+                        <input type="number" id="edukasyonPagpapakatao" name="edukasyonPagpapakatao" min="75" max="100"
+                            step="0.01" placeholder="Grade">
                     </div>
 
                     <div class="form-group">
-                        <label for="{{ form.science.id_for_label }}">Science</label>
-                        {{ form.science }}
-                        {% if form.science.errors %}<ul class="errorlist">{% for error in form.science.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        <label for="science">Science</label>
+                        <input type="number" id="science" name="science" min="75" max="100" step="0.01"
+                            placeholder="Grade">
                     </div>
 
                     <div class="form-group">
-                        <label for="{{ form.edukasyon_pangkabuhayan.id_for_label }}">Edukasyon Pampahalagang Pangkabuhayang</label>
-                        {{ form.edukasyon_pangkabuhayan }}
-                        {% if form.edukasyon_pangkabuhayan.errors %}<ul class="errorlist">{% for error in form.edukasyon_pangkabuhayan.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        <label for="edukasyonPangkabuhayan">Edukasyon Pampahalagang Pangkabuhayang</label>
+                        <input type="number" id="edukasyonPangkabuhayan" name="edukasyonPangkabuhayan" min="75"
+                            max="100" step="0.01" placeholder="Grade">
                     </div>
 
                     <div class="form-group">
-                        <label for="{{ form.filipino.id_for_label }}">Filipino</label>
-                        {{ form.filipino }}
-                        {% if form.filipino.errors %}<ul class="errorlist">{% for error in form.filipino.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        <label for="filipino">Filipino</label>
+                        <input type="number" id="filipino" name="filipino" min="75" max="100" step="0.01"
+                            placeholder="Grade">
                     </div>
 
                     <div class="form-group">
-                        <label for="{{ form.mapeh.id_for_label }}">MAPEH</label>
-                        {{ form.mapeh }}
-                        {% if form.mapeh.errors %}<ul class="errorlist">{% for error in form.mapeh.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        <label for="mapeh">MAPEH</label>
+                        <input type="number" id="mapeh" name="mapeh" min="75" max="100" step="0.01" placeholder="Grade">
                     </div>
                 </div>
 
                 <div class="form-group full-width">
                     <label for="overallAverage">Overall Average</label>
-                    <input type="number" id="overallAverage" name="overall_average" min="75" max="100" step="0.01"
-                        placeholder="Overall Average" readonly value="{{ form.overall_average.value|default:'' }}">
-                    {# overall_average is calculated in form.clean(), so it won't be directly rendered by form.overall_average #}
+                    <input type="number" id="overallAverage" name="overallAverage" min="75" max="100" step="0.01"
+                        placeholder="Overall Average" readonly>
                 </div>
             </div>
 
             <div class="form-section">
-    <h3>Other Details</h3>
+                <h3>Other Details</h3>
 
-    <!-- Working Student -->
-<div class="form-group">
-    <label for="workingStudent">Is the Student a Working Student?</label>
-    <input type="text" id="workingStudent" value="{{ is_working_student }}" readonly class="form-control">
-</div>
+                <div class="form-group">
+                    <label for="workingStudent">Is the Student a Working Student?</label>
+                    <select id="workingStudent" name="workingStudent" required>
+                        <option value="">-- Select --</option>
+                        <option value="yes">Yes</option>
+                        <option value="no" selected>No</option>
+                    </select>
+                </div>
 
-<div class="form-group">
-    <label for="workingDetails">If YES, what type of work?</label>
-    <input type="text" id="workingDetails" value="{{ working_details }}" readonly class="form-control">
-</div>
+                <div class="form-group" id="workTypeGroup" style="display: none;">
+                    <label for="workType">Work Type</label>
+                    <select id="workType" name="workType">
+                        <option value="">-- Select Work Type --</option>
+                        <option value="fulltime">Full Time</option>
+                        <option value="self-employed">Self Employed</option>
+                        <option value="family-business">Family Business</option>
+                    </select>
+                </div>
 
-<!-- PWD -->
-<div class="form-group">
-    <label for="pwd">Is the Student a PWD?</label>
-    <input type="text" id="pwd" value="{{ is_pwd }}" readonly class="form-control">
-</div>
+                <div class="form-group">
+                    <label for="disability">Is the Student a Person With Disability?</label>
+                    <select id="disability" name="disability" required>
+                        <option value="">-- Select --</option>
+                        <option value="yes">Yes</option>
+                        <option value="no" selected>No</option>
+                    </select>
+                </div>
 
-<div class="form-group">
-    <label for="disabilityType">If YES, please specify the disability type:</label>
-    <input type="text" id="disabilityType" value="{{ disability_type }}" readonly class="form-control">
-</div>
+                <div class="form-group" id="disabilityTypeGroup" style="display: none;">
+                    <label for="disabilityType">Type of Disability</label>
+                    <select id="disabilityType" name="disabilityType">
+                        <option value="">-- Select Disability Type --</option>
+                        <option value="visual-impairment">Visual Impairment</option>
+                        <option value="physical-disability">Physical Disability</option>
+                        <option value="learning-disability">Learning Disability</option>
+                        <option value="deaf-hard-hearing">Deaf/Hard of Hearing</option>
+                        <option value="intellectual-disability">Intellectual Disability</option>
+                        <option value="autism">Autism Spectrum Disorder</option>
+                        <option value="multiple-disabilities">Multiple Disabilities</option>
+                        <option value="others">Others</option>
+                    </select>
+                </div>
 
-
-    
-</div>
-                
                 <div class="form-group checkbox-group">
                     <label class="checkbox-container">
-                        {{ form.agreed_to_terms }}
+                        <input type="checkbox" id="agreeTerms" name="agreeTerms" required>
                         <span class="checkmark"></span>
                         I Agree to the <a href="#" class="terms-link">school policies and terms</a>
                     </label>
-                    {% if form.agreed_to_terms.errors %}<ul class="errorlist">{% for error in form.agreed_to_terms.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
                 </div>
             </div>
 
             <div class="form-actions">
+<<<<<<< Updated upstream
+                <a href="studentNonAcademic.html" class="back-btn" role="button">Back</a>
+                <a href="sectionPlacement.html" class="submit-btn" role="button">See Section</a>
+=======
                 <a href="{% url 'student_non_academic' student_id=student_id %}" class="back-btn" role="button">Back</a>
                 <button type="submit" class="submit-btn">See Section</button>
+>>>>>>> Stashed changes
             </div>
         </form>
     </div>
 
-    <script src="{% static 'enrollmentprocess/js/studentacademic.js' %}" defer></script>
+    <script src="../../static/enrollmentprocess/js/preEnlistment.js" defer></script>
 
 </body>
 

@@ -5,8 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Zamboanga National High School West</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'enrollmentprocess/css/login.css' %}">
+    <link rel="stylesheet" href="../../static/enrollmentprocess/css/login.css">
 </head>
 
 <body class="login-body">
@@ -14,7 +13,7 @@
         <div class="login-card">
             <!-- School Logo -->
             <div class="login-header">
-                <img src="{% static 'assets/westLogo.png' %}" alt="School Logo" class="login-logo">
+                <img src="../assets/westLogo.png" alt="School Logo" class="login-logo">
             </div>
 
             <!-- Welcome Message -->
@@ -51,23 +50,7 @@
         </div>
     </div>
 
-
-    <div id="loginModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <div class="modal-header">
-                <h3 id="modalTitle">Login Status</h3>
-            </div>
-            <div class="modal-body">
-                <p id="modalMessage">Please wait...</p>
-            </div>
-            <div class="modal-footer">
-                <button id="modalOkBtn" class="modal-btn">OK</button>
-            </div>
-        </div>
-    </div>
-
-    <script src="{% static 'enrollmentprocess/js/login.js' %}" defer></script>
+    <script src="../../static/enrollmentprocess/js/login.js"></script>
 </body>
 
 </html>
