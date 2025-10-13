@@ -1,16 +1,12 @@
-<!DOCTYPE html>
+{% comment %} <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pre-Enrollment Form 2</title>
-<<<<<<< Updated upstream
-    <link rel="stylesheet" href="../../static/enrollmentprocess/css/preEnlistment.css">
-=======
     {% load static %}
-    <link rel="stylesheet" href="{% static 'enrollmentprocess/css/preEnlistment.css' %}">
->>>>>>> Stashed changes
+    <link rel="stylesheet" href="../../static/enrollmentprocess/css/preEnlistment.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
 
@@ -18,11 +14,7 @@
 
     <header class="header">
         <div class="logo-section">
-<<<<<<< Updated upstream
-            <img src="../assets/westLogo.png" alt="School Logo" class="logo">
-=======
             <img src="{% static 'assets/westLogo.png' %}" alt="School Logo" class="logo">
->>>>>>> Stashed changes
             <div class="school-info">
                 <h1>Zamboanga National High School West</h1>
                 <p>R.T. Lim Boulevard Zamboanga City, Philippines</p>
@@ -30,15 +22,9 @@
             </div>
         </div>
         <div class="header-icons">
-<<<<<<< Updated upstream
-            <img src="../assets/deped1.png" alt="Logo 2" class="logo">
-            <img src="../assets/deped2.png" alt="SRIC" class="logo">
-            <img src="../assets/deped3.png" alt="DepEd Logo" class="logo">
-=======
             <img src="{% static 'assets/deped1.png' %}" alt="Logo 2" class="logo">
             <img src="{% static 'assets/deped2.png' %}" alt="SRIC" class="logo">
             <img src="{% static 'assets/deped3.png' %}" alt="DepEd Logo" class="logo">
->>>>>>> Stashed changes
         </div>
     </header>
 
@@ -48,7 +34,9 @@
             <p>School Year 2025-2026</p>
         </div>
 
-<<<<<<< Updated upstream
+<form method="POST" action="{% url 'family_data'%}" enctype="multipart/form-data" id="familyDataForm">
+            {% csrf_token %}
+
         <div class="form-content">
             <div class="form-left-full">
                 <div class="family-info-section">
@@ -60,31 +48,31 @@
                         <div class="grid-container">
                             <div class="grid-item full-width">
                                 <label>NAME:</label>
-                                <div class="name-fields">
-                                    <input type="text" placeholder="Father's Family Name">
-                                    <input type="text" placeholder="Father's First Name">
-                                    <input type="text" placeholder="Father's Middle Name">
+                               <div class="name-fields">
+                                        <input type="text" name="father_family_name" placeholder="Father's Family Name" required />
+                                        <input type="text" name="father_first_name" placeholder="Father's First Name" required />
+                                        <input type="text" name="father_middle_name" placeholder="Father's Middle Name" />
                                 </div>
                             </div>
                             <div class="grid-item">
                                 <label>Age:</label>
-                                <input type="text">
+                                <input type="number" name="father_age"  placeholder="Age" required />
                             </div>
                             <div class="grid-item">
                                 <label>Occupation:</label>
-                                <input type="text">
+                                <input type="text" name="father_occupation" placeholder="Occupation" required />
                             </div>
                             <div class="grid-item">
                                 <label>Date of Birth:</label>
-                                <input type="date">
+                                <input type="date" name="father_dob" required />
                             </div>
                             <div class="grid-item">
                                 <label>Contact Number:</label>
-                                <input type="text">
+                                <input type="tel" name="father_contact_number" placeholder="Contact Number" required/>
                             </div>
                             <div class="grid-item">
                                 <label>Email Address:</label>
-                                <input type="email">
+                                <input type="email" name="father_email" placeholder="Email Address" />
                             </div>
                         </div>
                     </div>
@@ -95,30 +83,30 @@
                             <div class="grid-item full-width">
                                 <label>NAME:</label>
                                 <div class="name-fields">
-                                    <input type="text" placeholder="Mother's Family Maiden Name">
-                                    <input type="text" placeholder="Mother's First Name">
-                                    <input type="text" placeholder="Mother's Middle Name">
+                                   <input type="text" name="mother_family_name" placeholder="Mother's Family Maiden Name" required />
+                                    <input type="text" name="mother_first_name" placeholder="Mother's First Name" required />
+                                    <input type="text" name="mother_middle_name" placeholder="Mother's Middle Name" />
                                 </div>
                             </div>
                             <div class="grid-item">
                                 <label>Age:</label>
-                                <input type="text">
+                                <input type="number" name="mother_age"  placeholder="Age" required />
                             </div>
                             <div class="grid-item">
                                 <label>Occupation:</label>
-                                <input type="text">
+                                <input type="text" name="mother_occupation" placeholder="Occupation" required />
                             </div>
                             <div class="grid-item">
                                 <label>Date of Birth:</label>
-                                <input type="date">
+                                <input type="date" name="mother_dob" required />
                             </div>
                             <div class="grid-item">
                                 <label>Contact Number:</label>
-                                <input type="text">
+                                <input type="tel" name="mother_contact_number" placeholder="Contact Number" required/>
                             </div>
                             <div class="grid-item">
                                 <label>Email Address:</label>
-                                <input type="email">
+                                <input type="email" name="mother_email" placeholder="Email Address" />
                             </div>
                         </div>
                     </div>
@@ -129,38 +117,38 @@
                             <div class="grid-item full-width">
                                 <label>NAME:</label>
                                 <div class="name-fields">
-                                    <input type="text" placeholder="Guardian's Family Name">
-                                    <input type="text" placeholder="Guardian's First Name">
-                                    <input type="text" placeholder="Guardian's Middle Name">
+                                    <input type="text" name="guardian_family_name" placeholder="Guardian's Family Name" required/>
+                                    <input type="text" name="guardian_first_name" placeholder="Guardian's First Name" required />
+                                    <input type="text" name="guardian_middle_name" placeholder="Guardian's Middle Name" />
                                 </div>
                             </div>
                             <div class="grid-item">
                                 <label>Age:</label>
-                                <input type="text">
+                                <input type="number" name="guardian_age"  placeholder="Age" required/>
                             </div>
                             <div class="grid-item">
                                 <label>Occupation:</label>
-                                <input type="text">
+                                <input type="text" name="guardian_occupation" placeholder="Occupation" required/>
                             </div>
                             <div class="grid-item">
                                 <label>Date of Birth:</label>
-                                <input type="date">
+                                <input type="date" name="guardian_dob" required/>
                             </div>
                             <div class="grid-item full-width">
                                 <label>Complete Home Address:</label>
-                                <input type="text">
+                                <input type="text" name="guardian_address" placeholder="Complete Home Address" required/>
                             </div>
                             <div class="grid-item full-width">
                                 <label>Relationship with the student:</label>
-                                <input type="text">
+                                <input type="text" name="guardian_relationship" placeholder="Relationship with the student" required/>
                             </div>
                             <div class="grid-item">
                                 <label>Contact Number:</label>
-                                <input type="text">
+                                <input type="tel" name="guardian_contact_number" placeholder="Contact Number" required/>
                             </div>
                             <div class="grid-item">
                                 <label>Email Address:</label>
-                                <input type="email">
+                                <input type="email" name="guardian_email" placeholder="Email Address" />
                             </div>
                         </div>
                     </div>
@@ -177,92 +165,110 @@
                         </div>
                         <img id="parent-photo-preview" src="#" alt="Parent Photo Preview" style="display: none;">
                     </label>
-                    <input type="file" id="parent-photo-upload" accept="image/*" class="file-input">
+                    <input type="file" id="parent-photo-upload" name="parent_photo" accept="image/*" class="file-input" />
                 </div>
             </div>
         </div>
 
         <div class="form-footer">
-            <a href="studentData.html" class="back-btn" role="button">Back</a>
-            <a href="studentNonAcademic.html" class="next-btn" role="button">Next Form</a>
+            <a href="{% url 'student_data' %}" class="back-btn" role="button">Back</a>
+            <button type="submit" class="next-btn">Next Form</button>
         </div>
+    </form>
     </main>
 
-    <script src="../../static/enrollmentprocess/js/preEnlistment.js" defer></script>
-=======
-        <div class="student-info-banner">
-            <h4>Student: {{ student_name }} (LRN: {{ student_lrn }})</h4>
+    <script src="{% static 'enrollmentprocess/js/preEnlistment.js' %}" defer></script>
+</body>
+
+</html> {% endcomment %}
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pre-Enrollment Form 2</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'enrollmentprocess/css/preEnlistment.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+
+<body>
+
+    <header class="header">
+        <div class="logo-section">
+            <img src="{% static 'assets/westLogo.png' %}" alt="School Logo" class="logo">
+            <div class="school-info">
+                <h1>Zamboanga National High School West</h1>
+                <p>R.T. Lim Boulevard Zamboanga City, Philippines</p>
+                <p>School I.D: 303942</p>
+            </div>
+        </div>
+        <div class="header-icons">
+            <img src="{% static 'assets/deped1.png' %}" alt="Logo 2" class="logo">
+            <img src="{% static 'assets/deped2.png' %}" alt="SRIC" class="logo">
+            <img src="{% static 'assets/deped3.png' %}" alt="DepEd Logo" class="logo">
+        </div>
+    </header>
+
+    <main class="form-container">
+        <div class="form-header">
+            <h2>ENROLLMENT FORM</h2>
+            <p>School Year 2025-2026</p>
         </div>
 
-        <form method="POST" action="{% url 'family_data' student_id=student_id %}" enctype="multipart/form-data"
-            id="familyDataForm" novalidate>
+        <form method="POST" action="{% url 'family_data' student_id=student_id %}" enctype="multipart/form-data" id="familyDataForm">
             {% csrf_token %}
             {% if form.errors %}
-            <ul class="errorlist">
-                {% for field in form %}
-                {% for error in field.errors %}
-                <li><strong>{{ field.label }}:</strong> {{ error }}</li>
-                {% endfor %}
-                {% endfor %}
-                {% for error in form.non_field_errors %}
-                <li>{{ error }}</li>
-                {% endfor %}
-            </ul>
+                <ul class="errorlist">
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li>{{ field.label }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
             {% endif %}
 
             <div class="form-content">
                 <div class="form-left-full">
                     <div class="family-info-section">
-                        <h3 class="section-title">B. Family Information Data <span class="subtitle">(Please fill in the
-                                complete and correct details)</span></h3>
+                        <h3 class="section-title">B. Family Information Data <span class="subtitle">(Please fill in the complete and correct details)</span></h3>
 
                         <div class="sub-section">
                             <h4>FATHER'S INFORMATION:</h4>
                             <div class="grid-container">
                                 <div class="grid-item full-width">
-                                    <label>NAME: <span class="required-asterisk">*</span></label>
+                                    <label>NAME:</label>
                                     <div class="name-fields">
                                         {{ form.father_family_name }}
                                         {{ form.father_first_name }}
                                         {{ form.father_middle_name }}
                                     </div>
-                                    
-                                    <div class="validation-message" id="father-name-validation" style="display: none;">
-                                        Please provide father's complete name (Last Name and First Name are required).
-                                    </div>
                                 </div>
                                 <div class="grid-item">
-                                    <label>Date of Birth: <span class="required-asterisk">*</span></label>
-                                    <div class="birthdate-container">
-                                        {{ form.father_dob }}
-                                        <span class="age-display" id="father-age-display">Age: --</span>
-                                    </div>
-                                    <div class="validation-message" id="father-dob-validation" style="display: none;">
-                                        Please enter father's date of birth.
-                                    </div>
+                                    <label>Age:</label>
+                                    {{ form.father_age }}
                                 </div>
                                 <div class="grid-item">
-                                    <label>Occupation: <span class="required-asterisk">*</span></label>
+                                    <label>Occupation:</label>
                                     {{ form.father_occupation }}
-                                    <div class="validation-message" id="father-occupation-validation"
-                                        style="display: none;">
-                                        Please enter father's occupation.
-                                    </div>
                                 </div>
                                 <div class="grid-item">
-                                    <label>Contact Number: <span class="required-asterisk">*</span></label>
+                                    <label>Date of Birth:</label>
+                                    {{ form.father_dob }}
+                                </div>
+                                <div class="grid-item">
+                                    <label>Contact Number:</label>
                                     {{ form.father_contact_number }}
-                                    <div class="validation-message" id="father-contact-validation"
-                                        style="display: none;">
-                                        Please provide a valid contact number for father.
-                                    </div>
                                 </div>
                                 <div class="grid-item">
                                     <label>Email Address:</label>
                                     {{ form.father_email }}
-                                    <div class="validation-message" id="father-email-validation" style="display: none;">
-                                        Please provide a valid email address.
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -271,56 +277,38 @@
                             <h4>MOTHER'S INFORMATION:</h4>
                             <div class="grid-container">
                                 <div class="grid-item full-width">
-                                    <label>NAME: <span class="required-asterisk">*</span></label>
+                                    <label>NAME:</label>
                                     <div class="name-fields">
                                         {{ form.mother_family_name }}
                                         {{ form.mother_first_name }}
                                         {{ form.mother_middle_name }}
                                     </div>
-                                    <div class="validation-message" id="mother-name-validation" style="display: none;">
-                                        Please provide mother's complete name (Last Name and First Name are required).
-                                    </div>
                                 </div>
                                 <div class="grid-item">
-                                    <label>Date of Birth: <span class="required-asterisk">*</span></label>
-                                    <div class="birthdate-container">
-                                        {{ form.mother_dob }}
-
-                                        <span class="age-display" id="mother-age-display">Age: --</span>
-                                    </div>
-                                    <div class="validation-message" id="mother-dob-validation" style="display: none;">
-                                        Please enter mother's date of birth.
-                                    </div>
+                                    <label>Age:</label>
+                                    {{ form.mother_age }}
                                 </div>
                                 <div class="grid-item">
-                                    <label>Occupation: <span class="required-asterisk">*</span></label>
+                                    <label>Occupation:</label>
                                     {{ form.mother_occupation }}
-                                    <div class="validation-message" id="mother-occupation-validation"
-                                        style="display: none;">
-                                        Please enter mother's occupation.
-                                    </div>
                                 </div>
                                 <div class="grid-item">
-                                    <label>Contact Number: <span class="required-asterisk">*</span></label>
+                                    <label>Date of Birth:</label>
+                                    {{ form.mother_dob }}
+                                </div>
+                                <div class="grid-item">
+                                    <label>Contact Number:</label>
                                     {{ form.mother_contact_number }}
-                                    <div class="validation-message" id="mother-contact-validation"
-                                        style="display: none;">
-                                        Please provide a valid contact number for mother.
-                                    </div>
                                 </div>
                                 <div class="grid-item">
                                     <label>Email Address:</label>
                                     {{ form.mother_email }}
-                                    <div class="validation-message" id="mother-email-validation" style="display: none;">
-                                        Please provide a valid email address.
-                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <div class="sub-section">
-                            <h4>GUARDIAN INFORMATION: <span class="subtitle">(if not staying with the parents)</span>
-                            </h4>
+                            <h4>GUARDIAN INFORMATION: <span class="subtitle">(if not staying with the parents)</span></h4>
                             <div class="grid-container">
                                 <div class="grid-item full-width">
                                     <label>NAME:</label>
@@ -331,16 +319,16 @@
                                     </div>
                                 </div>
                                 <div class="grid-item">
-                                    <label>Date of Birth:</label>
-                                    <div class="birthdate-container">
-                                        {{ form.guardian_dob }}
-
-                                        <span class="age-display" id="guardian-age-display">Age: --</span>
-                                    </div>
+                                    <label>Age:</label>
+                                    {{ form.guardian_age }}
                                 </div>
                                 <div class="grid-item">
                                     <label>Occupation:</label>
                                     {{ form.guardian_occupation }}
+                                </div>
+                                <div class="grid-item">
+                                    <label>Date of Birth:</label>
+                                    {{ form.guardian_dob }}
                                 </div>
                                 <div class="grid-item full-width">
                                     <label>Complete Home Address:</label>
@@ -366,33 +354,26 @@
 
                 <div class="form-right">
                     <div class="image-upload-box">
-                        <p>UPLOAD PARENT 1x1 PICTURE <span class="required-asterisk">*</span></p>
-                        <label for="id_parent_photo" class="upload-area" id="parent-upload-area-label">
+                        <p>UPLOAD PARENT 1x1 PICTURE</p>
+                        <label for="id_parent_photo" class="upload-area">
                             <div class="upload-icon-container">
                                 <i class="fas fa-cloud-upload-alt"></i>
                             </div>
-                            
-                            <div class="preview-container">
-                                <img id="parent-photo-preview" src="#" alt="Parent Photo Preview" style="display: none;">
-                            </div>
+                            <img id="parent-photo-preview" src="#" alt="Parent Photo Preview" style="display: none;">
                         </label>
                         {{ form.parent_photo }}
-                        <div class="file-validation-message" id="parent-photo-validation" style="display: none;">
-                            Please upload a parent 1x1 picture to continue.
-                        </div>
                     </div>
                 </div>
             </div>
 
             <div class="form-footer">
-                <a href="{% url 'student_data' student_id=student_id %}" class="back-btn" role="button">Back</a>
+                <a href="{% url 'student_data' %}" class="back-btn" role="button">Back</a>
                 <button type="submit" class="next-btn">Next Form</button>
             </div>
         </form>
     </main>
 
     <script src="{% static 'enrollmentprocess/js/familyData.js' %}" defer></script>
->>>>>>> Stashed changes
 </body>
 
 </html>
