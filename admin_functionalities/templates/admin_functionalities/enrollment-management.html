@@ -257,8 +257,8 @@
 
             <nav class="sidebar-nav">
                 <ul>
-                    <li class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
-                        <a href="{% url 'admin_functionalities:dashboard' %}" class="nav-link">
+                    <li class="nav-item {% if request.resolver_match.url_name == 'admin-dashboard' %}active{% endif %}">
+                        <a href="{% url 'admin_functionalities:admin-dashboard' %}" class="nav-link">
                             <i class="fas fa-tachometer-alt"></i>
                             <span>Dashboard</span>
                         </a>
@@ -292,7 +292,7 @@
 
             <div class="sidebar-footer">
                 <!-- Logout link -->
-                <a href="{% url 'admin_functionalities:logout' %}" class="logout-btn">
+                <a href="{% url 'enrollmentprocess:logout' %}" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>

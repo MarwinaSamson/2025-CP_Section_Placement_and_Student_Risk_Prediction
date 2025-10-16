@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "enrollmentprocess",
     "admin_functionalities",
+    "teacher",
 ]
 
 MIDDLEWARE = [
@@ -133,8 +134,8 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-LOGIN_URL = '/admin-functionalities/login/'
-LOGIN_REDIRECT_URL = '/admin-functionalities/dashboard/'
-LOGOUT_REDIRECT_URL = '/admin-functionalities/login/'
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/login/'
 
 AUTH_USER_MODEL = "admin_functionalities.CustomUser"

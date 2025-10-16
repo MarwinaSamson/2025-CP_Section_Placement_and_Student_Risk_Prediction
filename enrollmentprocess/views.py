@@ -7,8 +7,12 @@ from .forms import StudentForm, FamilyForm, StudentNonAcademicForm, StudentAcade
 from django.http import HttpResponseRedirect
 from django.db import transaction
 from .model_utils import predict_program_eligibility
-from admin_functionalities.models import Notification 
+from admin_functionalities.models import Notification, CustomUser  
 from .model_utils import extract_grades_from_image, SUBJECT_MAPPING  # Import from utils
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
 
 
 class IndexView(TemplateView):
@@ -300,5 +304,101 @@ class SectionPlacementView(TemplateView):
         return self.render_to_response(context)
 
 # LoginView can be added here if needed, or use Django's built-in auth views.
+# def login_view(request):
+#     return render(request, 'enrollmentprocess/login.html')  # Adjust path if your template is in a subfolder
+def get_redirect_url_by_role(user):
+    """Returns redirect URL based on CustomUser roles (admin, staff, teacher subtypes)."""
+    try:
+        if user.is_superuser:  # Admin (is_superuser=True)
+            return reverse('admin_functionalities:admin-dashboard')  # To /admin-functionalities/admin-dashboard/ → admin_dashboard.html
+        elif user.is_staff and not user.is_superuser:  # Staff (is_staff=True, fallback to admin for now)
+            return reverse('admin_functionalities:admin-dashboard')  # Same as admin
+        elif user.is_teacher or user.is_subject_teacher:  # Teacher umbrella
+            if user.is_adviser and user.is_subject_teacher:  # Both True → Combined dashboard
+                return reverse('teacher:bothaccess-dashboard')  # To /teacher/bothaccess_dashboard/ → bothaccess_dashboard.html
+            elif user.is_subject_teacher and not user.is_adviser:  # Subject only → Subject dashboard
+                return reverse('teacher:subjectteacher-dashboard')  # To /teacher/subjectteacher-dashboard/ → subjectteacher-dashboard.html
+            else:  # Fallback for general teacher
+                return reverse('teacher:subjectteacher-dashboard')
+        else:
+            # Unauthorized/default: Back to homepage
+            return reverse('enrollmentprocess:homepage')
+    except Exception as e:  # NoReverseMatch or other (e.g., URL name wrong)
+        print(f"Redirect error: {e}")  # Debug in server console
+        # Fallback paths (adjust to your exact URLs)
+        if user.is_superuser or user.is_staff:
+            return '/admin-functionalities/admin-dashboard/'
+        elif user.is_adviser and user.is_subject_teacher:
+            return '/teacher/bothaccess-dashboard/'
+        elif user.is_subject_teacher:
+            return '/teacher/subjectteacher-ashboard/'
+        else:
+            return '/'
+
 def login_view(request):
-    return render(request, 'enrollmentprocess/login.html')  # Adjust path if your template is in a subfolder
+    """Login view: Render form on GET; handle POST (AJAX or form) with role redirect."""
+    if request.user.is_authenticated:
+        # Already logged in: Redirect or JSON
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':  # AJAX
+            redirect_url = get_redirect_url_by_role(request.user)
+            return JsonResponse({
+                'success': True,
+                'message': 'Already logged in.',
+                'redirect': redirect_url
+            })
+        else:
+            # Non-AJAX: Direct redirect
+            return redirect(get_redirect_url_by_role(request.user))
+    
+    if request.method == 'POST':
+        # AJAX or form POST
+        username = request.POST.get('username')  # Assuming email as username
+        password = request.POST.get('password')
+        
+        if not username or not password:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'error': 'Please enter username and password.'})
+            else:
+                # Non-AJAX: Re-render with error (use messages or form errors)
+                from django.contrib import messages
+                messages.error(request, 'Please enter username and password.')
+        
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            if user.is_active:
+                login(request, user)
+                redirect_url = get_redirect_url_by_role(user)
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': True,
+                        'message': f'Welcome, {user.first_name or user.username}!',
+                        'redirect': redirect_url
+                    })
+                else:
+                    return redirect(redirect_url)
+            else:
+                error_msg = 'Account is disabled. Contact admin.'
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({'success': False, 'error': error_msg})
+                else:
+                    from django.contrib import messages
+                    messages.error(request, error_msg)
+        else:
+            error_msg = 'Invalid username or password.'
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'error': error_msg})
+            else:
+                from django.contrib import messages
+                messages.error(request, error_msg)
+        
+        # For non-AJAX POST errors, re-render form
+        if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return render(request, 'enrollmentprocess/login.html')  # Shared template
+    
+    # GET: Render login form
+    return render(request, 'enrollmentprocess/login.html')
+
+def logout_view(request):
+    
+    logout(request) 
+    return redirect('enrollmentprocess:login')  # /login/ form

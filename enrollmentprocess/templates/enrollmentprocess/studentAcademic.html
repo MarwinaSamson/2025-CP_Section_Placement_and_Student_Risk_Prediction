@@ -9,7 +9,7 @@
     {% load static %}
     <script>
         // Define the redirect URL in the template
-        const redirectUrl = "{% url 'section_placement' student_id=student_id %}";
+        const redirectUrl = "{% url 'enrollmentprocess:section_placement' student_id=student_id %}";
     </script>
     <link rel="stylesheet" href="{% static 'enrollmentprocess/css/studentAcademic.css' %}">
 </head>
@@ -46,7 +46,7 @@
         </div>
 
 
-        <form method="POST" action="{% url 'student_academic' student_id=student_id %}"
+        <form method="POST" action="{% url 'enrollmentprocess:student_academic' student_id=student_id %}"
             enctype="multipart/form-data" id="academicForm2" class="academic-form">
             {% csrf_token %}
             {% if form.errors %}
@@ -189,7 +189,7 @@
             </div>
 
             <div class="form-actions">
-                <a href="{% url 'student_non_academic' student_id=student_id %}" class="back-btn" role="button">Back</a>
+                <a href="{% url 'enrollmentprocess:student_non_academic' student_id=student_id %}" class="back-btn" role="button">Back</a>
                 <button type="submit" class="submit-btn">See Section</button>
             </div>
         </form>

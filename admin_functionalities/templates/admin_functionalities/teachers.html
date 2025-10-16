@@ -20,7 +20,7 @@
         <aside class="sidebar">
             <div class="sidebar-header">
                 <div class="logo-container">
-                    <img src="../assets/westLogo.png" alt="ZNHS West Logo" class="sidebar-logo">
+                    <img src="{% static 'admin_functionalities/assets/westLogo.png' %}" alt="ZNHS West Logo" class="sidebar-logo">
                     <span class="sidebar-title">ZNHS WEST</span>
                 </div>
             </div>
@@ -28,7 +28,7 @@
             <nav class="sidebar-nav">
                 <ul>
                     <li class="nav-item ">
-                        <a href="{% url 'admin_functionalities:dashboard' %}" class="nav-link">
+                        <a href="{% url 'admin_functionalities:admin-dashboard' %}" class="nav-link">
                             <i class="fas fa-tachometer-alt"></i>
                             <span>Dashboard</span>
                         </a>
@@ -62,7 +62,7 @@
 
             <div class="sidebar-footer">
                 <!-- Logout as link with onclick handler -->
-                <a href="#" class="logout-btn" onclick="handleLogout(); return false;">
+                <a href="{% url 'enrollmentprocess:logout' %}" class="logout-btn" onclick="handleLogout(); return false;">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
@@ -101,7 +101,7 @@
                             <span class="admin-role">Admin</span>
                         </div>
                         <div class="profile-avatar">
-                            <img src="../assets/spongebob.jpg" alt="Admin" class="avatar-img">
+                            <img src="{% static 'admin_functionalities/assets/spongebob.jpg' %}" alt="Admin" class="avatar-img">
                         </div>
                     </div>
                 </div>
@@ -122,72 +122,23 @@
                             </tr>
                         </thead>
                         <tbody id="teachersTableBody">
-                            <tr class="teacher-row" data-teacher-id="1">
-                                <td>Yuka</td>
-                                <td>M</td>
-                                <td>31</td>
-                                <td>Teacher I</td>
+                            {% for teacher in teachers %}
+                            <tr class="teacher-row" data-teacher-id="{{ teacher.id }}">
+                                <td>{{ teacher.fullName }}</td>
+                                <td>{{ teacher.sex }}</td>
+                                <td>{{ teacher.age }}</td>
+                                <td>{{ teacher.position }}</td>
                                 <td>
-                                    <button class="preview-btn" onclick="viewTeacherProfile(1)">
+                                    <button class="preview-btn" onclick="viewTeacherProfile({{ teacher.id }})">
                                         Preview
                                     </button>
                                 </td>
                             </tr>
-                            <tr class="teacher-row" data-teacher-id="2">
-                                <td>Eraser</td>
-                                <td>M</td>
-                                <td>31</td>
-                                <td>Teacher I</td>
-                                <td>
-                                    <button class="preview-btn" onclick="viewTeacherProfile(2)">
-                                        Preview
-                                    </button>
-                                </td>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" style="text-align: center;">No teachers found.</td>
                             </tr>
-                            <tr class="teacher-row" data-teacher-id="3">
-                                <td>Jiraya</td>
-                                <td>M</td>
-                                <td>31</td>
-                                <td>Teacher I</td>
-                                <td>
-                                    <button class="preview-btn" onclick="viewTeacherProfile(3)">
-                                        Preview
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr class="teacher-row" data-teacher-id="4">
-                                <td>Uzuhiko, Itachi C.</td>
-                                <td>M</td>
-                                <td>31</td>
-                                <td>Teacher I</td>
-                                <td>
-                                    <button class="preview-btn" onclick="viewTeacherProfile(4)">
-                                        Preview
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr class="teacher-row" data-teacher-id="5">
-                                <td>Kakashi</td>
-                                <td>M</td>
-                                <td>31</td>
-                                <td>Teacher I</td>
-                                <td>
-                                    <button class="preview-btn" onclick="viewTeacherProfile(5)">
-                                        Preview
-                                    </button>
-                                </td>
-                            </tr>
-                            <tr class="teacher-row" data-teacher-id="6">
-                                <td>Kira</td>
-                                <td>M</td>
-                                <td>31</td>
-                                <td>Teacher I</td>
-                                <td>
-                                    <button class="preview-btn" onclick="viewTeacherProfile(6)">
-                                        Preview
-                                    </button>
-                                </td>
-                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
@@ -211,7 +162,7 @@
                     <h3>Teacher Data</h3>
                     <div class="teacher-info-grid">
                         <div class="teacher-photo">
-                            <img id="teacherPhoto" src="../assets/kakashi.webp" alt="Teacher Photo">
+                            <img id="teacherPhoto" src="{% static 'admin_functionalities/assets/kakashi.webp' %}" alt="Teacher Photo">
                         </div>
                         <div class="teacher-details">
                             <div class="detail-row">
@@ -336,7 +287,9 @@
             </div>
         </div>
     </div>
-
+     <script>
+        window.teachersData = {{ teachers|safe }};  // Pass the teachers data as a global variable
+    </script>
     <script src="{% static 'admin_functionalities/js/teachers.js' %}"></script>
 </body>
 

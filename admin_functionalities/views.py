@@ -1,25 +1,27 @@
 # admin_functionalities/views.py
 
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse, HttpResponseForbidden
+from django.http import JsonResponse, HttpResponseForbidden, HttpResponseRedirect
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.middleware.csrf import get_token
-from django.db import transaction
+from django.db import transaction, models
 from django.db.models import Prefetch, Count
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.views.generic import UpdateView
+from django.template.loader import render_to_string
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 # App-specific imports
-from .models import Notification, StudentRequirements, CustomUser , AddUserLog, Teacher
-from .forms import AddUserForm, StudentRequirementsForm
+from .models import Notification, StudentRequirements, CustomUser , AddUserLog, Section, SectionSubjectAssignment , Teacher
+from .forms import AddUserForm, StudentRequirementsForm, SectionForm, SectionSubjectAssignmentForm
 
 from enrollmentprocess.models import (
     Student,
@@ -235,40 +237,6 @@ def student_edit_view(request, student_id):
     }
     return render(request, "admin_functionalities/student_edit.html", context)
 
-def admin_login(request):
-    if request.user.is_authenticated:
-        return redirect('admin_functionalities:dashboard')
-
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            return redirect('admin_functionalities:dashboard')
-        else:
-            context = {'error': 'Invalid username or password'}
-            return render(request, 'admin_functionalities/login.html', context)
-    else:
-        return render(request, 'admin_functionalities/login.html')
-    
-@login_required
-def custom_logout(request):
-    # Fix: Use username directly (avoids get_full_name() error)
-    admin_name = request.user.username
-    
-    last_login = request.user.last_login  # Assumes your CustomUser  has this field
-    # Example session duration placeholder; replace with real calculation if needed
-    session_duration = "2h 0m"
-    
-    logout(request)  # Log out the user (clears session)
-    
-    context = {
-        'admin_name': admin_name,
-        'last_login': last_login,
-        'session_duration': session_duration,
-    }
-    return render(request, 'admin_functionalities/logout.html', context)
 
 @login_required
 def admin_dashboard(request):
@@ -385,11 +353,274 @@ def admin_dashboard(request):
     print("=== END DEBUG ===\n")
     return render(request, 'admin_functionalities/admin-dashboard.html', context)
 
-
+# ALLVIEWS FOR SECTOIONS ARE HERE
 @login_required
 def sections_view(request):
-    # Add context if needed
-    return render(request, 'admin_functionalities/sections.html', {'active_page': 'sections'})
+    # Get initial program from URL params (e.g., ?program=TOP5)
+    program = request.GET.get('program', 'STE')  # Default to STE
+    
+    # Fetch teachers where is_adviser=true or is_subject_teacher=true
+    teachers = CustomUser.objects.filter(
+        models.Q(is_adviser=True) | models.Q(is_subject_teacher=True)
+    ).order_by('last_name', 'first_name')
+    
+    teachers_data = []  # Prepare data for the template
+    for teacher in teachers:
+        full_name = f"{teacher.last_name}, {teacher.first_name} {teacher.middle_name}".strip()
+        teachers_data.append({
+            'id': teacher.id,
+            'name': full_name if full_name else teacher.username,
+        })
+    
+    context = {
+        'active_page': 'sections',
+        'initial_program': program,  # Pass to JS for initial load if needed
+        'teachers': teachers_data,  # Pass the combined teachers for the dropdown
+    }
+    return render(request, 'admin_functionalities/sections.html', context)
+
+@require_http_methods(["GET"])
+@require_http_methods(["GET"])
+def get_teachers(request):
+    """
+    Returns teachers for adviser/subject teacher dropdowns.
+    """
+    try:
+        advisers = Teacher.objects.all().order_by('last_name', 'first_name')
+        subject_teachers = Teacher.objects.all().order_by('last_name', 'first_name')
+
+        advisers_data = [
+            {'id': t.id, 'name': f"{t.last_name}, {t.first_name} {t.middle_name or ''}".strip()}
+            for t in advisers
+        ]
+
+        subject_teachers_data = [
+            {'id': t.id, 'name': f"{t.last_name}, {t.first_name} {t.middle_name or ''}".strip()}
+            for t in subject_teachers
+        ]
+
+        return JsonResponse({
+            'success': True,
+            'advisers': advisers_data,
+            'subject_teachers': subject_teachers_data
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["GET"])
+def get_buildings_rooms(request):
+    """
+    Returns building/room data for location dropdowns.
+    Hardcoded for now; can be moved to DB model later.
+    """
+    rooms_data = {
+        1: ['101', '102', '103', '104', '105'],
+        2: ['201', '202', '203', '204', '205'],
+        3: ['301', '302', '303', '304', '305'],
+        4: ['Lab 1', 'Lab 2', 'Lab 3', 'Lecture 1', 'Lecture 2'],
+        5: ['IT-101', 'IT-102', 'IT-201', 'IT-202', 'Server Room'],
+    }
+    
+    return JsonResponse({
+        'success': True,
+        'rooms': rooms_data
+    })
+
+
+@login_required
+@require_http_methods(["GET"])
+def get_sections_by_program(request, program):
+    """
+    Returns all sections for a given program (STE, SPFL, etc.).
+    Used by sections.html to populate the grid.
+    """
+    try:
+        sections = Section.objects.filter(program=program.upper()).select_related('adviser')
+        
+        sections_data = []
+        for section in sections:
+            adviser_name = "No Adviser"
+            if section.adviser:
+                adviser_name = f"{section.adviser.last_name}, {section.adviser.first_name}".strip()
+                if adviser_name == ',':
+                    adviser_name = section.adviser.username
+            
+            sections_data.append({
+                'id': section.id,
+                'name': section.name,
+                'adviser': adviser_name,
+                'adviserId': section.adviser.id if section.adviser else None,
+                'location': section.location,
+                'students': section.current_students,
+                'maxStudents': section.max_students,
+                'avatar': section.avatar.url if section.avatar else '/static/admin_functionalities/assets/default_section.png',
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'sections': sections_data
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def add_section(request, program):
+    """
+    Creates a new section for the given program.
+    Expects FormData with: name, adviser (user ID), building, room, max_students.
+    """
+    try:
+        form = SectionForm(request.POST, request.FILES)
+        
+        if form.is_valid():
+            section = form.save(commit=False)
+            section.program = program.upper()
+            section.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Section "{section.name}" added successfully to {program.upper()}!'
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'message': 'Validation failed',
+                'errors': form.errors
+            }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error adding section: {str(e)}'
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def update_section(request, section_id):
+    """
+    Updates an existing section.
+    Expects FormData with: name, adviser, building, room, max_students.
+    """
+    try:
+        section = get_object_or_404(Section, id=section_id)
+        form = SectionForm(request.POST, request.FILES, instance=section)
+        
+        if form.is_valid():
+            form.save()
+            return JsonResponse({
+                'success': True,
+                'message': f'Section "{section.name}" updated successfully!'
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'message': 'Validation failed',
+                'errors': form.errors
+            }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error updating section: {str(e)}'
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["DELETE"])
+def delete_section(request, section_id):
+    """
+    Deletes a section (soft delete if you prefer; hard delete for now).
+    """
+    try:
+        section = get_object_or_404(Section, id=section_id)
+        section_name = section.name
+        section.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Section "{section_name}" deleted successfully!'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error deleting section: {str(e)}'
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def assign_subject_teachers(request, section_id):
+    """
+    Assigns subject teachers to a section.
+    Expects JSON body with 'assignments' list:
+    [
+        {
+            'subject': 'MATH',
+            'teacher_id': 5,
+            'day': 'DAILY',
+            'start_time': '08:00',
+            'end_time': '09:00'
+        },
+        ...
+    ]
+    """
+    try:
+        section = get_object_or_404(Section, id=section_id)
+        data = json.loads(request.body)
+        assignments = data.get('assignments', [])
+        
+        if not assignments:
+            return JsonResponse({
+                'success': False,
+                'message': 'No assignments provided'
+            }, status=400)
+        
+        created_count = 0
+        updated_count = 0
+        
+        with transaction.atomic():
+            for assignment in assignments:
+                subject = assignment.get('subject', '').upper()
+                teacher_id = assignment.get('teacher_id')
+                day = assignment.get('day')
+                start_time = assignment.get('start_time')
+                end_time = assignment.get('end_time')
+                
+                if not all([subject, teacher_id, day, start_time, end_time]):
+                    continue  # Skip incomplete assignments
+                
+                teacher = get_object_or_404(CustomUser, id=teacher_id, is_subject_teacher=True)
+                
+                # Update or create assignment
+                obj, created = SectionSubjectAssignment.objects.update_or_create(
+                    section=section,
+                    subject=subject,
+                    defaults={
+                        'teacher': teacher,
+                        'day': day,
+                        'start_time': start_time,
+                        'end_time': end_time
+                    }
+                )
+                
+                if created:
+                    created_count += 1
+                else:
+                    updated_count += 1
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Subject teachers assigned! (Created: {created_count}, Updated: {updated_count})'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error assigning teachers: {str(e)}',
+            'errors': str(e)
+        }, status=500)
 
 @login_required
 def enrollment_view(request):
@@ -455,10 +686,46 @@ def enrollment_view(request):
     return render(request, 'admin_functionalities/enrollment-management.html', context)
 
 
+# TEACHERS VIEWS
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from .models import Teacher  # Ensure you import the Teacher model
 
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from .models import Teacher
+
+@login_required
 def teachers_view(request):
-    # Add context if needed
-    return render(request, 'admin_functionalities/teachers.html')
+    teachers = Teacher.objects.order_by('last_name', 'first_name')
+    teachers_data = []  # Prepare detailed data for each teacher
+    
+    for t in teachers:
+        teachers_data.append({
+            'id': t.id,
+            'fullName': t.full_name or f"{t.first_name} {t.last_name}".strip(),
+            'sex': t.gender or 'N/A',
+            'age': t.age or 'N/A',
+            'position': t.position or 'N/A',
+            'employeeId': t.employee_id or 'N/A',
+            'lastName': t.last_name or 'N/A',
+            'firstName': t.first_name or 'N/A',
+            'middleName': t.middle_name or 'N/A',
+            'dateOfBirth': t.date_of_birth.strftime('%B %d, %Y') if t.date_of_birth else 'N/A',
+            'department': t.department or 'N/A',
+            'email': t.email or 'N/A',
+            'phone': t.phone or 'N/A',
+            'address': t.address or 'N/A',
+            'photo': t.profile_photo.url if t.profile_photo else '/static/admin_functionalities/assets/kakashi.webp',
+            # Removed problematic fields; add back if they exist in your model
+        })
+    
+    context = {
+        'teachers': teachers_data,  # Pass the list with full details
+    }
+    
+    return render(request, 'admin_functionalities/teachers.html', context)
+
 
 @csrf_exempt
 def mark_notification_read(request):
@@ -535,82 +802,64 @@ class StudentAcademicUpdateView(AdminRequiredMixin, UpdateView):
 
 # ALL SETTINGS RELATED VIEWS ARE HERE
 @method_decorator(login_required, name='dispatch')
-# class AddUserView(View):
-#       def get(self, request):  # NEW: Handle GET (if direct access to /add-user/, redirect to settings)
-#         return redirect('admin_functionalities:settings')
-
-#       def post(self, request):
-#         print(f"=== DEBUG: POST received in AddUser View! Raw POST data: {dict(request.POST)} ===")  # KEY: Shows all form data (e.g., position='Administrative')
-#         print(f"=== DEBUG: FILES present: {bool(request.FILES)} (userImage: {request.FILES.get('userImage', 'None')}) ===")  # Check file if needed
-
-#         form = AddUserForm(request.POST, request.FILES)  # Process form
-#         print(f"=== DEBUG: Form errors: {form.errors} ===")  # KEY: Exact validation errors (e.g., {'position': ['This field is required.']})
-#         print(f"=== DEBUG: Form cleaned_data (if partial): {form.cleaned_data} ===")  # Shows valid fields
-
-#         if form.is_valid():
-#             print("=== DEBUG: Form VALID – Saving user... ===")
-#             try:
-#                 result = form.save(created_by_user=request.user)
-#                 print(f"=== DEBUG: SUCCESS – User created! ID={result['user'].id}, Position={result['user'].position}, Roles: is_teacher={result['user'].is_teacher}, is_subject_teacher={result['user'].is_subject_teacher}, is_adviser={result['user'].is_adviser} ===")
-#                 messages.success(request, 'User  added successfully! Please refresh the page to see the new user.')
-#                 return redirect('admin_functionalities:settings')  # Redirect to settings (reloads table, closes modal implicitly)
-#             except Exception as save_err:
-#                 print(f"=== DEBUG: Save ERROR: {save_err} ===")
-#                 messages.error(request, f'Error saving user: {str(save_err)}')
-#                 return redirect('admin_functionalities:settings')
-#         else:
-#             print("=== DEBUG: Form INVALID – Redirecting with errors ===")
-#             # For regular form, show errors via messages (terminal + browser flash)
-#             error_msg = 'Please correct the form errors (check terminal for details).'
-#             for field, errs in form.errors.items():
-#                 error_msg += f' {field}: {", ".join(errs)}'
-#             messages.error(request, error_msg)
-#             # Re-fetch context for redirect
-#             users = CustomUser .objects.filter(is_active=True).order_by('-id')[:20]
-#             logs = AddUserLog.objects.select_related('user').order_by('-date', '-time')[:20]
-#             context = {
-#                 'active_page': 'settings',
-#                 'users': users,
-#                 'logs': logs,
-#                 'form': form,  # Pass form (errors bound; but modal needs JS to show – terminal has details)
-#             }
-#             return render(request, 'admin_functionalities/settings.html', context) 
 class AddUserView(View):
-    def get(self, request):  # Handle direct GET (redirect to settings)
-        return redirect('admin_functionalities:settings')
+    def get(self, request):
+        # If someone directly visits the URL, just redirect them to the settings page
+        return redirect(reverse('admin_functionalities:settings'))
 
     def post(self, request):
-        print(f"=== DEBUG: POST received in AddUser  View! Raw POST data: {dict(request.POST)} ===")
+        print(f"=== DEBUG: POST received in AddUser View! Raw POST data: {dict(request.POST)} ===")
         print(f"=== DEBUG: FILES present: {bool(request.FILES)} (userImage: {request.FILES.get('userImage', 'None')}) ===")
 
         form = AddUserForm(request.POST, request.FILES)
-        print(f"=== DEBUG: Form errors: {form.errors} ===")
-        print(f"=== DEBUG: Form cleaned_data (if partial): {form.cleaned_data} ===")
+        print(f"=== DEBUG: Form errors before validation: {form.errors} ===")
 
         if form.is_valid():
             print("=== DEBUG: Form VALID – Saving user... ===")
             try:
-                result = form.save(created_by_user=request.user)
-                print(f"=== DEBUG: SUCCESS – User created! ID={result['user'].id}, Position={result['user'].position}, Roles: is_teacher={result['user'].is_teacher}, is_subject_teacher={result['user'].is_subject_teacher}, is_adviser={result['user'].is_adviser} ===")
-                # JSON for AJAX: Success + data for JS (e.g., reload table)
-                return JsonResponse({
-                    'success': True, 
-                    'message': 'User  added successfully!', 
-                    'user_id': result['user'].id,
-                    'position': result['user'].position  # Optional for JS
-                })
+                # ✅ Fixed: pass created_by_user so AddUserLog will be created
+                user = form.save(created_by_user=request.user)
+
+                print(f"=== DEBUG: SUCCESS – User created! ID={user.id}, Position={user.position}, Roles: "
+                      f"is_subject_teacher={user.is_subject_teacher}, is_adviser={user.is_adviser} ===")
+
+                # AJAX response
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': True,
+                        'message': 'User added successfully!',
+                        'user_id': user.id,
+                        'position': user.position
+                    })
+
+                # Non-AJAX: redirect back to settings
+                return redirect(reverse('admin_functionalities:settings'))
+
             except Exception as save_err:
                 print(f"=== DEBUG: Save ERROR: {save_err} ===")
-                return JsonResponse({'success': False, 'error': str(save_err)}, status=500)
+
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({'success': False, 'error': str(save_err)}, status=500)
+
+                # Non-AJAX: Redirect with error
+                from django.contrib import messages
+                messages.error(request, f"Error saving user: {save_err}")
+                return redirect(reverse('admin_functionalities:settings'))
+
         else:
             print("=== DEBUG: Form INVALID – Returning JSON errors ===")
-            # JSON for AJAX: Errors dict (JS can show field-specific alerts)
-            return JsonResponse({
-                'success': False, 
-                'errors': form.errors,  # e.g., {'password': ['Must be 8+ chars'], '__all__': ['Username mismatch']}
-                'message': 'Please correct the errors below.'
-            }, status=400)
 
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False,
+                    'errors': form.errors,
+                    'message': 'Please correct the errors below.'
+                }, status=400)
+
+            # Non-AJAX: Redirect with message
+            from django.contrib import messages
+            messages.error(request, 'Form errors occurred. Please check and try again.')
+            return redirect(reverse('admin_functionalities:settings'))
 
 @login_required
 def settings_view(request):
@@ -654,3 +903,52 @@ def get_user_profile(request, user_id):
         return JsonResponse({'success': True, 'data': profile_data})
     except CustomUser .DoesNotExist:
         return JsonResponse({'success': False, 'error': 'User  not found'}, status=404)
+
+
+# SECTIONS RELATED VIEWS 
+# NEW: Sections Backend Views (AJAX/JSON for sections.html)
+
+
+
+
+
+
+
+
+
+
+
+
+# SAMPLE
+
+
+@login_required
+def get_users_data(request):
+    users = CustomUser.objects.filter(is_active=True).order_by('-id')[:20]
+    users_html = render_to_string('admin_functionalities/partials/users_table.html', {'users': users})  # Render partial HTML
+    return JsonResponse({'users_html': users_html})
+
+@login_required
+def get_logs_data(request):
+    logs = AddUserLog.objects.select_related('user').order_by('-date', '-time')[:20]
+    
+    # Prepare logs with combined activity
+    logs_data = []
+    for log in logs:
+        # Determine the role for the affected user
+        role = "admin" if log.affected_is_admin else \
+               "administrative staff" if log.affected_is_staff_expert else \
+               "teacher" if log.affected_is_adviser or log.affected_is_teacher or log.affected_is_subject_teacher else "user"
+        
+        # Combined activity string: "Username performed action for Role"
+        combined_activity = f"{log.user.username} {log.action} for {role}"
+        
+        logs_data.append({
+            'combined_activity': combined_activity,  # New combined field
+            'date': log.date.strftime('%B %d, %Y') if log.date else 'N/A',
+            'time': log.time.strftime('%I:%M %p') if log.time else 'N/A',
+        })
+    
+    logs_html = render_to_string('admin_functionalities/partials/history_table.html', {'logs': logs_data})  # Pass the new data
+    return JsonResponse({'logs_html': logs_html})
+

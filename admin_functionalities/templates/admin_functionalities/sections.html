@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+{% comment %} <!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -16,7 +16,7 @@
         <aside class="sidebar">
             <div class="sidebar-header">
                 <div class="logo-container">
-                    <img src="../assets/westLogo.png" alt="ZNHS West Logo" class="sidebar-logo">
+                    <img src="{% static 'admin_functionalities/assets/westLogo.png' %}" alt="ZNHS West Logo" class="sidebar-logo">
                     <span class="sidebar-title">ZNHS WEST</span>
                 </div>
             </div>
@@ -24,7 +24,7 @@
             <nav class="sidebar-nav">
                 <ul>
                      <li class="nav-item ">
-                        <a href="{% url 'admin_functionalities:dashboard' %}" class="nav-link">
+                        <a href="{% url 'admin_functionalities:admin-dashboard' %}" class="nav-link">
                             <i class="fas fa-tachometer-alt"></i>
                             <span>Dashboard</span>
                         </a>
@@ -59,7 +59,7 @@
 
             <div class="sidebar-footer">
                 <!-- Logout as link with onclick handler -->
-                <a href="#" class="logout-btn" onclick="handleLogout(); return false;">
+                <a href="{% url 'enrollmentprocess:logout' %}" class="logout-btn" onclick="handleLogout(); return false;">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
@@ -126,57 +126,54 @@
     </div>
 
 
-    <div id="addSectionModal" class="modal">
+     <div id="addSectionModal" class="modal">
         <div class="modal-content">
             <h2>ADD SECTION</h2>
-            <form id="addSectionForm">
-                <div class="form-group">
-                    <label for="sectionName">Section Name:</label>
-                    <input type="text" id="sectionName" name="sectionName" required>
-                </div>
+              <form id="addSectionForm">
+      {% csrf_token %}  <!-- ← ADD FOR POST SECURITY -->
+      <div class="form-group">
+          <label for="sectionName">Section Name:</label>
+          <input type="text" id="sectionName" name="name" required>  <!-- ← name="name" (matches form) -->
+      </div>
 
-                <div class="form-group">
-                    <label for="adviserName">Adviser Name:</label>
-                    <select id="adviserName" name="adviserName" required>
-                        <option value="">Select Adviser</option>
-                        <option value="Pain">Pain</option>
-                        <option value="Chrollo">Chrollo</option>
-                        <option value="Itachi">Itachi</option>
-                        <option value="Madara">Madara</option>
-                    </select>
-                </div>
+      <div class="form-group">
+          <label for="adviserName">Adviser Name:</label>
+          <select id="adviserName" name="adviser" required>  <!-- ← name="adviser" (matches form), value=ID in JS -->
+              <option value="">Select Adviser</option>
+              <!-- Options populated by JS from get_teachers -->
+          </select>
+      </div>
 
-                <div class="form-group">
-                    <label>Location:</label>
-                    <div class="location-inputs">
-                        <div class="location-field">
-                            <label for="buildingNumber">Building Number:</label>
-                            <select id="buildingNumber" name="buildingNumber" required>
-                                <option value="">Select Building</option>
-                                <option value="1">Building 1</option>
-                                <option value="2">Building 2</option>
-                                <option value="3">Building 3</option>
-                            </select>
-                        </div>
-                        <div class="location-field">
-                            <label for="roomNumber">Room Number:</label>
-                            <select id="roomNumber" name="roomNumber" required>
-                                <option value="">Select Room</option>
-                                <option value="101">Room 101</option>
-                                <option value="102">Room 102</option>
-                                <option value="103">Room 103</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
+      <div class="form-group">
+          <label>Location:</label>
+          <div class="location-inputs">
+              <div class="location-field">
+                  <label for="buildingNumber">Building Number:</label>
+                  <select id="buildingNumber" name="building" required>  <!-- ← name="building" -->
+                      <option value="">Select Building</option>
+                      <!-- Populated by JS from get_buildings_rooms -->
+                  </select>
+              </div>
+              <div class="location-field">
+                  <label for="roomNumber">Room Number:</label>
+                  <select id="roomNumber" name="room" required>  <!-- ← name="room" -->
+                      <option value="">Select Room</option>
+                      <!-- Populated by JS, depends on building -->
+                  </select>
+              </div>
+          </div>
+      </div>
 
-                <div class="modal-buttons">
-                    <button type="button" class="btn-back" onclick="closeAddSectionModal()">BACK</button>
-                    <button type="submit" class="btn-add">ADD</button>
-                </div>
-            </form>
+
+      <div class="modal-buttons">
+          <button type="button" class="btn-back" onclick="closeAddSectionModal()">BACK</button>
+          <button type="submit" class="btn-add">ADD</button>
+      </div>
+  </form>
+  
         </div>
-    </div>
+    </div> 
+    
 
     <!-- Add Subject Teacher Modal -->
     <div id="addSubjectTeacherModal" class="modal">
@@ -200,68 +197,150 @@
                     <tbody>
                         <tr>
                             <td>Mathematics</td>
-                            <td>
-                                <select name="mathTeacher">
-                                    <option value="Juan Dela Cruz" selected>Juan Dela Cruz</option>
-                                    <option value="Maria Santos">Maria Santos</option>
-                                </select>
-                            </td>
-                            <td>
-                                <select name="mathDay">
-                                    <option value="Daily" selected>Daily</option>
-                                    <option value="MWF">MWF</option>
-                                    <option value="TTH">TTH</option>
-                                </select>
-                            </td>
-                            <td>
-                                <input type="time" name="mathTime" value="08:00">
-                                <span class="time-separator">-</span>
-                                <input type="time" name="mathTimeEnd" value="09:00">
-                            </td>
+                                <td>
+                                    <select id="mathTeacher" name="mathTeacher">  <!-- ← Add id -->
+                                        <option value="">Select Teacher</option>
+                                        <!-- Populated by JS from subject_teachers -->
+                                    </select>
+                                </td>
+                                <td>
+                                    <select id="mathDay" name="mathDay">  <!-- ← Add id -->
+                                        <option value="DAILY">Daily</option>
+                                        <option value="MWF">MWF</option>
+                                        <option value="TTH">TTH</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="time" id="mathTime" name="mathTime">  <!-- ← Add id -->
+                                    <span class="time-separator">-</span>
+                                    <input type="time" id="mathTimeEnd" name="mathTimeEnd">  <!-- ← Add id -->
+                                </td>
                         </tr>
                         <tr>
                             <td>English</td>
-                            <td>
-                                <select name="englishTeacher">
-                                    <option value="">Select Teacher</option>
-                                    <option value="Juan Dela Cruz">Juan Dela Cruz</option>
-                                    <option value="Maria Santos">Maria Santos</option>
-                                </select>
-                            </td>
-                            <td>
-                                <select name="englishDay">
-                                    <option value="MWF" selected>MWF</option>
-                                    <option value="TTH">TTH</option>
-                                    <option value="Daily">Daily</option>
-                                </select>
-                            </td>
-                            <td>
-                                <input type="time" name="englishTime">
-                                <span class="time-separator">-</span>
-                                <input type="time" name="englishTimeEnd">
-                            </td>
+                                <td>
+                                    <select id="englishTeacher" name="englishTeacher">  <!-- ← Add id -->
+                                        <option value="">Select Teacher</option>
+                                        <!-- Populated by JS from subject_teachers -->
+                                    </select>
+                                </td>
+                                <td>
+                                    <select id="englishDay" name="englishDay">  <!-- ← Add id -->
+                                        <option value="DAILY">Daily</option>
+                                        <option value="MWF">MWF</option>
+                                        <option value="TTH">TTH</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="time" id="englishTime" name="englishTime">  <!-- ← Add id -->
+                                    <span class="time-separator">-</span>
+                                    <input type="time" id="englishTimeEnd" name="englihTimeEnd">  <!-- ← Add id -->
+                                </td>
                         </tr>
                         <tr>
                             <td>Science</td>
-                            <td>
-                                <select name="scienceTeacher">
-                                    <option value="">Select Teacher</option>
-                                    <option value="Juan Dela Cruz">Juan Dela Cruz</option>
-                                    <option value="Maria Santos">Maria Santos</option>
-                                </select>
-                            </td>
-                            <td>
-                                <select name="scienceDay">
-                                    <option value="MWF" selected>MWF</option>
-                                    <option value="TTH">TTH</option>
-                                    <option value="Daily">Daily</option>
-                                </select>
-                            </td>
-                            <td>
-                                <input type="time" name="scienceTime">
-                                <span class="time-separator">-</span>
-                                <input type="time" name="scienceTimeEnd">
-                            </td>
+                                <td>
+                                    <select id="scienceTeacher" name="scienceTeacher">  <!-- ← Add id -->
+                                        <option value="">Select Teacher</option>
+                                        <!-- Populated by JS from subject_teachers -->
+                                    </select>
+                                </td>
+                                <td>
+                                    <select id="scienceDay" name="scienceDay">  <!-- ← Add id -->
+                                        <option value="DAILY">Daily</option>
+                                        <option value="MWF">MWF</option>
+                                        <option value="TTH">TTH</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="time" id="scienceTime" name="scienceTime">  <!-- ← Add id -->
+                                    <span class="time-separator">-</span>
+                                    <input type="time" id="scienceTimeEnd" name="scienceTimeEnd">  <!-- ← Add id -->
+                                </td>
+                        </tr>
+                        <tr>
+                            <td>Filipino</td>
+                                <td>
+                                    <select id="filipinoTeacher" name="filipinoTeacher">  <!-- ← Add id -->
+                                        <option value="">Select Teacher</option>
+                                        <!-- Populated by JS from subject_teachers -->
+                                    </select>
+                                </td>
+                                <td>
+                                    <select id="filipinoDay" name="filipinoDay">  <!-- ← Add id -->
+                                        <option value="DAILY">Daily</option>
+                                        <option value="MWF">MWF</option>
+                                        <option value="TTH">TTH</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="time" id="filipinoTime" name="filipinoTime">  <!-- ← Add id -->
+                                    <span class="time-separator">-</span>
+                                    <input type="time" id="filipinoTimeEnd" name="filipinoTimeEnd">  <!-- ← Add id -->
+                                </td>
+                        </tr>
+                        <tr>
+                            <td>Araling Panlipunan</td>
+                                <td>
+                                    <select id="arpanTeacher" name="arpanTeacher">  <!-- ← Add id -->
+                                        <option value="">Select Teacher</option>
+                                        <!-- Populated by JS from subject_teachers -->
+                                    </select>
+                                </td>
+                                <td>
+                                    <select id="arpanDay" name="arpanDay">  <!-- ← Add id -->
+                                        <option value="DAILY">Daily</option>
+                                        <option value="MWF">MWF</option>
+                                        <option value="TTH">TTH</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="time" id="arpanTime" name="arpanTime">  <!-- ← Add id -->
+                                    <span class="time-separator">-</span>
+                                    <input type="time" id="arpanTimeEnd" name="arpanTimeEnd">  <!-- ← Add id -->
+                                </td>
+                        </tr>
+                        <tr>
+                            <td>MAPEH</td>
+                                <td>
+                                    <select id="mapehTeacher" name="mapehTeacher">  <!-- ← Add id -->
+                                        <option value="">Select Teacher</option>
+                                        <!-- Populated by JS from subject_teachers -->
+                                    </select>
+                                </td>
+                                <td>
+                                    <select id="mapehDay" name="mapehDay">  <!-- ← Add id -->
+                                        <option value="DAILY">Daily</option>
+                                        <option value="MWF">MWF</option>
+                                        <option value="TTH">TTH</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="time" id="mapehTime" name="mapehTime">  <!-- ← Add id -->
+                                    <span class="time-separator">-</span>
+                                    <input type="time" id="mapehTimeEnd" name="mapehTimeEnd">  <!-- ← Add id -->
+                                </td>
+                        </tr>
+                        <tr>
+                            <td>Edukasyon sa Pagpapakatao</td>
+                                <td>
+                                    <select id="espTeacher" name="espTeacher">  <!-- ← Add id -->
+                                        <option value="">Select Teacher</option>
+                                        <!-- Populated by JS from subject_teachers -->
+                                    </select>
+                                </td>
+                                <td>
+                                    <select id="espDay" name="espDay">  <!-- ← Add id -->
+                                        <option value="DAILY">Daily</option>
+                                        <option value="MWF">MWF</option>
+                                        <option value="TTH">TTH</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="time" id="espTime" name="espTime">  <!-- ← Add id -->
+                                    <span class="time-separator">-</span>
+                                    <input type="time" id="espTimeEnd" name="espTimeEnd">  <!-- ← Add id -->
+                                </td>
                         </tr>
                     </tbody>
                 </table>
@@ -278,26 +357,477 @@
     <div id="updateSectionModal" class="modal">
         <div class="modal-content">
             <h2>UPDATE SECTION</h2>
-            <form id="updateSectionForm">
+             <form id="updateSectionForm">
+                    {% csrf_token %}  <!-- ← ADD -->
+                    <input type="hidden" name="section_id" id="updateSectionId">  <!-- ← ADD: For JS to set ID -->
+                    <div class="form-group">
+                        <label for="updateSectionName">Section Name:</label>
+                        <input type="text" id="updateSectionName" name="name" required>  <!-- ← name="name" -->
+                    </div>
+
+                    <div class="form-group">
+                        <label for="updateAdviserName">Section Teacher:</label>
+                        <select id="updateAdviserName" name="adviser" required>  <!-- ← name="adviser" -->
+                            <option value="">Select Teacher</option>
+                            <!-- Populated by JS -->
+                        </select>
+                    </div>
+
+                    <div class="form-group">  <!-- ← CHANGE: Split location into building/room for form match -->
+                        <label>Location:</label>
+                        <div class="location-inputs">
+                            <div class="location-field">
+                                <label for="updateBuilding">Building Number:</label>
+                                <select id="updateBuilding" name="building" required>
+                                    <option value="">Select Building</option>
+                                    <!-- Populated by JS -->
+                                </select>
+                            </div>
+                            <div class="location-field">
+                                <label for="updateRoom">Room Number:</label>
+                                <select id="updateRoom" name="room" required>
+                                    <option value="">Select Room</option>
+                                    <!-- Populated by JS -->
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="updateMaxStudents">Max Students:</label>
+                        <input type="number" id="updateMaxStudents" name="max_students" value="40" min="1" class="form-control">
+                    </div>
+
+                    <div class="modal-buttons">
+                        <button type="button" class="btn-back" onclick="closeUpdateSectionModal()">BACK</button>
+                        <button type="submit" class="btn-add">UPDATE</button>
+                    </div>
+                </form>
+        </div>
+    </div>
+
+    <script src="{% static 'admin_functionalities/js/sections.js' %}"></script>
+</body>
+
+</html> {% endcomment %}
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <title>Sections Management - ZNHS West</title>
+    <link rel="stylesheet" href="{% static 'admin_functionalities/css/sections.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar (unchanged) -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <img src="{% static 'admin_functionalities/assets/westLogo.png' %}" alt="ZNHS West Logo" class="sidebar-logo">
+                    <span class="sidebar-title">ZNHS WEST</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul>
+                     <li class="nav-item ">
+                        <a href="{% url 'admin_functionalities:admin-dashboard' %}" class="nav-link">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_functionalities:sections' %}" class="nav-link">
+                            <i class="fas fa-users"></i>
+                            <span>Sections</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_functionalities:teachers' %}" class="nav-link">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                            <span>Teachers</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'admin_functionalities:enrollment' %}" class="nav-link">
+                            <i class="fas fa-clipboard-list"></i>
+                            <span>Enrollment</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="{% url 'admin_functionalities:settings' %}" class="nav-link">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="{% url 'enrollmentprocess:logout' %}" class="logout-btn" onclick="handleLogout(); return false;">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content (unchanged) -->
+        <main class="main-content">
+            <header class="sections-header">
+                <div class="header-left">
+                    <h1>List of Programs and Sections</h1>
+                    <div class="grade-selector">
+                        <label for="gradeLevel">Grade Level:</label>
+                        <select id="gradeLevel" class="grade-dropdown">
+                            <option value="7">Grade 7</option>
+                            <option value="8">Grade 8</option>
+                            <option value="9">Grade 9</option>
+                            <option value="10">Grade 10</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="header-right">
+                    <div class="search-container">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search sections..." class="search-input">
+                    </div>
+
+                    <button class="add-section-btn" onclick="openAddSectionModal()">
+                        <i class="fas fa-plus"></i>
+                        Add Section
+                    </button>
+
+                    <div class="admin-profile">
+                        <div class="profile-info">
+                            <span class="admin-name">Samson, Marwina D.</span>
+                            <span class="admin-role">Admin</span>
+                        </div>
+                        <div class="profile-avatar">
+                            <img src="{% static 'admin_functionalities/assets/spongebob.jpg' %}" alt="Admin" class="avatar-img">
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Program Tabs (unchanged) -->
+            <section class="program-tabs">
+                <div class="tabs-container">
+                    <button class="tab-btn active" data-program="STE">STE</button>
+                    <button class="tab-btn" data-program="SPFL">SPFL</button>
+                    <button class="tab-btn" data-program="SPTVE">SPTVE</button>
+                    <button class="tab-btn" data-program="OHSP">OHSP</button>
+                    <button class="tab-btn" data-program="SNED">SNED</button>
+                    <button class="tab-btn" data-program="TOP5">TOP 5</button>
+                    <button class="tab-btn" data-program="REGULAR">REGULAR</button>
+                </div>
+            </section>
+
+            <section class="sections-grid" id="sectionsGrid">
+                <!-- Section cards will be dynamically loaded here -->
+            </section>
+        </main>
+    </div>
+
+    <!-- Add Section Modal -->
+    <div id="addSectionModal" class="modal">
+        <div class="modal-content">
+            <h2>ADD SECTION</h2>
+            <form id="addSectionForm" enctype="multipart/form-data">
+                {% csrf_token %}
                 <div class="form-group">
-                    <label for="updateSectionName">Section Name:</label>
-                    <input type="text" id="updateSectionName" name="sectionName" required>
+                    <label for="sectionName">Section Name:</label>
+                    <input type="text" id="sectionName" name="name" placeholder="e.g., Akatsuki" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="updateAdviserName">Section Teacher:</label>
-                    <select id="updateAdviserName" name="adviserName" required>
-                        <option value="">Select Teacher</option>
-                        <option value="Pain">Pain</option>
-                        <option value="Chrollo">Chrollo</option>
-                        <option value="Itachi">Itachi</option>
-                        <option value="Madara">Madara</option>
+                    <label for="adviserName">Adviser Name:</label>
+                    <select id="adviserName" name="adviser" required>
+                        <option value="">Select Adviser</option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label for="updateLocation">Location:</label>
-                    <input type="text" id="updateLocation" name="location" placeholder="e.g., Bldg 1 Room 101" required>
+                    <label>Location:</label>
+                    <div class="location-inputs">
+                        <div class="location-field">
+                            <label for="buildingNumber">Building Number:</label>
+                            <select id="buildingNumber" name="building" required>
+                                <option value="">Select Building</option>
+                                <option value=1>Building 1</option>
+                                <option value=2>Building 2</option>
+                                <option value=3>Building 3</option>
+                                <option value=4>Building 4</option>
+                                <option value=5>Building 5</option>
+                            </select>
+                        </div>
+                        <div class="location-field">
+                            <label for="roomNumber">Room Number:</label>
+                            <select id="roomNumber" name="room" required>
+                                <option value="">Select Room</option>
+                                <option value="101">Room 101</option>
+                                <option value="102">Room 102</option>
+                                <option value="103">Room 103</option>
+                                <option value="104">Room 104</option>
+                                <option value="105">Room 105</option>
+                                <option value="201">Room 201</option>
+                                <option value="202">Room 202</option>
+                                <option value="203">Room 203</option>
+                                <option value="204">Room 204</option>
+                                <option value="205">Room 205</option>
+                                <option value="301">Room 301</option>
+                                <option value="302">Room 302</option>
+                                <option value="303">Room 303</option>
+                                <option value="304">Room 304</option>
+                                <option value="305">Room 305</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="maxStudents">Max Students:</label>
+                    <input type="number" id="maxStudents" name="max_students" value="40" min="20" max="60" class="form-control">
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="button" class="btn-back" onclick="closeAddSectionModal()">BACK</button>
+                    <button type="submit" class="btn-add">ADD</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Subject Teacher Modal (fixed: wrapped in form, fixed typo, button onclick) -->
+    <div id="addSubjectTeacherModal" class="modal">
+        <div class="modal-content subject-teacher-modal">
+            <h2>ADD SUBJECT TEACHER</h2>
+            <div class="section-info">
+                <span>Section: <span id="currentSection">Akatsuki</span> | Adviser: <span id="currentAdviser">Pain</span></span>
+            </div>
+
+            <form id="addSubjectTeacherForm">  <!-- Wrapped in form for JS -->
+                <div class="subjects-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Teacher's Name</th>
+                                <th>Day</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Mathematics</td>
+                                <td>
+                                    <select id="mathTeacher" name="mathTeacher">
+                                        <option value="">Select Teacher</option>
+                                        <!-- Populated by JS from subject_teachers -->
+                                    </select>
+                                </td>
+                                <td>
+                                    <select id="mathDay" name="mathDay">
+                                        <option value="DAILY">Daily</option>
+                                        <option value="MWF">MWF</option>
+                                        <option value="TTH">TTH</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="time" id="mathTime" name="mathTime">
+                                    <span class="time-separator">-</span>
+                                    <input type="time" id="mathTimeEnd" name="mathTimeEnd">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>English</td>
+                                <td>
+                                    <select id="englishTeacher" name="englishTeacher">
+                                        <option value="">Select Teacher</option>
+                                        <!-- Populated by JS from subject_teachers -->
+                                    </select>
+                                </td>
+                                <td>
+                                    <select id="englishDay" name="englishDay">
+                                        <option value="DAILY">Daily</option>
+                                        <option value="MWF">MWF</option>
+                                        <option value="TTH">TTH</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="time" id="englishTime" name="englishTime">
+                                    <span class="time-separator">-</span>
+                                    <input type="time" id="englishTimeEnd" name="englishTimeEnd">  <!-- Fixed typo: englih -> english -->
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Science</td>
+                                <td>
+                                    <select id="scienceTeacher" name="scienceTeacher">
+                                        <option value="">Select Teacher</option>
+                                        <!-- Populated by JS from subject_teachers -->
+                                    </select>
+                                </td>
+                                <td>
+                                    <select id="scienceDay" name="scienceDay">
+                                        <option value="DAILY">Daily</option>
+                                        <option value="MWF">MWF</option>
+                                        <option value="TTH">TTH</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="time" id="scienceTime" name="scienceTime">
+                                    <span class="time-separator">-</span>
+                                    <input type="time" id="scienceTimeEnd" name="scienceTimeEnd">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Filipino</td>
+                                <td>
+                                    <select id="filipinoTeacher" name="filipinoTeacher">
+                                        <option value="">Select Teacher</option>
+                                        <!-- Populated by JS from subject_teachers -->
+                                    </select>
+                                </td>
+                                <td>
+                                    <select id="filipinoDay" name="filipinoDay">
+                                        <option value="DAILY">Daily</option>
+                                        <option value="MWF">MWF</option>
+                                        <option value="TTH">TTH</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="time" id="filipinoTime" name="filipinoTime">
+                                    <span class="time-separator">-</span>
+                                    <input type="time" id="filipinoTimeEnd" name="filipinoTimeEnd">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Araling Panlipunan</td>
+                                <td>
+                                    <select id="arpanTeacher" name="arpanTeacher">
+                                        <option value="">Select Teacher</option>
+                                        <!-- Populated by JS from subject_teachers -->
+                                    </select>
+                                </td>
+                                <td>
+                                    <select id="arpanDay" name="arpanDay">
+                                        <option value="DAILY">Daily</option>
+                                        <option value="MWF">MWF</option>
+                                        <option value="TTH">TTH</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="time" id="arpanTime" name="arpanTime">
+                                    <span class="time-separator">-</span>
+                                    <input type="time" id="arpanTimeEnd" name="arpanTimeEnd">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>MAPEH</td>
+                                <td>
+                                    <select id="mapehTeacher" name="mapehTeacher">
+                                        <option value="">Select Teacher</option>
+                                        <!-- Populated by JS from subject_teachers -->
+                                    </select>
+                                </td>
+                                <td>
+                                    <select id="mapehDay" name="mapehDay">
+                                        <option value="DAILY">Daily</option>
+                                        <option value="MWF">MWF</option>
+                                        <option value="TTH">TTH</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="time" id="mapehTime" name="mapehTime">
+                                    <span class="time-separator">-</span>
+                                    <input type="time" id="mapehTimeEnd" name="mapehTimeEnd">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Edukasyon sa Pagpapakatao</td>
+                                <td>
+                                    <select id="espTeacher" name="espTeacher">
+                                        <option value="">Select Teacher</option>
+                                        <!-- Populated by JS from subject_teachers -->
+                                    </select>
+                                </td>
+                                <td>
+                                    <select id="espDay" name="espDay">
+                                        <option value="DAILY">Daily</option>
+                                        <option value="MWF">MWF</option>
+                                        <option value="TTH">TTH</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="time" id="espTime" name="espTime">
+                                    <span class="time-separator">-</span>
+                                    <input type="time" id="espTimeEnd" name="espTimeEnd">
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="button" class="btn-back" onclick="closeSubjectTeacherModal()">BACK</button>
+                    <button type="submit" class="btn-add" onclick="handleAssignSubjectTeachers(event)">ADD</button>  <!-- Fixed: Calls JS handler, prevents default -->
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Update Section Modal (unchanged) -->
+    <div id="updateSectionModal" class="modal">
+        <div class="modal-content">
+            <h2>UPDATE SECTION</h2>
+            <form id="updateSectionForm" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="section_id" id="updateSectionId">
+                <div class="form-group">
+                    <label for="updateSectionName">Section Name:</label>
+                    <input type="text" id="updateSectionName" name="name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="updateAdviserName">Section Teacher:</label>
+                    <select id="updateAdviserName" name="adviser" required>
+                        <option value="">Select Teacher</option>
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Location:</label>
+                    <div class="location-inputs">
+                        <div class="location-field">
+                            <label for="updateBuilding">Building Number:</label>
+                            <select id="updateBuilding" name="building" required>
+                                <option value="">Select Building</option>
+                                <!-- Populated by JS -->
+                            </select>
+                        </div>
+                        <div class="location-field">
+                            <label for="updateRoom">Room Number:</label>
+                            <select id="updateRoom" name="room" required>
+                                <option value="">Select Room</option>
+                                <!-- Populated by JS -->
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="updateMaxStudents">Max Students:</label>
+                    <input type="number" id="updateMaxStudents" name="max_students" value="40" min="1" class="form-control">
                 </div>
 
                 <div class="modal-buttons">
@@ -310,5 +840,32 @@
 
     <script src="{% static 'admin_functionalities/js/sections.js' %}"></script>
 </body>
+<script>
+    // Room data by building
+    const roomsByBuilding = {
+        1: ["101", "102", "103", "104", "105"],
+        2: ["201", "202", "203", "204", "205"],
+        3: ["301", "302", "303", "304", "305"],
+        4: ["Lab 1", "Lab 2", "Lab 3", "Lecture 1", "Lecture 2"],
+        5: ["IT-101", "IT-102", "IT-201", "IT-202", "Server Room"]
+    };
 
+    const buildingSelect = document.getElementById("buildingNumber");
+    const roomSelect = document.getElementById("roomNumber");
+
+    // Update rooms when a building is selected
+    buildingSelect.addEventListener("change", function() {
+        const selectedBuilding = this.value;
+        roomSelect.innerHTML = '<option value="">Select Room</option>'; // Reset options
+
+        if (selectedBuilding && roomsByBuilding[selectedBuilding]) {
+            roomsByBuilding[selectedBuilding].forEach(room => {
+                const option = document.createElement("option");
+                option.value = room;
+                option.textContent = room;
+                roomSelect.appendChild(option);
+            });
+        }
+    });
+</script>
 </html>

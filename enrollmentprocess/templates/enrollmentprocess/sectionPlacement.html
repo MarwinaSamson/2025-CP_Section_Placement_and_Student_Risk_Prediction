@@ -9,7 +9,7 @@
     {% load static %}
     <script>
         // Define the redirect URL in the template
-        const redirectUrl = "{% url 'student_data' %}"; // This might need to be adjusted based on your flow
+        const redirectUrl = "{% url 'enrollmentprocess:student_data' %}"; // This might need to be adjusted based on your flow
     </script>
     <link rel="stylesheet" href="{% static 'enrollmentprocess/css/sectionPlacement.css' %}">
 </head>
@@ -49,7 +49,7 @@
                 <p style="color: red;">{{ error_message }}</p>
             {% endif %}
 
-            <form method="POST" action="{% url 'section_placement' student_id=student.pk %}" id="sectionPlacementForm">
+            <form method="POST" action="{% url 'enrollmentprocess:section_placement' student_id=student.pk %}" id="sectionPlacementForm">
                 {% csrf_token %}
                 <input type="hidden" name="selected_program" id="selectedProgramInput">
 
@@ -185,7 +185,7 @@
     if (okayBtn) {
       okayBtn.addEventListener("click", function() {
         successModal.style.display = "none"; // close modal
-        window.location.href = "{% url 'homepage' %}"; // redirect AFTER click
+        window.location.href = "{% url 'enrollmentprocess:homepage' %}"; // redirect AFTER click
       });
     }
   });

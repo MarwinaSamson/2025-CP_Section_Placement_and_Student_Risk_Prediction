@@ -203,7 +203,7 @@
 <body>
     <header class="header">
         <div class="logo-section">
-            <a href="{% url 'homepage' %}">
+            <a href="{% url 'enrollmentprocess:homepage' %}">
                 <img src="{% static 'assets/westLogo.png' %}" alt="School Logo" class="logo">
             </a>
             <div class="school-info">
@@ -224,7 +224,7 @@
             <h2>ENROLLMENT FORM</h2>
             <p>School Year 2025-2026</p>
         </div>
-        <form method="POST" action="{% url 'student_data' %}" enctype="multipart/form-data" id="studentDataForm">
+        <form method="POST" action="{% url 'enrollmentprocess:student_data' %}" enctype="multipart/form-data" id="studentDataForm">
             {% csrf_token %}
             <div class="form-content">
                 <div class="form-left">
@@ -409,7 +409,7 @@
                 </div>
             </div>
             <div class="form-footer">
-                <a href="{% url 'homepage' %}" class="back-btn" role="button">Back</a>
+                <a href="{% url 'enrollmentprocess:homepage' %}" class="back-btn" role="button">Back</a>
                 <button type="submit" class="next-btn">Next Form</button>
             </div>
         </form>

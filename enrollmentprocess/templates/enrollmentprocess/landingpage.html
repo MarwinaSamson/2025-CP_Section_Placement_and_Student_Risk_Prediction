@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Landing Page</title>
   {% load static %}
-<link rel="stylesheet" href="../../static/enrollmentprocess/css/index.css">
+<link rel="stylesheet" href="{% static 'enrollmentprocess/css/index.css' %}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
 
@@ -56,8 +56,8 @@
       </div>
     </div>
     <div class="nav-buttons">
-      <a href="{% url 'student_data' %}" class="nav-button pre-enrollment" role="button">Pre-Enrollment</a> 
-      <a href="{% url 'login' %}" class="nav-button login" role="button">Log in</a>
+      <a href="{% url 'enrollmentprocess:student_data' %}" class="nav-button pre-enrollment" role="button">Pre-Enrollment</a> 
+      <a href="{% url 'enrollmentprocess:login' %}" class="nav-button login" role="button">Log in</a>
     </div>
   </nav>
   <br>

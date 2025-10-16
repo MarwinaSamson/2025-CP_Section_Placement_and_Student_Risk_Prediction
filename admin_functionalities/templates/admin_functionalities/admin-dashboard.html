@@ -289,7 +289,7 @@
             <nav class="sidebar-nav">
                 <ul>
                     <li class="nav-item active">
-                        <a href="{% url 'admin_functionalities:dashboard' %}" class="nav-link">
+                        <a href="{% url 'admin_functionalities:admin-dashboard' %}" class="nav-link">
                             <i class="fas fa-tachometer-alt"></i>
                             <span>Dashboard</span>
                         </a>
@@ -323,7 +323,7 @@
 
             <div class="sidebar-footer">
                 <!-- Logout link -->
-                <a href="{% url 'admin_functionalities:logout' %}" class="logout-btn">
+                <a href="{% url 'enrollmentprocess:logout' %}" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
@@ -651,8 +651,11 @@
     }
 </script>
 
-
-    <script src="{% static 'admin_functionalities/js/admin.js' %}"></script>
+<script>
+// Pass Django URL to JS (global variable for admin.js)
+window.logoutUrl = "{% url 'enrollmentprocess:logout' %}";  // '/logout/'
+</script>
+<script src="{% static 'admin_functionalities/js/admin.js' %}"></script>
 </body>
 
 </html>

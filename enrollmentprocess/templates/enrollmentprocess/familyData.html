@@ -219,7 +219,7 @@
             <p>School Year 2025-2026</p>
         </div>
 
-        <form method="POST" action="{% url 'family_data' student_id=student_id %}" enctype="multipart/form-data" id="familyDataForm">
+        <form method="POST" action="{% url 'enrollmentprocess:family_data' student_id=student_id %}" enctype="multipart/form-data" id="familyDataForm">
             {% csrf_token %}
             {% if form.errors %}
                 <ul class="errorlist">
@@ -367,7 +367,7 @@
             </div>
 
             <div class="form-footer">
-                <a href="{% url 'student_data' %}" class="back-btn" role="button">Back</a>
+                <a href="{% url 'enrollmentprocess:student_data' %}" class="back-btn" role="button">Back</a>
                 <button type="submit" class="next-btn">Next Form</button>
             </div>
         </form>
