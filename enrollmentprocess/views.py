@@ -23,15 +23,13 @@ class StudentDataView(CreateView):
     form_class = StudentForm
     template_name = 'enrollmentprocess/studentData.html'
 
+    # def get_success_url(self):
+    #     # Redirect to family data form, passing the newly created student's ID
+    #     return reverse_lazy('family_data', kwargs={'student_id': self.object.pk})
     def get_success_url(self):
-        # Redirect to family data form, passing the newly created student's ID
-        return reverse_lazy('family_data', kwargs={'student_id': self.object.pk})
+        return reverse('enrollmentprocess:family_data', kwargs={'student_id': self.object.id})
 
     def form_valid(self, form):
-        # Convert boolean fields from string 'True'/'False' to actual booleans
-        # form.instance.is_sped = (form.cleaned_data['is_sped'] == 'True')
-        # form.instance.is_working_student = (form.cleaned_data['is_working_student'] == 'True')
-        # return super().form_valid(form)
         form.instance.is_sped = form.cleaned_data['is_sped']
         form.instance.is_working_student = form.cleaned_data['is_working_student']
         form.instance.sped_details = form.cleaned_data.get('sped_details')

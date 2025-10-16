@@ -22,6 +22,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 # App-specific imports
 from .models import Notification, StudentRequirements, CustomUser , AddUserLog, Section, SectionSubjectAssignment , Teacher
 from .forms import AddUserForm, StudentRequirementsForm, SectionForm, SectionSubjectAssignmentForm
+from admin_functionalities.services import SectionAssignmentService
 
 from enrollmentprocess.models import (
     Student,
@@ -42,6 +43,7 @@ from enrollmentprocess.forms import (
 # Standard library
 import json
 from django.http import JsonResponse
+import logging
 
 
 
@@ -182,16 +184,30 @@ def get_placement_or_create(student):
 
    # NEW: Main edit view for modal (add this function)
 
+logger = logging.getLogger(__name__)
 @login_required
 @require_http_methods(["GET", "POST"])
 def student_edit_view(request, student_id):
+    """
+    Edit student details and auto-assign to section upon save.
+    
+    Flow:
+    1. Admin reviews/edits all student details
+    2. Admin clicks "Save All Changes"
+    3. All forms validated and saved
+    4. System automatically assigns student to a section based on:
+       - Selected program (from SectionPlacementForm)
+       - Academic merit (overall average)
+       - Section availability and current load
+    5. Success message shows assigned section
+    """
     student = get_object_or_404(Student, id=student_id)
 
     if not request.user.is_staff:
         messages.error(request, 'Access denied: Admin only.')
         return render(request, 'admin_functionalities/error.html', {'error': 'Permission denied.'})
 
-    # get or create requirements record
+    # Get or create requirements record
     requirements, _ = StudentRequirements.objects.get_or_create(student=student)
 
     if request.method == "POST":
@@ -205,18 +221,56 @@ def student_edit_view(request, student_id):
         if all(form.is_valid() for form in [student_form, family_form, non_academic_form, academic_form, placement_form, requirements_form]):
             try:
                 with transaction.atomic():
+                    # Save all forms first
                     student_form.save()
                     family_form.save()
                     non_academic_form.save()
                     academic_form.save()
                     placement_form.save()
                     requirements_form.save()
-                messages.success(request, f"Student {student.first_name} {student.last_name} updated successfully!")
+
+                    # NEW: Auto-assign student to section
+                    program = placement_form.cleaned_data.get('selected_program', '').upper()
+                    
+                    if program:
+                        logger.info(f"Auto-assigning student {student.id} to program {program}")
+                        
+                        success, assigned_section, msg = SectionAssignmentService.assign_student_to_section(
+                            student, 
+                            program
+                        )
+                        
+                        if success:
+                            # Success: Show section assignment in message
+                            messages.success(
+                                request, 
+                                f"✓ Student {student.first_name} {student.last_name} updated successfully! "
+                                f"Assigned to section: {assigned_section.name} ({program})"
+                            )
+                            logger.info(f"Student {student.id} successfully assigned to {assigned_section.name}")
+                        else:
+                            # Assignment failed but form saved
+                            messages.warning(
+                                request,
+                                f"Student updated but section assignment failed: {msg}. "
+                                f"Admin may need to assign manually."
+                            )
+                            logger.warning(f"Section assignment failed for student {student.id}: {msg}")
+                    else:
+                        messages.warning(
+                            request,
+                            f"Student updated but no program selected. "
+                            f"Section assignment skipped."
+                        )
+
                 return redirect("admin_functionalities:student_edit", student_id=student.id)
+
             except Exception as e:
+                logger.error(f"Error in student_edit_view for student {student.id}: {str(e)}")
                 messages.error(request, f"Error saving data: {e}")
         else:
             messages.error(request, "Please correct the errors below.")
+            logger.warning(f"Form validation failed for student {student.id}")
     else:
         student_form = StudentForm(instance=student, user=request.user)
         family_form = FamilyForm(instance=get_family_or_create(student), user=request.user)
@@ -236,6 +290,61 @@ def student_edit_view(request, student_id):
         "is_admin": request.user.is_staff,
     }
     return render(request, "admin_functionalities/student_edit.html", context)
+
+# @login_required
+# @require_http_methods(["GET", "POST"])
+# def student_edit_view(request, student_id):
+#     student = get_object_or_404(Student, id=student_id)
+
+#     if not request.user.is_staff:
+#         messages.error(request, 'Access denied: Admin only.')
+#         return render(request, 'admin_functionalities/error.html', {'error': 'Permission denied.'})
+
+#     # get or create requirements record
+#     requirements, _ = StudentRequirements.objects.get_or_create(student=student)
+
+#     if request.method == "POST":
+#         student_form = StudentForm(request.POST, request.FILES, instance=student, user=request.user)
+#         family_form = FamilyForm(request.POST, request.FILES, instance=get_family_or_create(student), user=request.user)
+#         non_academic_form = StudentNonAcademicForm(request.POST, instance=get_non_academic_or_create(student), user=request.user)
+#         academic_form = StudentAcademicForm(request.POST, request.FILES, instance=get_academic_or_create(student), user=request.user)
+#         placement_form = SectionPlacementForm(request.POST, instance=get_placement_or_create(student), user=request.user)
+#         requirements_form = StudentRequirementsForm(request.POST, instance=requirements)
+
+#         if all(form.is_valid() for form in [student_form, family_form, non_academic_form, academic_form, placement_form, requirements_form]):
+#             try:
+#                 with transaction.atomic():
+#                     student_form.save()
+#                     family_form.save()
+#                     non_academic_form.save()
+#                     academic_form.save()
+#                     placement_form.save()
+#                     requirements_form.save()
+#                 messages.success(request, f"Student {student.first_name} {student.last_name} updated successfully!")
+#                 return redirect("admin_functionalities:student_edit", student_id=student.id)
+#             except Exception as e:
+#                 messages.error(request, f"Error saving data: {e}")
+#         else:
+#             messages.error(request, "Please correct the errors below.")
+#     else:
+#         student_form = StudentForm(instance=student, user=request.user)
+#         family_form = FamilyForm(instance=get_family_or_create(student), user=request.user)
+#         non_academic_form = StudentNonAcademicForm(instance=get_non_academic_or_create(student), user=request.user)
+#         academic_form = StudentAcademicForm(instance=get_academic_or_create(student), user=request.user)
+#         placement_form = SectionPlacementForm(instance=get_placement_or_create(student), user=request.user)
+#         requirements_form = StudentRequirementsForm(instance=requirements)
+
+#     context = {
+#         "student": student,
+#         "student_form": student_form,
+#         "family_form": family_form,
+#         "non_academic_form": non_academic_form,
+#         "academic_form": academic_form,
+#         "placement_form": placement_form,
+#         "requirements_form": requirements_form,
+#         "is_admin": request.user.is_staff,
+#     }
+#     return render(request, "admin_functionalities/student_edit.html", context)
 
 
 @login_required
@@ -624,22 +733,30 @@ def assign_subject_teachers(request, section_id):
 
 @login_required
 def enrollment_view(request):
+    """
+    Enrollment management view with proper filtering for both program and status.
+    Supports all combinations:
+    - All programs + All statuses
+    - Specific program + All statuses
+    - All programs + Specific status
+    - Specific program + Specific status
+    """
     # Get filters from URL params
-    program_filter = request.GET.get('program', None)  # e.g., 'ste' or None (all)
-    status_filter = request.GET.get('status', 'pending')  # Default pending; can expand later
+    program_filter = request.GET.get('program', 'all')  # Default 'all'
+    status_filter = request.GET.get('status', 'pending')  # Default 'pending'
     
-    # Base query: All enrollments (not just pending – for full filtering)
-    queryset = SectionPlacement.objects.select_related('student').order_by('-id')  # Or '-placement_date'
+    # Base query: All enrollments with related student data
+    queryset = SectionPlacement.objects.select_related('student').order_by('-placement_date', '-id')
     
-    # Apply program filter if specified
-    if program_filter:
+    # Apply program filter
+    if program_filter and program_filter != 'all':
         queryset = queryset.filter(selected_program__iexact=program_filter)
     
-    # Apply status filter (for future; now defaults to pending but passes all for JS)
-    if status_filter != 'all':
+    # Apply status filter
+    if status_filter and status_filter != 'all':
         queryset = queryset.filter(status=status_filter)
     
-    # Fetch data as list of dicts for template
+    # Fetch enrollments as list of dicts for template
     enrollments = list(queryset.values(
         'id',
         'student__id',
@@ -648,29 +765,44 @@ def enrollment_view(request):
         'student__middle_name',
         'student__last_name',
         'selected_program',
-        'status',  # For data-status
-        'placement_date'  # Or 'placement_date' if exists
+        'status',
+        'placement_date'
     ))
     
-    # Stats (overall across all programs; adjust to filtered if needed)
-    total_requests = SectionPlacement.objects.count()
-    approved = SectionPlacement.objects.filter(status='approved').count()
-    pending = SectionPlacement.objects.filter(status='pending').count()
-    rejected = SectionPlacement.objects.filter(status='rejected').count()
+    # Calculate stats based on CURRENT filters
+    if program_filter and program_filter != 'all':
+        # Stats for specific program
+        stats_queryset = SectionPlacement.objects.filter(selected_program__iexact=program_filter)
+        total_requests = stats_queryset.count()
+        approved = stats_queryset.filter(status='approved').count()
+        pending = stats_queryset.filter(status='pending').count()
+        rejected = stats_queryset.filter(status='rejected').count()
+    else:
+        # Stats for all programs
+        total_requests = SectionPlacement.objects.count()
+        approved = SectionPlacement.objects.filter(status='approved').count()
+        pending = SectionPlacement.objects.filter(status='pending').count()
+        rejected = SectionPlacement.objects.filter(status='rejected').count()
     
     # Program display mapping
     PROGRAM_DISPLAY_NAMES = {
         'ste': 'STE',
         'spfl': 'SPFL',
         'sptve': 'SPTVE',
+        'sned': 'SNED',
         'top5': 'TOP 5',
-        'hetero': 'HETERO',  # Assuming 'hetero' for regular/hetero
+        'hetero': 'HETERO',
         'ohsp': 'OHSP',
         'regular': 'Regular',
-        # Add more as needed
     }
-    display_name = PROGRAM_DISPLAY_NAMES.get(program_filter.lower() if program_filter else None, 'All Programs')
-    is_filtered = bool(program_filter)
+    
+    # Determine display name
+    if program_filter == 'all':
+        display_name = 'All Programs'
+    else:
+        display_name = PROGRAM_DISPLAY_NAMES.get(program_filter.lower(), program_filter.upper())
+    
+    is_filtered = (program_filter != 'all' or status_filter != 'pending')
     
     context = {
         'enrollments': enrollments,
@@ -678,12 +810,14 @@ def enrollment_view(request):
         'approved': approved,
         'pending': pending,
         'rejected': rejected,
-        'program_filter': program_filter or 'all',
+        'program_filter': program_filter,
         'status_filter': status_filter,
         'display_name': display_name,
         'is_filtered': is_filtered,
     }
+    
     return render(request, 'admin_functionalities/enrollment-management.html', context)
+
 
 
 # TEACHERS VIEWS
@@ -904,24 +1038,6 @@ def get_user_profile(request, user_id):
     except CustomUser .DoesNotExist:
         return JsonResponse({'success': False, 'error': 'User  not found'}, status=404)
 
-
-# SECTIONS RELATED VIEWS 
-# NEW: Sections Backend Views (AJAX/JSON for sections.html)
-
-
-
-
-
-
-
-
-
-
-
-
-# SAMPLE
-
-
 @login_required
 def get_users_data(request):
     users = CustomUser.objects.filter(is_active=True).order_by('-id')[:20]
@@ -951,4 +1067,7 @@ def get_logs_data(request):
     
     logs_html = render_to_string('admin_functionalities/partials/history_table.html', {'logs': logs_data})  # Pass the new data
     return JsonResponse({'logs_html': logs_html})
+
+
+
 
