@@ -412,46 +412,129 @@
         </main>
     </div>
 
-    <script>
+    
+
+<script>
     // Get URL params for auto-filter
     const urlParams = new URLSearchParams(window.location.search);
     const urlProgram = urlParams.get('program') || 'all';
     const urlStatus = urlParams.get('status') || 'pending';
 
-    // Auto-apply filters on load
-    function applyFilters(programVal = urlProgram, statusVal = urlStatus) {
+    // Set initial dropdown values from URL
+    document.getElementById("programFilter").value = urlProgram;
+    document.getElementById("statusFilter").value = urlStatus;
+
+    /**
+     * Apply filters to table rows
+     * Shows/hides rows based on BOTH program and status filters
+     */
+    function applyFilters(programVal, statusVal) {
         const rows = document.querySelectorAll("#requestsTable tbody tr");
+        let visibleCount = 0;
+        
         rows.forEach(row => {
-            const matchesProgram = (programVal === 'all' || row.dataset.program === programVal.toLowerCase());
-            const matchesStatus = (statusVal === 'all' || row.dataset.status === statusVal);
-            row.style.display = (matchesProgram && matchesStatus) ? '' : 'none';
+            // Skip empty state rows (no data-status attribute)
+            if (!row.dataset.status) {
+                row.style.display = 'none';
+                return;
+            }
+            
+            // Check program match (case-insensitive)
+            const rowProgram = (row.dataset.program || '').toLowerCase();
+            const matchesProgram = (programVal === 'all') || (rowProgram === programVal.toLowerCase());
+            
+            // Check status match (case-sensitive for status)
+            const rowStatus = row.dataset.status || '';
+            const matchesStatus = (statusVal === 'all') || (rowStatus === statusVal);
+            
+            // Show row only if BOTH conditions match
+            if (matchesProgram && matchesStatus) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
         });
+        
+        // Update counter or show "No results" message
+        console.log(`Filters applied: Program="${programVal}", Status="${statusVal}", Visible rows: ${visibleCount}`);
+        
+        // Optional: Show "no results" message if needed
+        const tbody = document.querySelector("#requestsTable tbody");
+        let noResultsRow = tbody.querySelector('.no-results-row');
+        
+        if (visibleCount === 0) {
+            if (!noResultsRow) {
+                noResultsRow = document.createElement('tr');
+                noResultsRow.className = 'no-results-row';
+                noResultsRow.innerHTML = '<td colspan="6" style="text-align: center; padding: 2rem; color: #666;">No requests match the selected filters.</td>';
+                tbody.appendChild(noResultsRow);
+            }
+            noResultsRow.style.display = '';
+        } else if (noResultsRow) {
+            noResultsRow.style.display = 'none';
+        }
     }
 
-    // Initial auto-filter
-    applyFilters();
-
-    // Program filter change
-    document.getElementById("programFilter").addEventListener("change", function() {
-        const programVal = this.value;
-        const statusVal = document.getElementById("statusFilter").value;
-        applyFilters(programVal, statusVal);
+    /**
+     * Update URL without page reload
+     */
+    function updateURL(programVal, statusVal) {
         const newUrl = new URL(window.location);
-        if (programVal !== 'all') newUrl.searchParams.set('program', programVal); else newUrl.searchParams.delete('program');
+        
+        // Update or remove program param
+        if (programVal && programVal !== 'all') {
+            newUrl.searchParams.set('program', programVal);
+        } else {
+            newUrl.searchParams.delete('program');
+        }
+        
+        // Update or remove status param
+        if (statusVal && statusVal !== 'all') {
+            newUrl.searchParams.set('status', statusVal);
+        } else {
+            newUrl.searchParams.delete('status');
+        }
+        
         window.history.replaceState({}, '', newUrl);
-    });
+    }
 
-    // Status filter change
-    document.getElementById("statusFilter").addEventListener("change", function() {
-        const statusVal = this.value;
+    /**
+     * Handle filter changes - triggers full page reload for backend filtering
+     */
+    function handleFilterChange() {
         const programVal = document.getElementById("programFilter").value;
-        applyFilters(programVal, statusVal);
-        const newUrl = new URL(window.location);
-        if (statusVal !== 'pending') newUrl.searchParams.set('status', statusVal); else newUrl.searchParams.delete('status');
-        window.history.replaceState({}, '', newUrl);
-    });
+        const statusVal = document.getElementById("statusFilter").value;
+        
+        // Build new URL with filters
+        const newUrl = new URL(window.location.pathname, window.location.origin);
+        
+        if (programVal && programVal !== 'all') {
+            newUrl.searchParams.set('program', programVal);
+        }
+        
+        if (statusVal && statusVal !== 'all') {
+            newUrl.searchParams.set('status', statusVal);
+        }
+        
+        // Reload page with new filters
+        window.location.href = newUrl.toString();
+    }
 
-    </script>
+    // Initial filter application on page load (for any pre-loaded data)
+    applyFilters(urlProgram, urlStatus);
+
+    // Attach event listeners to both dropdowns
+    document.getElementById("programFilter").addEventListener("change", handleFilterChange);
+    document.getElementById("statusFilter").addEventListener("change", handleFilterChange);
+
+    // Debug: Log initial state
+    console.log('Enrollment filters initialized:', {
+        program: urlProgram,
+        status: urlStatus,
+        totalRows: document.querySelectorAll("#requestsTable tbody tr[data-status]").length
+    });
+</script>
 
     <script src="{% static 'admin_functionalities/js/admin.js' %}"></script>
 </body>
