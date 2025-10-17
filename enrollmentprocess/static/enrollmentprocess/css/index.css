@@ -37,10 +37,6 @@ body {
     color: #555;
 }
 
-.header-icons {
-    display: flex;
-    gap: 10px;
-}
 
 .navbar {
     background-color: #ca3a31;
@@ -133,6 +129,68 @@ body {
 /* Show the dropdown menu on hover */
 .dropdown:hover .dropdown-content {
     display: block;
+}
+
+.hero-section {
+    background: linear-gradient(135deg, #ca3a31 0%, #b1322a 100%);
+    color: white;
+    padding: 60px 20px;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.hero-content h2 {
+    font-size: 2.5em;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+.hero-content p {
+    font-size: 1.2em;
+    margin-bottom: 30px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.6;
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.hero-btn {
+    padding: 15px 30px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1.1em;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.hero-btn.primary {
+    background-color: #f7a01a;
+    color: white;
+}
+
+
+.hero-btn.primary:hover {
+    background-color: #e6900f;
+    transform: translateY(-2px);
+}
+
+.hero-btn.secondary {
+    background-color: transparent;
+    color: white;
+    border: 2px solid white;
+}
+
+.hero-btn.secondary:hover {
+    background-color: white;
+    color: #ca3a31;
 }
 
 /* Image Carousel Styling */
@@ -228,6 +286,7 @@ body {
     display: grid;
     grid-template-columns: 2fr 1fr;
     gap: 20px;
+    margin: 0 20px;
 }
 
 .services-section {
@@ -355,6 +414,37 @@ body {
 
 }
 
+.partners-container h3 {
+    color: #c00;
+    font-size: 1.8em;
+    margin-bottom: 30px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.partners-logos {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+    flex-wrap: wrap;
+    max-width: 100%;
+    margin: 0 auto;
+    width: fit-content;
+}
+
+.partner-logo {
+    height: 80px;
+    width: auto;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+    margin: 0;
+    }
+    
+    .partner-logo:hover {
+        transform: scale(1.1);
+    }
+
 /* Footer */
 .footer {
     background-color: #c00;
@@ -362,5 +452,47 @@ body {
     text-align: center;
     padding: 20px 0;
     font-size: 0.8em;
-    margin: 20px;
+    margin: 0;
 }
+
+@media (max-width: 768px) {
+    .hero-content h2 {
+        font-size: 2em;
+    }
+
+    .hero-content p {
+        font-size: 1em;
+    }
+
+  .hero-buttons {
+      flex-direction: column;
+      align-items: center;
+  }
+
+  .content-container {
+      grid-template-columns: 1fr;
+      margin: 0 10px;
+  }
+
+  .faculty-grid {
+      grid-template-columns: repeat(2, 1fr);
+  }
+
+  .partners-logos {
+      gap: 20px;
+  }
+
+  .partner-logo {
+      height: 60px;
+  }
+  }
+
+  @media (max-width: 480px) {
+      .faculty-grid {
+          grid-template-columns: 1fr;
+      }
+
+      .services-grid {
+          grid-template-columns: 1fr;
+      }
+  }

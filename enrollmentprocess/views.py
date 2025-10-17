@@ -13,37 +13,133 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
+from datetime import date
+from django .http import JsonResponse
+import json
+
 
 
 class IndexView(TemplateView):
     template_name = 'enrollmentprocess/landingpage.html'
+
 
 class StudentDataView(CreateView):
     model = Student
     form_class = StudentForm
     template_name = 'enrollmentprocess/studentData.html'
 
+    def student_data(request):
+        # Render the studentData.html template
+        return render(request, 'enrollmentprocess/studentData.html')
+
+
+    def family_data(request):
+        # Render the familyData.html template
+        return render(request, 'enrollmentprocess/familyData.html')
+
+
+    def student_non_academic(request):
+        # Render the studentNonAcademic.html template
+        return render(request, 'enrollmentprocess/studentNonAcademic.html')
+    
+    def student_academic(request):
+        # Render the studentAcademic.html template
+        return render(request, 'enrollmentprocess/studentAcademic.html')
+
+
+    def student_academic_2(request):
+        # Render the studentAcademic2.html template
+        return render(request, 'enrollmentprocess/studentAcademic2.html')
+
+
+    def qualified_program(request):
+        return render(request, 'enrollmentprocess/qualified_program.html')
+    
+    def get_object(self):
+        """Get existing student object if student_id is provided"""
+        student_id = self.kwargs.get('student_id')
+        if student_id:
+            try:
+                return Student.objects.get(pk=student_id)
+            except Student.DoesNotExist:
+                return None
+        return None
+
+    def get_initial(self):
+        """Prefill form with existing data if available"""
+        initial = super().get_initial()
+        student = self.get_object()
+
+        if student:
+            initial.update({
+                'lrn': student.lrn,
+                'enrolling_as': student.enrolling_as.split(',') if student.enrolling_as else [],
+                'is_sped': '1' if student.is_sped else '0',
+                'sped_details': student.sped_details,
+                'is_working_student': '1' if student.is_working_student else '0',
+                'working_details': student.working_details,
+                'last_name': student.last_name,
+                'first_name': student.first_name,
+                'middle_name': student.middle_name,
+                'address': student.address,
+                'gender': student.gender,
+                'date_of_birth': student.date_of_birth,
+                'place_of_birth': student.place_of_birth,
+                'religion': student.religion,
+                'dialect_spoken': student.dialect_spoken,
+                'ethnic_tribe': student.ethnic_tribe,
+                'last_school_attended': student.last_school_attended,
+                'previous_grade_section': student.previous_grade_section,
+                'last_school_year': student.last_school_year,
+            })
+        return initial
+    
     def get_success_url(self):
-        # Redirect to family data form, passing the newly created student's ID
-        return reverse_lazy('family_data', kwargs={'student_id': self.object.pk})
+     return reverse_lazy('enrollmentprocess:family_data', kwargs={'student_id': self.object.pk})
 
     def form_valid(self, form):
-        # Convert boolean fields from string 'True'/'False' to actual booleans
-        # form.instance.is_sped = (form.cleaned_data['is_sped'] == 'True')
-        # form.instance.is_working_student = (form.cleaned_data['is_working_student'] == 'True')
-        # return super().form_valid(form)
+        # Calculate age from date_of_birth
+        if form.cleaned_data.get('date_of_birth'):
+            today = date.today()
+            birth_date = form.cleaned_data['date_of_birth']
+            age = today.year - birth_date.year - \
+                ((today.month, today.day) < (birth_date.month, birth_date.day))
+            form.instance.age = age
+
+        # Handle other boolean fields
         form.instance.is_sped = form.cleaned_data['is_sped']
         form.instance.is_working_student = form.cleaned_data['is_working_student']
         form.instance.sped_details = form.cleaned_data.get('sped_details')
-        form.instance.working_details = form.cleaned_data.get('working_details')
+        form.instance.working_details = form.cleaned_data.get(
+            'working_details')
+
+        # If we're editing an existing student, update it instead of creating new
+        student = self.get_object()
+        if student:
+            # Update existing student
+            for field, value in form.cleaned_data.items():
+                setattr(student, field, value)
+            student.save()
+            self.object = student
+        else:
+            # Create new student
+            self.object = form.save()
+
         return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Pass student_id if we're editing
+        student_id = self.kwargs.get('student_id')
+        if student_id:
+            context['student_id'] = student_id
+        return context
     
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         print(f"DEBUG: Before setting instance, instance is: {kwargs.get('instance')}")
         kwargs['instance'] = None
         print(f"DEBUG: After setting instance, instance is: {kwargs.get('instance')}")
-        kwargs['user'] = self.request.user
         return kwargs
 
 
@@ -52,13 +148,84 @@ class FamilyDataView(CreateView):
     form_class = FamilyForm
     template_name = 'enrollmentprocess/familyData.html'
 
+    def get_initial(self):
+        """Prefill form with existing family data if available"""
+        initial = super().get_initial()
+        student_id = self.kwargs['student_id']
+
+        try:
+            student = Student.objects.get(pk=student_id)
+            if hasattr(student, 'family_data') and student.family_data:
+                family = student.family_data
+                initial.update({
+                    'father_family_name': family.father_family_name,
+                    'father_first_name': family.father_first_name,
+                    'father_middle_name': family.father_middle_name,
+                    'father_occupation': family.father_occupation,
+                    'father_dob': family.father_dob,
+                    'father_contact_number': family.father_contact_number,
+                    'father_email': family.father_email,
+                    'mother_family_name': family.mother_family_name,
+                    'mother_first_name': family.mother_first_name,
+                    'mother_middle_name': family.mother_middle_name,
+                    'mother_occupation': family.mother_occupation,
+                    'mother_dob': family.mother_dob,
+                    'mother_contact_number': family.mother_contact_number,
+                    'mother_email': family.mother_email,
+                    'guardian_family_name': family.guardian_family_name,
+                    'guardian_first_name': family.guardian_first_name,
+                    'guardian_middle_name': family.guardian_middle_name,
+                    'guardian_occupation': family.guardian_occupation,
+                    'guardian_dob': family.guardian_dob,
+                    'guardian_address': family.guardian_address,
+                    'guardian_relationship': family.guardian_relationship,
+                    'guardian_contact_number': family.guardian_contact_number,
+                    'guardian_email': family.guardian_email,
+                })
+        except Student.DoesNotExist:
+            pass
+
+        return initial
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Pass student_id to the template for the "Back" button URL
         context['student_id'] = self.kwargs['student_id']
+
+        # Get student info for display
+        try:
+            student = Student.objects.get(pk=self.kwargs['student_id'])
+            context['student_name'] = f"{student.first_name} {student.last_name}"
+            context['student_lrn'] = student.lrn
+        except Student.DoesNotExist:
+            pass
+
         return context
 
     def form_valid(self, form):
+        # Calculate ages from date of birth before saving
+        today = date.today()
+
+        # Calculate father's age
+        if form.cleaned_data.get('father_dob'):
+            birth_date = form.cleaned_data['father_dob']
+            father_age = today.year - birth_date.year - \
+                ((today.month, today.day) < (birth_date.month, birth_date.day))
+            form.instance.father_age = father_age
+
+        # Calculate mother's age
+        if form.cleaned_data.get('mother_dob'):
+            birth_date = form.cleaned_data['mother_dob']
+            mother_age = today.year - birth_date.year - \
+                ((today.month, today.day) < (birth_date.month, birth_date.day))
+            form.instance.mother_age = mother_age
+
+        # Calculate guardian's age
+        if form.cleaned_data.get('guardian_dob'):
+            birth_date = form.cleaned_data['guardian_dob']
+            guardian_age = today.year - birth_date.year - \
+                ((today.month, today.day) < (birth_date.month, birth_date.day))
+            form.instance.guardian_age = guardian_age
+
         with transaction.atomic():
             family_instance = form.save()
             student = get_object_or_404(Student, pk=self.kwargs['student_id'])
@@ -67,26 +234,117 @@ class FamilyDataView(CreateView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        # Redirect to non-academic data form, passing the student's ID
-        return reverse_lazy('student_non_academic', kwargs={'student_id': self.kwargs['student_id']})
+        from django.urls import reverse_lazy
+        return reverse_lazy('enrollmentprocess:student_non_academic', kwargs={'student_id': self.kwargs['student_id']})
 
 class StudentNonAcademicView(CreateView):
     model = StudentNonAcademic
     form_class = StudentNonAcademicForm
     template_name = 'enrollmentprocess/studentNonAcademic.html'
 
+    def get_initial(self):
+        """Prefill form with existing non-academic data if available"""
+        initial = super().get_initial()
+        student_id = self.kwargs['student_id']
+
+        try:
+            non_academic = StudentNonAcademic.objects.get(
+                student_id=student_id)
+            # Convert comma-separated strings back to lists for multiple choice fields
+            initial.update({
+                'study_hours': non_academic.study_hours,
+                'study_place': non_academic.study_place.split(',') if non_academic.study_place else [],
+                'study_with': non_academic.study_with,
+                'live_with': non_academic.live_with.split(',') if non_academic.live_with else [],
+                'parent_help': non_academic.parent_help,
+                'highest_education': non_academic.highest_education,
+                'marital_status': non_academic.marital_status,
+                'house_type': non_academic.house_type,
+                'quiet_place': non_academic.quiet_place,
+                'study_area': non_academic.study_area,
+                'transport_mode': non_academic.transport_mode,
+                'travel_time': non_academic.travel_time,
+                'access_resources': non_academic.access_resources.split(',') if non_academic.access_resources else [],
+                'computer_use': non_academic.computer_use,
+                'hobbies': non_academic.hobbies,
+                'personality_traits': non_academic.personality_traits.split(',') if non_academic.personality_traits else [],
+                'confidence_level': non_academic.confidence_level,
+            })
+        except StudentNonAcademic.DoesNotExist:
+            pass
+
+        return initial
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        student = get_object_or_404(Student, pk=self.kwargs['student_id'])
+        form = context['form']
+
+        # Pre-fill LRN and lock it
+        form.fields['lrn'].initial = student.lrn
+        form.fields['lrn'].widget.attrs['readonly'] = True
+
+        # Pass read-only info from Student to template
         context['student_id'] = self.kwargs['student_id']
+        context['is_working_student'] = "YES" if student.is_working_student else "NO"
+        context['working_details'] = student.working_details or "N/A"
+        context['is_pwd'] = "YES" if student.is_sped else "NO"
+        context['disability_type'] = student.sped_details or "N/A"
+
         return context
+
+    def get_success_url(self):
+        return reverse_lazy('enrollmentprocess:section_placement', kwargs={'student_id': self.kwargs['student_id']})
 
     def form_valid(self, form):
         student = get_object_or_404(Student, pk=self.kwargs['student_id'])
         form.instance.student = student
-        return super().form_valid(form)
 
-    def get_success_url(self):
-        return reverse_lazy('student_academic', kwargs={'student_id': self.kwargs['student_id']})
+        # Enforce values from Student
+        form.instance.is_working_student = student.is_working_student
+        form.instance.work_type = student.working_details if student.is_working_student else None
+        form.instance.is_pwd = student.is_sped
+        form.instance.disability_type = student.sped_details if student.is_sped else None
+
+
+        if form.cleaned_data['lrn'] != student.lrn:
+            form.add_error('lrn', "LRN does not match the student's record.")
+            return self.form_invalid(form)
+
+        # Set overall_average if provided
+        form.instance.overall_average = form.cleaned_data.get(
+            'overall_average', 0.0)
+
+        # First save the form / instance
+        response = super().form_valid(form)
+
+        # OCR and mismatch logic here...
+        mismatches = {}
+        try:
+            report_field = self.object.report_card
+            if report_field:
+                # ... your existing OCR code ...
+                pass
+        except Exception as e:
+            print("OCR/verification error:", e)
+
+        # Save mismatch details
+        self.object.mismatch_fields = mismatches or {}
+        self.object.save(update_fields=['mismatch_fields'])
+
+        # Notification logic...
+        try:
+            if mismatches:
+                student_name = f"{student.first_name} {student.last_name}".strip()
+                fields = ", ".join(mismatches.keys())
+                Notification.objects.create(
+                    title="Grade mismatch detected",
+                    message=f"Possible grade mismatch for {student_name}. Fields: {fields}"
+                )
+        except Exception as e:
+            print("Notification creation failed:", e)
+
+        return response
 
 class StudentAcademicView(CreateView):
     model = StudentAcademic
@@ -110,27 +368,7 @@ class StudentAcademicView(CreateView):
         context['disability_type'] = student.sped_details or "N/A"
 
         return context
-
-    def form_valid(self, form):
-        student = get_object_or_404(Student, pk=self.kwargs['student_id'])
-        form.instance.student = student
-
-        # Always enforce values from Student model
-        form.instance.is_working_student = student.is_working_student
-        form.instance.work_type = student.working_details if student.is_working_student else None
-        form.instance.is_pwd = student.is_sped
-        form.instance.disability_type = student.sped_details if student.is_sped else None
-
-        # Ensure LRN matches
-        if form.cleaned_data['lrn'] != student.lrn:
-            form.add_error('lrn', "LRN does not match the student's record.")
-            return self.form_invalid(form)
-
-        # Compute overall average (if applicable)
-        form.instance.overall_average = form.cleaned_data.get('overall_average', 0.0)
-        return super().form_valid(form)
     
-    def get_success_url(self): return reverse_lazy('section_placement', kwargs={'student_id': self.kwargs['student_id']})
     def form_valid(self, form):
         student = get_object_or_404(Student, pk=self.kwargs['student_id'])
         form.instance.student = student
@@ -216,8 +454,7 @@ class StudentAcademicView(CreateView):
 
 
     def get_success_url(self):
-        # Redirect to section placement with the current student_id (from URL kwargs)
-        return reverse_lazy('section_placement', kwargs={'student_id': self.kwargs['student_id']})
+        return reverse_lazy('enrollmentprocess:section_placement', kwargs={'student_id': self.kwargs['student_id']})
 
 
 

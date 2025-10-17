@@ -21,6 +21,8 @@
         <p>School I.D: 303942</p>
       </div>
     </div>
+
+    
     <div class="header-icons">
       <img src="{% static 'assets/deped1.png' %}" alt="Logo 2" class="logo">
       <img src="{% static 'assets/deped2.png' %}" alt="SRIC" class="logo">
@@ -56,11 +58,22 @@
       </div>
     </div>
     <div class="nav-buttons">
-      <a href="{% url 'enrollmentprocess:student_data' %}" class="nav-button pre-enrollment" role="button">Pre-Enrollment</a> 
+      <a href="{% url 'enrollmentprocess:student_data' %}" class="nav-button pre-enrollment" role="button">Pre-Enrollment</a>
       <a href="{% url 'enrollmentprocess:login' %}" class="nav-button login" role="button">Log in</a>
     </div>
   </nav>
-  <br>
+
+  <section class="hero-section">
+    <div class="hero-content">
+      <h2>Welcome to Excellence in Education</h2>
+      <p>Empowering students to achieve their dreams through quality education and innovative programs</p>
+      <div class="hero-buttons">
+        <a href="{% url 'enrollmentprocess:student_data' %}" class="hero-btn primary">Start Enrollment</a>
+        <a href="#programs" class="hero-btn secondary">Explore Programs</a>
+      </div>
+    </div>
+  </section>
+
 
   <section class="image-carousel-section">
     <div class="carousel-container">
@@ -132,7 +145,7 @@
     </div>
   </main>
 
-  <section class="faculty-section">
+  <!-- <section class="faculty-section">
     <h2>Faculty</h2>
     <div class="faculty-grid">
       <div class="faculty-card">
@@ -174,6 +187,18 @@
         <img src="{% static 'assets/secretary.png' %}" alt="Name of Teacher" class="faculty-image">
         <h5>Name of Teacher</h5>
         <p>Position</p>
+      </div>
+    </div>
+  </section>
+  -->
+
+  <section class="partners-section">
+    <div class="partners-container">
+      <h3>Our Partners</h3>
+      <div class="partners-logos">
+        <img src="{% static 'assets/deped1.png' %}" alt="DepEd Logo 1" class="partner-logo">
+        <img src="{% static 'assets/deped2.png' %}" alt="SRIC" class="partner-logo">
+        <img src="{% static 'assets/deped3.png' %}" alt="DepEd Logo" class="partner-logo">
       </div>
     </div>
   </section>

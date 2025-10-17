@@ -14,7 +14,9 @@
         <div class="login-card">
             <!-- School Logo -->
             <div class="login-header">
-                <img src="{% static 'assets/westLogo.png' %}" alt="School Logo" class="login-logo">
+                <a href="{% url 'enrollmentprocess:homepage' %}" class="logo-link">
+                    <img src="{% static 'assets/westLogo.png' %}" alt="School Logo" class="login-logo">
+                </a>
             </div>
 
             <!-- Welcome Message -->

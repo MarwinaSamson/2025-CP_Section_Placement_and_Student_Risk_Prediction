@@ -233,7 +233,7 @@
         </div>
 
         <div class="form-footer">
-            <a href="{% url 'family_data'  %}" class="back-btn" role="button">Back</a>
+            <a href="{% url 'enrollmentprocess:family_data' student_id=student_id %}" class="back-btn" role="button">Back</a>
             <button type="submit" class="next-btn">Next Form</button>
         </div>
     </form>
@@ -284,7 +284,7 @@
             <h2>ENROLLMENT FORM</h2>
             <p>School Year 2025-2026</p>
         </div>
-        <form method="POST" action="{% url 'student_non_academic' student_id=student_id %}" id="nonAcademicForm">
+        <form method="POST" action="{% url 'enrollmentprocess:student_non_academic' student_id=student_id %}" id="nonAcademicForm">
             {% csrf_token %}
             {% if form.errors %}
                 <ul class="errorlist">
@@ -554,7 +554,7 @@
             </div>
 
             <div class="form-footer">
-                <a href="{% url 'family_data' student_id=student_id %}" class="back-btn" role="button">Back</a>
+                <a href="{% url 'enrollmentprocess:family_data' student_id=student_id %}" class="back-btn" role="button">Back</a>
                 <button type="submit" class="next-btn">Next Form</button>
             </div>
         </form>

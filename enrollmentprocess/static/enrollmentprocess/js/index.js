@@ -1,14 +1,14 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const images = document.querySelectorAll('.carousel-image');
-    const dots = document.querySelectorAll('.dot');
-    const prevButton = document.querySelector('.prev-button');
-    const nextButton = document.querySelector('.next-button');
-    let currentIndex = 0;
+document.addEventListener("DOMContentLoaded", () => {
+  const images = document.querySelectorAll(".carousel-image")
+  const dots = document.querySelectorAll(".dot")
+  const prevButton = document.querySelector(".prev-button")
+  const nextButton = document.querySelector(".next-button")
+  let currentIndex = 0
 
-    function updateCarousel() {
+      function updateCarousel() {
         // Hide all images and deactivate all dots
-        images.forEach(image => image.classList.remove('active'));
-        dots.forEach(dot => dot.classList.remove('active'));
+        images.forEach((image) => image.classList.remove("active"))
+        dots.forEach((dot) => dot.classList.remove("active"))
 
         // Show the current image and activate the current dot
         images[currentIndex].classList.add('active');
@@ -28,14 +28,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Event listeners for the navigation dots
-    dots.forEach(dot => {
-        dot.addEventListener('click', () => {
-            const dotIndex = parseInt(dot.getAttribute('data-index'));
-            currentIndex = dotIndex;
-            updateCarousel();
-        });
-    });
+    dots.forEach((dot) => {
+        dot.addEventListener("click", () => {
+        const dotIndex = Number.parseInt(dot.getAttribute("data-index"))
+        currentIndex = dotIndex
+        updateCarousel()
+        })
+    })
 
     // Initial call to set up the carousel on page load
-    updateCarousel();
-});
+    updateCarousel()
+})
