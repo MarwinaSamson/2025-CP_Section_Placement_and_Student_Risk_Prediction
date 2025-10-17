@@ -1,4 +1,3 @@
-
 from django import forms
 from .models import Student, Family, StudentNonAcademic, StudentAcademic, SectionPlacement
 
@@ -9,19 +8,14 @@ YES_NO_CHOICES = (
 
 
 class StudentForm(forms.ModelForm):
-    # Custom fields for 'enrolling_as' to handle multiple checkboxes
+    # [Your existing StudentForm code remains the same]
     ENROLLING_AS_CHOICES = [
         ('4 Ps Member', '4 Ps Member'),
         ('Retained', 'Retained'),
         ('Balik-aral', 'Balik-aral'),
         ('Transferee', 'Transferee'),
     ]
-    # enrolling_as = forms.MultipleChoiceField(
-    #     choices=ENROLLING_AS_CHOICES,
-    #     widget=forms.CheckboxSelectMultiple(attrs={'class': 'option'}),
-    #     required=False,
-    #     label="Please check the appropriate box if you are enrolling as one of the following:"
-    # )
+
     enrolling_as = forms.MultipleChoiceField(
         choices=ENROLLING_AS_CHOICES,
         widget=forms.CheckboxSelectMultiple(attrs={
@@ -31,18 +25,12 @@ class StudentForm(forms.ModelForm):
         label="Please check the appropriate box if you are enrolling as one of the following:"
     )
 
-    # Custom fields for 'is_sped' and 'is_working_student' to handle radio buttons and text input
     is_sped = forms.ChoiceField(
         choices=[('1', 'YES'), ('0', 'NO')],
         widget=forms.RadioSelect,
         required=True,
         label="Does the student need a Special Education Program?"
     )
-    # sped_details = forms.CharField(
-    #     max_length=255,
-    #     required=False,
-    #     widget=forms.TextInput(attrs={'class': 'fill-in-box', 'placeholder': 'Please specify...', 'disabled': 'disabled'})
-    # )
 
     sped_details = forms.CharField(
         max_length=255,
@@ -52,7 +40,6 @@ class StudentForm(forms.ModelForm):
             'placeholder': 'Please specify...',
             'disabled': 'disabled',
             'id': 'id_sped_details',
-
         })
     )
 
@@ -62,11 +49,7 @@ class StudentForm(forms.ModelForm):
         required=True,
         label="Is the student a Working Student?"
     )
-    # working_details = forms.CharField(
-    #     max_length=255,
-    #     required=False,
-    #     widget=forms.TextInput(attrs={'class': 'fill-in-box', 'placeholder': 'Please specify...', 'disabled': 'disabled'})
-    # )
+
     working_details = forms.CharField(
         max_length=255,
         required=False,
@@ -79,11 +62,8 @@ class StudentForm(forms.ModelForm):
     )
 
     def __init__(self, *args, **kwargs):
-        # Extract user if passed, then remove it from kwargs
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
-
-        # Remove age field from the form since it's calculated automatically
         if 'age' in self.fields:
             del self.fields['age']
 
@@ -111,33 +91,21 @@ class StudentForm(forms.ModelForm):
             'previous_grade_section': forms.TextInput(attrs={'placeholder': 'Previous Grade and Section'}),
             'last_school_year': forms.TextInput(attrs={'placeholder': 'e.g., 2023-2024'}),
             'photo': forms.FileInput(attrs={'id': 'photo-upload', 'class': 'file-input'}),
-
         }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Remove age field from the form since it's calculated automatically
-        if 'age' in self.fields:
-            del self.fields['age']
-
     def clean_enrolling_as(self):
-        # Convert list of choices to a comma-separated string
         return ",".join(self.cleaned_data.get('enrolling_as', []))
 
     def clean_lrn(self):
         lrn = self.cleaned_data.get('lrn')
 
-        # Ensure it's only digits
         if not lrn.isdigit():
             raise forms.ValidationError("LRN must contain numbers only.")
 
-        # Ensure exactly 12 digits
         if len(lrn) != 12:
             raise forms.ValidationError("LRN must be exactly 12 digits long.")
 
-        # Check for uniqueness only when creating new student
-        # If we're editing an existing student, allow the same LRN
-        if not self.instance.pk:  # Only check for new students
+        if not self.instance.pk:
             if Student.objects.filter(lrn=lrn).exists():
                 raise forms.ValidationError(
                     "A student with this LRN already exists.")
@@ -151,7 +119,6 @@ class StudentForm(forms.ModelForm):
         is_working_student = cleaned_data.get('is_working_student')
         working_details = cleaned_data.get('working_details')
 
-        # Convert 'is_sped' and 'is_working_student' to boolean
         cleaned_data['is_sped'] = (is_sped == '1')
         cleaned_data['is_working_student'] = (is_working_student == '1')
 
@@ -159,14 +126,12 @@ class StudentForm(forms.ModelForm):
             self.add_error(
                 'sped_details', "Please specify details for Special Education Program.")
         if not cleaned_data['is_sped']:
-            # Clear details if 'NO' is selected
             cleaned_data['sped_details'] = None
 
         if cleaned_data['is_working_student'] and not working_details:
             self.add_error('working_details',
                            "Please specify details for Working Student.")
         if not cleaned_data['is_working_student']:
-            # Clear details if 'NO' is selected
             cleaned_data['working_details'] = None
 
         return cleaned_data
@@ -203,10 +168,7 @@ class FamilyForm(forms.ModelForm):
             'guardian_email': forms.EmailInput(attrs={'placeholder': "Email Address"}),
 
             'parent_photo': forms.FileInput(attrs={'class': 'file-input'}),
-
         }
-
-        # this method make age fields not required in the form
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -289,7 +251,6 @@ class StudentNonAcademicForm(forms.ModelForm):
         ('sometimes', 'Sometimes'),
         ('often', 'Often'),
         ('always', 'Always'),
-
     ]
 
     parent_help = forms.ChoiceField(
@@ -379,7 +340,6 @@ class StudentNonAcademicForm(forms.ModelForm):
         ('1_2_hours', '1-2 hours'),
         ('2_3_hours', '2-3 hours'),
         ('more_than_3', 'More than 3 hours'),
-
     ]
 
     study_hours = forms.ChoiceField(
@@ -393,7 +353,6 @@ class StudentNonAcademicForm(forms.ModelForm):
         ('sometimes', 'Sometimes'),
         ('often', 'Often'),
         ('always', 'Always'),
-
     ]
 
     study_with = forms.ChoiceField(
@@ -445,7 +404,6 @@ class StudentNonAcademicForm(forms.ModelForm):
         ('Very_confident', 'Very confident'),
         ('Somewhat_confident', 'Somewhat confident'),
         ('Not_confident', 'Not confident'),
-
     ]
 
     confidence_level = forms.ChoiceField(
@@ -516,7 +474,6 @@ class StudentNonAcademicForm(forms.ModelForm):
         if access_resources:
             cleaned_data['access_resources'] = ",".join(access_resources)
         else:
-            # Ensure it's an empty string if nothing selected
             cleaned_data['access_resources'] = ""
 
         return cleaned_data
@@ -529,7 +486,7 @@ class StudentAcademicForm(forms.ModelForm):
             'lrn', 'dost_exam_result', 'report_card',
             'mathematics', 'araling_panlipunan', 'english', 'edukasyon_pagpapakatao',
             'science', 'edukasyon_pangkabuhayan', 'filipino', 'mapeh',
-            'agreed_to_terms'  # overall_average, is_working_student, work_type, is_pwd, disability_type will be set in view
+            'agreed_to_terms'
         ]
         widgets = {
             'lrn': forms.TextInput(attrs={'placeholder': 'Enter LRN (numbers only)'}),
@@ -559,18 +516,15 @@ class StudentAcademicForm(forms.ModelForm):
             cleaned_data.get('mapeh'),
         ]
 
-        # Filter out None values in case some fields are not filled (though they are required)
         valid_grades = [g for g in grades if g is not None]
 
         if valid_grades:
             overall_average = sum(valid_grades) / len(valid_grades)
             cleaned_data['overall_average'] = round(overall_average, 2)
         else:
-            # Or raise a validation error if no grades are provided
             cleaned_data['overall_average'] = 0.0
 
-        # Validate grades are within 75-100 range
-        for field_name, grade in zip(self.fields, grades):
+        for field_name, grade in zip(['mathematics', 'araling_panlipunan', 'english', 'edukasyon_pagpapakatao', 'science', 'edukasyon_pangkabuhayan', 'filipino', 'mapeh'], grades):
             if grade is not None and (grade < 75 or grade > 100):
                 self.add_error(field_name, "Grade must be between 75 and 100.")
 

@@ -237,6 +237,7 @@ class FamilyDataView(CreateView):
         from django.urls import reverse_lazy
         return reverse_lazy('enrollmentprocess:student_non_academic', kwargs={'student_id': self.kwargs['student_id']})
 
+
 class StudentNonAcademicView(CreateView):
     model = StudentNonAcademic
     form_class = StudentNonAcademicForm
@@ -250,7 +251,7 @@ class StudentNonAcademicView(CreateView):
         try:
             non_academic = StudentNonAcademic.objects.get(
                 student_id=student_id)
-            # Convert comma-separated strings back to lists for multiple choice fields
+
             initial.update({
                 'study_hours': non_academic.study_hours,
                 'study_place': non_academic.study_place.split(',') if non_academic.study_place else [],
@@ -278,11 +279,6 @@ class StudentNonAcademicView(CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         student = get_object_or_404(Student, pk=self.kwargs['student_id'])
-        form = context['form']
-
-        # Pre-fill LRN and lock it
-        form.fields['lrn'].initial = student.lrn
-        form.fields['lrn'].widget.attrs['readonly'] = True
 
         # Pass read-only info from Student to template
         context['student_id'] = self.kwargs['student_id']
@@ -294,7 +290,7 @@ class StudentNonAcademicView(CreateView):
         return context
 
     def get_success_url(self):
-        return reverse_lazy('enrollmentprocess:section_placement', kwargs={'student_id': self.kwargs['student_id']})
+        return reverse_lazy('enrollmentprocess:student_academic', kwargs={'student_id': self.kwargs['student_id']})
 
     def form_valid(self, form):
         student = get_object_or_404(Student, pk=self.kwargs['student_id'])
@@ -306,45 +302,7 @@ class StudentNonAcademicView(CreateView):
         form.instance.is_pwd = student.is_sped
         form.instance.disability_type = student.sped_details if student.is_sped else None
 
-
-        if form.cleaned_data['lrn'] != student.lrn:
-            form.add_error('lrn', "LRN does not match the student's record.")
-            return self.form_invalid(form)
-
-        # Set overall_average if provided
-        form.instance.overall_average = form.cleaned_data.get(
-            'overall_average', 0.0)
-
-        # First save the form / instance
-        response = super().form_valid(form)
-
-        # OCR and mismatch logic here...
-        mismatches = {}
-        try:
-            report_field = self.object.report_card
-            if report_field:
-                # ... your existing OCR code ...
-                pass
-        except Exception as e:
-            print("OCR/verification error:", e)
-
-        # Save mismatch details
-        self.object.mismatch_fields = mismatches or {}
-        self.object.save(update_fields=['mismatch_fields'])
-
-        # Notification logic...
-        try:
-            if mismatches:
-                student_name = f"{student.first_name} {student.last_name}".strip()
-                fields = ", ".join(mismatches.keys())
-                Notification.objects.create(
-                    title="Grade mismatch detected",
-                    message=f"Possible grade mismatch for {student_name}. Fields: {fields}"
-                )
-        except Exception as e:
-            print("Notification creation failed:", e)
-
-        return response
+        return super().form_valid(form)
 
 class StudentAcademicView(CreateView):
     model = StudentAcademic
