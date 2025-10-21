@@ -66,6 +66,16 @@ class StudentForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if 'age' in self.fields:
             del self.fields['age']
+            
+        if self.instance and self.instance.enrolling_as:
+            self.initial['enrolling_as'] = [
+                item.strip() for item in self.instance.enrolling_as.split(',')
+        ]
+
+        # ✅ Convert boolean fields to '1'/'0' for radio widgets
+        if self.instance and self.instance.pk:
+            self.initial['is_sped'] = '1' if self.instance.is_sped else '0'
+            self.initial['is_working_student'] = '1' if self.instance.is_working_student else '0'
 
     class Meta:
         model = Student
@@ -121,7 +131,13 @@ class StudentForm(forms.ModelForm):
 
         cleaned_data['is_sped'] = (is_sped == '1')
         cleaned_data['is_working_student'] = (is_working_student == '1')
-
+        
+        if self.instance and self.instance.pk:
+            if 'sped_details' not in self.data and self.instance.sped_details:
+                cleaned_data['sped_details'] = self.instance.sped_details
+            if 'working_details' not in self.data and self.instance.working_details:
+                cleaned_data['working_details'] = self.instance.working_details
+        
         if cleaned_data['is_sped'] and not sped_details:
             self.add_error(
                 'sped_details', "Please specify details for Special Education Program.")
@@ -138,6 +154,13 @@ class StudentForm(forms.ModelForm):
 
 
 class FamilyForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)  # ✅ pop user safely
+        super().__init__(*args, **kwargs)
+        self.fields['father_age'].required = False
+        self.fields['mother_age'].required = False
+        self.fields['guardian_age'].required = False
+        
     class Meta:
         model = Family
         fields = '__all__'
@@ -170,15 +193,20 @@ class FamilyForm(forms.ModelForm):
             'parent_photo': forms.FileInput(attrs={'class': 'file-input'}),
         }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['father_age'].required = False
-        self.fields['mother_age'].required = False
-        self.fields['guardian_age'].required = False
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #     self.fields['father_age'].required = False
+    #     self.fields['mother_age'].required = False
+    #     self.fields['guardian_age'].required = False
+        
+    
 
 
 class StudentNonAcademicForm(forms.ModelForm):
-    # Custom fields to handle 'other' inputs and multiple selections
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)  # ✅ added
+        super().__init__(*args, **kwargs)
+        
     STUDY_PLACE_CHOICES = [
         ('Bedroom', 'Bedroom'),
         ('Living Room', 'Living room'),
@@ -480,6 +508,10 @@ class StudentNonAcademicForm(forms.ModelForm):
 
 
 class StudentAcademicForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)  # ✅ added
+        super().__init__(*args, **kwargs)
+        
     class Meta:
         model = StudentAcademic
         fields = [
@@ -530,17 +562,48 @@ class StudentAcademicForm(forms.ModelForm):
 
         return cleaned_data
 
-
 class SectionPlacementForm(forms.ModelForm):
+    PROGRAM_CHOICES = [
+        ('STE', 'Science Technology and Engineering'),
+        ('SPFL', 'Special Program in Foreign Language'),
+        ('SPTVL', 'Special Program in Technical Vocational Livelihood'),
+        ('TOP5', 'Top 5 Regular Class'),
+        ('HETERO', 'Hetero Regular class'),
+        ('OHSP', 'Open High School Program'),
+        ('SNED', 'Special Needs Education Program'),
+    ]
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = SectionPlacement
         fields = ['status', 'selected_program']
         widgets = {
-            'status': forms.Select(choices=[('pending', 'Pending'), ('approved', 'Approved'), ('rejected', 'Rejected')]),
-            'selected_program': forms.Select(choices=[
-                ('ste', 'STE'), ('spfl', 'SPFL'), ('sptve', 'SPTVE'),
-                ('top5', 'TOP 5'), ('hetero', 'HETERO'), ('ohsp',
-                                                          'OHSP'), ('regular', 'Regular')
+            'status': forms.Select(choices=[
+                ('pending', 'Pending'),
+                ('approved', 'Approved'),
+                ('rejected', 'Rejected'),
             ]),
+            'selected_program': forms.Select(choices=SectionPlacement.PROGRAM_CHOICES),  # ✅ Fixed reference
             'placement_date': forms.DateInput(attrs={'type': 'date'}),
         }
+
+# class SectionPlacementForm(forms.ModelForm):
+#     def __init__(self, *args, **kwargs):
+#         self.user = kwargs.pop('user', None)  # ✅ added
+#         super().__init__(*args, **kwargs)
+        
+#     class Meta:
+#         model = SectionPlacement
+#         fields = ['status', 'selected_program']
+#         widgets = {
+#             'status': forms.Select(choices=[('pending', 'Pending'), ('approved', 'Approved'), ('rejected', 'Rejected')]),
+#             'selected_program': forms.Select(choices=[
+#                 ('ste', 'STE'), ('spfl', 'SPFL'), ('sptve', 'SPTVE'),
+#                 ('top5', 'TOP 5'), ('hetero', 'HETERO'), ('ohsp',
+#                                                           'OHSP'), ('regular', 'Regular')
+#             ]),
+#             'placement_date': forms.DateInput(attrs={'type': 'date'}),
+#         }

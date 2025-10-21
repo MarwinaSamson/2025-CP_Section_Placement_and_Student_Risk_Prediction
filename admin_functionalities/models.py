@@ -515,13 +515,13 @@ User = get_user_model()
 
 # Choices for programs (matching your tabs)
 PROGRAM_CHOICES = [
-    ('STE', 'STE (Science Technology and Engineering)'),
-    ('SPFL', 'SPFL (Special Program in Foreign Language)'),
-    ('SPTVE', 'SPTVE (Special Program in Technical Vocational Education)'),
-    ('SNED', 'SNED (Special Needs Education)'),
-    ('OHSP', 'OHSP (Open High School Program)'),
-    ('TOP5', 'TOP 5 Regular class'),
-    ('HETERO', 'HETERO Regular class'),
+    ('STE', 'Science Technology and Engineering'),
+    ('SPFL', 'Special Program in Foreign Language'),
+    ('SPTVL', 'Special Program in Technical Vocational Livelihood'),
+    ('TOP5', 'Top 5 Regular Class'),
+    ('HETERO', 'Hetero Regular class'),
+    ('OHSP', 'Open High School Program'),
+    ('SNED', 'Special Needs Education Program'),
 ]
 
 # Common subjects (expand as needed)

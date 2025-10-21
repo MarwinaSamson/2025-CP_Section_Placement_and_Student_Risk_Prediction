@@ -202,35 +202,71 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 
-  /*** PWD & WORKING STUDENT LOGIC ***/
-  const spedDetails = document.getElementById("id_sped_details");
-  const workingDetails = document.getElementById("id_working_details");
+      
+function handleRadioToggle(radioName, inputField) {
+  const radios = document.querySelectorAll(`input[name="${radioName}"]`);
+  
+  // Initialize state on page load
+  radios.forEach(radio => {
+    if (radio.checked && radio.value === "1") {
+      inputField.disabled = false;
+    }
+  });
 
-  if (spedDetails) spedDetails.disabled = true;
-  if (workingDetails) workingDetails.disabled = true;
-
-  function handleRadioToggle(radioName, inputField) {
-    const radios = document.querySelectorAll(`input[name="${radioName}"]`);
-    radios.forEach(radio => {
-      radio.addEventListener("change", function () {
-        if (this.value === "1") {
-          inputField.disabled = false;
-          inputField.focus(); // auto-highlight when enabled
-        } else {
-          inputField.disabled = true;
-          inputField.value = ""; // clear if disabled
-        }
-      });
+  // Handle change events
+  radios.forEach(radio => {
+    radio.addEventListener("change", function () {
+      if (this.value === "1") {
+        inputField.disabled = false;
+        inputField.focus();
+      } else {
+        inputField.disabled = true;
+        inputField.value = "";
+      }
     });
-  }
+  });
+}
 
-  if (spedDetails) {
-    handleRadioToggle("is_sped", spedDetails);
-  }
+// Apply logic
+const spedDetails = document.getElementById("id_sped_details");
+const workingDetails = document.getElementById("id_working_details");
 
-  if (workingDetails) {
-    handleRadioToggle("is_working_student", workingDetails);
-  }
+if (spedDetails) {
+  handleRadioToggle("is_sped", spedDetails);
+}
+
+if (workingDetails) {
+  handleRadioToggle("is_working_student", workingDetails);
+}
+
+ /*** PWD & WORKING STUDENT LOGIC ***/
+  // const spedDetails = document.getElementById("id_sped_details");
+  // const workingDetails = document.getElementById("id_working_details");
+  // if (spedDetails) spedDetails.disabled = true;
+  // if (workingDetails) workingDetails.disabled = true;
+
+  // function handleRadioToggle(radioName, inputField) {
+  //   const radios = document.querySelectorAll(`input[name="${radioName}"]`);
+  //   radios.forEach(radio => {
+  //     radio.addEventListener("change", function () {
+  //       if (this.value === "1") {
+  //         inputField.disabled = false;
+  //         inputField.focus(); // auto-highlight when enabled
+  //       } else {
+  //         inputField.disabled = true;
+  //         inputField.value = ""; // clear if disabled
+  //       }
+  //     });
+  //   });
+  // }
+
+  // if (spedDetails) {
+  //   handleRadioToggle("is_sped", spedDetails);
+  // }
+
+  // if (workingDetails) {
+  //   handleRadioToggle("is_working_student", workingDetails);
+  // }
 
 /*** LRN VALIDATION ***/
   const lrnInput = document.getElementById("id_lrn");

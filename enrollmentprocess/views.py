@@ -491,7 +491,7 @@ class SectionPlacementView(TemplateView):
                 )
 
             # Redirect back with success flag to trigger modal
-            url = reverse('section_placement', kwargs={'student_id': student.pk})
+            url = reverse('enrollmentprocess:section_placement', kwargs={'student_id': student.pk})
             return redirect(f"{url}?success=1")
 
         context = self.get_context_data(**kwargs)

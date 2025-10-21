@@ -228,7 +228,7 @@
  
   {% endcomment %}
 
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
@@ -359,12 +359,11 @@
                         <option value="all" {% if program_filter == 'all' %}selected{% endif %}>All Programs</option>
                         <option value="ste" {% if program_filter == 'ste' %}selected{% endif %}>STE</option>
                         <option value="spfl" {% if program_filter == 'spfl' %}selected{% endif %}>SPFL</option>
-                        <option value="sptve" {% if program_filter == 'sptve' %}selected{% endif %}>SPTVE</option>
+                        <option value="sptvl" {% if program_filter == 'sptvl' %}selected{% endif %}>SPTVL</option>
+                        <option value="sned" {% if program_filter == 'sned' %}selected{% endif %}>SNED</option>
                         <option value="top5" {% if program_filter == 'top5' %}selected{% endif %}>TOP 5</option>
                         <option value="hetero" {% if program_filter == 'hetero' %}selected{% endif %}>HETERO</option>
                         <option value="ohsp" {% if program_filter == 'ohsp' %}selected{% endif %}>OHSP</option>
-                        <option value="regular" {% if program_filter == 'regular' %}selected{% endif %}>Regular</option>
-                        <!-- Add more options as needed -->
                     </select>
 
                     <label for="statusFilter" style="margin-left: 20px;">Filter by Status:</label>

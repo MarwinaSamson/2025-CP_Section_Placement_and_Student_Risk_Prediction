@@ -77,6 +77,16 @@
                 <div class="messages {{ message.tags }}">{{ message }}</div>
             {% endfor %}
         {% endif %}
+        {% if student_form.errors or family_form.errors or non_academic_form.errors or academic_form.errors or placement_form.errors %}
+            <div style="background:#fff3cd; border:1px solid #ffeeba; padding:10px; margin-bottom:20px;">
+                <h4>Debug Form Errors:</h4>
+                <pre>{{ student_form.errors.as_text }}
+        {{ family_form.errors.as_text }}
+        {{ non_academic_form.errors.as_text }}
+        {{ academic_form.errors.as_text }}
+        {{ placement_form.errors.as_text }}</pre>
+            </div>
+        {% endif %}
 
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
@@ -335,35 +345,76 @@
         </form>
     </div>
 
-    <script>
-        const isAdmin = {{ is_admin|yesno:"true,false" }};
-        function toggleAccordion(header) {
-            const accordion = header.parentElement;
-            accordion.classList.toggle('open');
+<script>
+const isAdmin = {{ is_admin|yesno:"true,false" }};
+
+function toggleAccordion(header) {
+    const accordion = header.parentElement;
+    accordion.classList.toggle('open');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // --- Handle LRN field editability ---
+    const lrnField = document.getElementById('id_lrn');
+    if (lrnField) {
+        if (!isAdmin) {
+            lrnField.readOnly = true;
+            lrnField.style.backgroundColor = '#f5f5f5';
+        } else {
+            lrnField.readOnly = false;
+            lrnField.style.backgroundColor = 'white';
+            lrnField.classList.add('admin-lrn-editable');
         }
-        document.addEventListener('DOMContentLoaded', function() {
-            const lrnField = document.getElementById('id_lrn');
-            if (lrnField) {
-                if (!isAdmin) {
-                    lrnField.readOnly = true;
-                    lrnField.style.backgroundColor = '#f5f5f5';
-                } else {
-                    lrnField.readOnly = false;
-                    lrnField.style.backgroundColor = 'white';
-                    lrnField.classList.add('admin-lrn-editable');
-                }
+    }
+
+    // --- Handle photo upload field ---
+    const photoField = document.querySelector('input[type="file"][name*="photo"]');
+    if (photoField) {
+        if (!isAdmin) {
+            photoField.disabled = true;
+        } else {
+            photoField.disabled = false;
+            photoField.classList.add('admin-editable');
+        }
+    }
+
+    // --- Keep open accordions open ---
+    document.querySelectorAll('.accordion.open').forEach(acc => acc.classList.add('open'));
+
+    // --- Handle SPED and Working Student toggle behavior ---
+    function handleRadioToggle(radioName, inputField) {
+        const radios = document.querySelectorAll(`input[name="${radioName}"]`);
+
+        // Set initial state based on loaded data
+        radios.forEach(radio => {
+            if (radio.checked && radio.value === "1") {
+                inputField.disabled = false;
+            } else if (radio.checked && radio.value === "0") {
+                inputField.disabled = true;
             }
-            const photoField = document.querySelector('input[type="file"][name*="photo"]');
-            if (photoField) {
-                if (!isAdmin) {
-                    photoField.disabled = true;
-                } else {
-                    photoField.disabled = false;
-                    photoField.classList.add('admin-editable');
-                }
-            }
-            document.querySelectorAll('.accordion.open').forEach(acc => acc.classList.add('open'));
         });
-    </script>
+
+        // Update on change
+        radios.forEach(radio => {
+            radio.addEventListener("change", function() {
+                if (this.value === "1") {
+                    inputField.disabled = false;
+                    inputField.focus();
+                } else {
+                    inputField.disabled = true;
+                    inputField.value = "";
+                }
+            });
+        });
+    }
+
+    const spedDetails = document.getElementById("id_sped_details");
+    const workingDetails = document.getElementById("id_working_details");
+
+    if (spedDetails) handleRadioToggle("is_sped", spedDetails);
+    if (workingDetails) handleRadioToggle("is_working_student", workingDetails);
+});
+</script>
+
 </body>
 </html>
