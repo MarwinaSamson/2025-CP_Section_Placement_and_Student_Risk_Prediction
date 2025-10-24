@@ -218,10 +218,24 @@ def student_edit_view(request, student_id):
         placement_form = SectionPlacementForm(request.POST, instance=get_placement_or_create(student), user=request.user)
         requirements_form = StudentRequirementsForm(request.POST, instance=requirements)
 
+        # A small helper: collect requirement fields that are unchecked
+        def get_missing_requirements(req_cleaned):
+            missing = []
+            # names here match fields in StudentRequirementsForm
+            for fname, friendly in [
+                ('birth_certificate', 'Birth Certificate'),
+                ('good_moral', 'Good Moral Certificate'),
+                ('interview_done', 'Interview'),
+                ('reading_assessment_done', 'Reading Assessment'),
+            ]:
+                if not req_cleaned.get(fname):
+                    missing.append(friendly)
+            return missing
+
         if all(form.is_valid() for form in [student_form, family_form, non_academic_form, academic_form, placement_form, requirements_form]):
             try:
                 with transaction.atomic():
-                    # Save all forms first
+                    # Save forms first
                     student_form.save()
                     family_form.save()
                     non_academic_form.save()
@@ -229,39 +243,60 @@ def student_edit_view(request, student_id):
                     placement_form.save()
                     requirements_form.save()
 
-                    # NEW: Auto-assign student to section
-                    program = placement_form.cleaned_data.get('selected_program', '').upper()
-                    
-                    if program:
-                        logger.info(f"Auto-assigning student {student.id} to program {program}")
-                        
-                        success, assigned_section, msg = SectionAssignmentService.assign_student_to_section(
-                            student, 
-                            program
-                        )
-                        
+                    # Only auto-assign when status == 'approved'
+                    placement_status = placement_form.cleaned_data.get('status', '').lower()
+                    selected_program = placement_form.cleaned_data.get('selected_program', '') or ''
+                    selected_program = selected_program.upper()
+
+                    # If admin is trying to approve, ensure requirements are OK or admin confirmed override.
+                    requirement_confirmed = request.POST.get('confirm_approve_incomplete') == '1'
+                    missing_requirements = get_missing_requirements(requirements_form.cleaned_data)
+
+                    if placement_status == 'approved':
+                        if missing_requirements and not requirement_confirmed:
+                            # Don't assign yet — render page with missing requirements so JS will ask the admin
+                            messages.warning(request, f"Student marked as Approved but requirements incomplete.")
+                            context = {
+                                "student": student,
+                                "student_form": student_form,
+                                "family_form": family_form,
+                                "non_academic_form": non_academic_form,
+                                "academic_form": academic_form,
+                                "placement_form": placement_form,
+                                "requirements_form": requirements_form,
+                                "is_admin": request.user.is_staff,
+                                # flags for template/JS
+                                "requirement_missing_list": missing_requirements,
+                            }
+                            return render(request, "admin_functionalities/student_edit.html", context)
+
+                        # Proceed to assign (either all requirements present OR admin confirmed override)
+                        success, assigned_section, msg = SectionAssignmentService.assign_student_to_section(student, selected_program)
+
                         if success:
-                            # Success: Show section assignment in message
                             messages.success(
-                                request, 
-                                f"✓ Student {student.first_name} {student.last_name} updated successfully! "
-                                f"Assigned to section: {assigned_section.name} ({program})"
-                            )
-                            logger.info(f"Student {student.id} successfully assigned to {assigned_section.name}")
-                        else:
-                            # Assignment failed but form saved
-                            messages.warning(
                                 request,
-                                f"Student updated but section assignment failed: {msg}. "
-                                f"Admin may need to assign manually."
+                                f"✓ Student {student.first_name} {student.last_name} updated and assigned to {assigned_section.name} ({selected_program})"
                             )
-                            logger.warning(f"Section assignment failed for student {student.id}: {msg}")
+                        else:
+                            # If assignment failed because sections are full, provide contextual info to template
+                            messages.warning(request, f"Student updated but section assignment failed: {msg}")
+                            context = {
+                                "student": student,
+                                "student_form": student_form,
+                                "family_form": family_form,
+                                "non_academic_form": non_academic_form,
+                                "academic_form": academic_form,
+                                "placement_form": placement_form,
+                                "requirements_form": requirements_form,
+                                "is_admin": request.user.is_staff,
+                                "section_assignment_error": msg,  # e.g., "All sections for X are already full"
+                                "section_program": selected_program.lower(),
+                            }
+                            return render(request, "admin_functionalities/student_edit.html", context)
                     else:
-                        messages.warning(
-                            request,
-                            f"Student updated but no program selected. "
-                            f"Section assignment skipped."
-                        )
+                        # Not approved: skip assignment
+                        messages.success(request, f"Student {student.first_name} {student.last_name} updated. Section placement skipped (status: {placement_status}).")
 
                 return redirect("admin_functionalities:student_edit", student_id=student.id)
 

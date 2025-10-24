@@ -91,6 +91,8 @@
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
 
+            <input type="hidden" name="confirm_approve_incomplete" id="confirm_approve_incomplete" value="0" />
+
             {% comment %} Put this at the top of the Academic Information accordion-content {% endcomment %}
             {% with mismatches=academic_form.instance.mismatch_fields %}
                 {% if mismatches %}
@@ -415,6 +417,39 @@ document.addEventListener('DOMContentLoaded', function() {
     if (workingDetails) handleRadioToggle("is_working_student", workingDetails);
 });
 </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle incomplete requirements confirmation
+    {% if requirement_missing_list %}
+        let missing = {{ requirement_missing_list|safe }};
+        let msg = "Are you sure to approve {{ student.first_name }} {{ student.last_name }} even if requirements are incomplete?\n\nMissing:\n";
+        missing.forEach(function(r) { msg += " - " + r + "\n"; });
+        if (confirm(msg)) {
+            document.getElementById('confirm_approve_incomplete').value = '1';
+            document.querySelector('form').submit();
+        } else {
+            // Stay on the page and highlight the requirements section
+            const reqSection = document.querySelector('#requirementsSection');
+            if (reqSection) reqSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    {% endif %}
+
+    // Handle section full prompt
+    {% if section_assignment_error %}
+        let errorMsg = "{{ section_assignment_error|escapejs }}";
+        if (confirm(errorMsg + "\n\nDo you want to create/add another section now? (OK = Yes, Cancel = No)")) {
+            // Redirect to sections.html and tell it to open Add Section modal automatically
+            let prog = "{{ section_program|default:'' }}";
+            window.location.href = "{% url 'admin_functionalities:sections' %}?open_add=1&program=" + encodeURIComponent(prog);
+        } else {
+            // If no, just redirect normally to sections page
+            window.location.href = "{% url 'admin_functionalities:sections' %}";
+        }
+    {% endif %}
+});
+</script>
+
 
 </body>
 </html>

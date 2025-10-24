@@ -868,4 +868,29 @@
         }
     });
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Detect URL params like ?open_add=1&program=STE
+    const params = new URLSearchParams(window.location.search);
+    const shouldOpenAdd = params.get('open_add');
+    const program = params.get('program');
+
+    if (shouldOpenAdd === '1') {
+        // Optionally highlight the related program tab before opening
+        if (program) {
+            const targetTab = document.querySelector(`.tab-btn[data-program="${program.toUpperCase()}"]`);
+            if (targetTab) {
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                targetTab.classList.add('active');
+            }
+        }
+
+        // Open the Add Section modal
+        if (typeof openAddSectionModal === 'function') {
+            openAddSectionModal();
+        }
+    }
+});
+</script>
+
 </html>
