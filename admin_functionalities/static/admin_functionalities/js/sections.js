@@ -524,21 +524,19 @@ function switchProgram(program) {
 }
 
 function fetchTeachers() {
-    return fetch(`${BASE_URL}api/get-teachers/`)  // FIXED: Updated to new API path
+    return fetch(`${BASE_URL}api/get-subject-teachers/`)
         .then(response => {
             if (!response.ok) throw new Error('Network response was not ok');
             return response.json();
         })
         .then(data => {
-            console.log('Fetched teachers data:', data);
-            advisers = data.advisers || [];
-            subjectTeachers = data.subject_teachers || [];
-            populateAdviserSelects();
+            console.log('Fetched subject teachers by department:', data);
+            subjectTeachers = data.teachers || [];
             populateSubjectTeacherSelects();
-            if (advisers.length === 0) console.warn('No advisers found');
         })
         .catch(error => console.error('Error fetching teachers:', error));
 }
+
 
 function fetchBuildingsRooms() {
     return fetch(`${BASE_URL}api/buildings-rooms/`)  // FIXED: Updated to new API path
@@ -554,46 +552,74 @@ function fetchBuildingsRooms() {
         .catch(error => console.error('Error fetching buildings/rooms:', error));
 }
 
-function populateAdviserSelects() {
+function populateAdviserSelects(currentAdviserId = null) {
     console.log('Populating adviser selects with:', advisers);
     const adviserSelects = [
         document.getElementById('adviserName'),
         document.getElementById('updateAdviserName')
     ];
-    
+
     adviserSelects.forEach(select => {
         if (select) {
             select.innerHTML = '<option value="">Select Adviser</option>';
+
             advisers.forEach(adviser => {
                 const option = document.createElement('option');
                 option.value = adviser.id;
                 option.textContent = adviser.name;
+
+                // Disable if already assigned to another section (except current adviser)
+                if (adviser.isAssigned && adviser.id != currentAdviserId) {
+                    option.disabled = true;
+                    option.textContent += ' (Unavailable)';
+                }
+
                 select.appendChild(option);
             });
         }
     });
 }
 
+
 function populateSubjectTeacherSelects() {
-    console.log('Populating subject teacher selects with:', subjectTeachers);
-    const subjectSelects = [
-        'mathTeacher', 'englishTeacher', 'scienceTeacher', 'filipinoTeacher',
-        'arpanTeacher', 'mapehTeacher', 'espTeacher'
-    ];
-    
-    subjectSelects.forEach(selectId => {
+    console.log('Populating subject teacher selects with department filtering:', subjectTeachers);
+
+    // Map subjects to their required department
+    const subjectDepartmentMap = {
+        'mathTeacher': 'Mathematics',
+        'englishTeacher': 'English',
+        'scienceTeacher': 'Science',
+        'filipinoTeacher': 'Filipino',
+        'arpanTeacher': 'Social Studies',
+        'mapehTeacher': 'MAPEH',
+        'espTeacher': 'Values Education'
+    };
+
+    Object.entries(subjectDepartmentMap).forEach(([selectId, department]) => {
         const select = document.getElementById(selectId);
         if (select) {
             select.innerHTML = '<option value="">Select Teacher</option>';
-            subjectTeachers.forEach(teacher => {
-                const option = document.createElement('option');
-                option.value = teacher.id;
-                option.textContent = teacher.name;
-                select.appendChild(option);
-            });
+
+            const filteredTeachers = subjectTeachers.filter(t =>t.department && t.department.toLowerCase().includes(department.toLowerCase()));
+
+
+            if (filteredTeachers.length === 0) {
+                const opt = document.createElement('option');
+                opt.disabled = true;
+                opt.textContent = `No ${department} teachers available`;
+                select.appendChild(opt);
+            } else {
+                filteredTeachers.forEach(teacher => {
+                    const option = document.createElement('option');
+                    option.value = teacher.id;
+                    option.textContent = `${teacher.name}`;
+                    select.appendChild(option);
+                });
+            }
         }
     });
 }
+
 
 function populateBuildingSelects() {
     console.log('Populating building selects with:', buildingsRooms);
@@ -651,8 +677,8 @@ function loadSections(program) {
             }
             
             sectionsGrid.innerHTML = data.sections.map(section => `
-                <div class="section-card">
-                    <div class="section-header">
+                <div class="section-card" >
+                    <div class="section-header" onclick="openSectionMasterlist(${section.id})">
                         <div class="section-avatar">
                             <img src="${section.avatar}" alt="${section.name}">
                         </div>
@@ -718,30 +744,33 @@ function closeSubjectTeacherModal() {
 function openUpdateSectionModal(sectionId) {
     console.log('Opening Update Section Modal for section ID:', sectionId);
     const section = findSectionById(sectionId);
-    if (section) {
-        currentSectionForUpdate = section;
-        document.getElementById('updateSectionName').value = section.name;
-        document.getElementById('updateAdviserName').value = section.adviserId || '';
-        
-        // Parse location (e.g., "Bldg 1 Room 101")
-        const locationMatch = section.location.match(/Bldg (\d+) Room (.+)/);
-        if (locationMatch) {
-            const building = `building${locationMatch[1]}`;
-            const room = locationMatch[2];
-            document.getElementById('updateBuilding').value = building;
-            // Populate rooms for this building first
-            populateRoomSelectById('updateRoom', building);
-            // Then set the room value
-            setTimeout(() => {
-                document.getElementById('updateRoom').value = room;
-            }, 50);
-        }
-        
-        document.getElementById('updateMaxStudents').value = section.maxStudents;
-    }
-    document.getElementById('updateSectionModal').style.display = 'block';
-    populateAdviserSelects();
+    if (!section) return;
+
+    currentSectionForUpdate = section;
+
+    // Populate selects first
+    populateAdviserSelects(section.adviserId);
     populateBuildingSelects();
+
+    // Fill form fields
+    document.getElementById('updateSectionName').value = section.name;
+    document.getElementById('updateAdviserName').value = section.adviserId || '';
+    document.getElementById('updateMaxStudents').value = section.maxStudents;
+
+    // Parse and set building + room
+    const locationMatch = section.location.match(/Bldg (\d+) Room (.+)/);
+    if (locationMatch) {
+        const building = `building${locationMatch[1]}`;
+        const room = locationMatch[2];
+        document.getElementById('updateBuilding').value = building;
+        populateRoomSelectById('updateRoom', building);
+        setTimeout(() => {
+            document.getElementById('updateRoom').value = room;
+        }, 50);
+    }
+
+    // Open modal
+    document.getElementById('updateSectionModal').style.display = 'block';
 }
 
 function closeUpdateSectionModal() {
@@ -844,6 +873,11 @@ function deleteSection(sectionId) {
             alert('An error occurred while deleting the section.');
         });
     }
+}
+
+function openSectionMasterlist(sectionId) {
+    // Simply redirect to Django-rendered masterlist page
+    window.location.href = `${BASE_URL}sections/${sectionId}/masterlist/`;
 }
 
 function handleAssignSubjectTeachers(event) {

@@ -396,6 +396,7 @@ class Teacher(models.Model):
         ('MAPEH', 'MAPEH'),
         ('TLE', 'Technology and Livelihood Education'),
         ('Values Education', 'Values Education'),
+        ('History', 'History'),
         # Add more
     ]
     department = models.CharField(max_length=50, choices=DEPARTMENT_CHOICES, blank=True, verbose_name="Department")

@@ -1,0 +1,247 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ section.name }} - Student Masterlist</title>
+    <link rel="stylesheet" href="{% static 'admin_functionalities/css/admin.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .masterlist-container {
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .section-info h1 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+        }
+        .section-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .detail-item i {
+            color: #3498db;
+            font-size: 18px;
+        }
+        .capacity-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .capacity-full {
+            background: #e74c3c;
+            color: white;
+        }
+        .capacity-available {
+            background: #27ae60;
+            color: white;
+        }
+        .capacity-warning {
+            background: #f39c12;
+            color: white;
+        }
+        .students-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .students-table th {
+            background: #34495e;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        .students-table td {
+            padding: 12px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        .students-table tr:hover {
+            background: #f8f9fa;
+        }
+        .student-photo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .grade-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .grade-excellent {
+            background: #27ae60;
+            color: white;
+        }
+        .grade-good {
+            background: #3498db;
+            color: white;
+        }
+        .grade-fair {
+            background: #f39c12;
+            color: white;
+        }
+        .btn-back {
+            padding: 10px 20px;
+            background: #95a5a6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-back:hover {
+            background: #7f8c8d;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+        }
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            color: #bdc3c7;
+        }
+    </style>
+</head>
+<body>
+    <div class="masterlist-container">
+        <div class="section-header">
+            <div class="section-info">
+                <h1><i class="fas fa-users"></i> {{ section.name }} - Student Masterlist</h1>
+                <div class="section-details">
+                    <div class="detail-item">
+                        <i class="fas fa-graduation-cap"></i>
+                        <span><strong>Program:</strong> {{ section.program }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                        <span><strong>Adviser:</strong> {{ section.adviser.full_name|default:"No Adviser" }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span><strong>Location:</strong> {{ section.location }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-user-friends"></i>
+                        <span><strong>Total Students:</strong> {{ total_students }} / {{ section.max_students }}</span>
+                    </div>
+                </div>
+                <div style="margin-top: 15px;">
+                    {% if is_full %}
+                        <span class="capacity-badge capacity-full">
+                            <i class="fas fa-exclamation-circle"></i> Section Full
+                        </span>
+                    {% elif available_slots <= 5 %}
+                        <span class="capacity-badge capacity-warning">
+                            <i class="fas fa-exclamation-triangle"></i> {{ available_slots }} Slots Remaining
+                        </span>
+                    {% else %}
+                        <span class="capacity-badge capacity-available">
+                            <i class="fas fa-check-circle"></i> {{ available_slots }} Slots Available
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div>
+                <a href="{% url 'admin_functionalities:sections' %}?program={{ section.program }}" class="btn-back">
+                    <i class="fas fa-arrow-left"></i> Back to Sections
+                </a>
+            </div>
+        </div>
+
+        {% if students %}
+            <table class="students-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Photo</th>
+                        <th>LRN</th>
+                        <th>Student Name</th>
+                        <th>Gender</th>
+                        <th>Age</th>
+                        <th>Overall Average</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                <img src="{{ student.photo.url|default:'/static/admin_functionalities/assets/default_avatar.png' }}" 
+                                     alt="{{ student.first_name }}" 
+                                     class="student-photo">
+                            </td>
+                            <td>{{ student.lrn }}</td>
+                            <td>{{ student.last_name }}, {{ student.first_name }} {{ student.middle_name|default:"" }}</td>
+                            <td>{{ student.get_gender_display }}</td>
+                            <td>{{ student.age }}</td>
+                            <td>
+                                {% if student.studentacademic.overall_average %}
+                                    {% if student.studentacademic.overall_average >= 90 %}
+                                        <span class="grade-badge grade-excellent">{{ student.studentacademic.overall_average|floatformat:2 }}</span>
+                                    {% elif student.studentacademic.overall_average >= 85 %}
+                                        <span class="grade-badge grade-good">{{ student.studentacademic.overall_average|floatformat:2 }}</span>
+                                    {% else %}
+                                        <span class="grade-badge grade-fair">{{ student.studentacademic.overall_average|floatformat:2 }}</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span style="color: #999;">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span style="color: #27ae60; font-weight: bold;">
+                                    <i class="fas fa-check-circle"></i> Enrolled
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'admin_functionalities:student_edit' student.id %}" 
+                                   style="color: #3498db; text-decoration: none;">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-user-slash"></i>
+                <h2>No Students Enrolled Yet</h2>
+                <p>This section currently has no enrolled students.</p>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

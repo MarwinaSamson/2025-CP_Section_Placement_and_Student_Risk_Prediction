@@ -488,34 +488,73 @@ def sections_view(request):
     }
     return render(request, 'admin_functionalities/sections.html', context)
 
-@require_http_methods(["GET"])
+@login_required
 @require_http_methods(["GET"])
 def get_teachers(request):
     """
-    Returns teachers for adviser/subject teacher dropdowns.
+    Returns all teachers who can be advisers and subject teachers.
+    Includes availability status (if already assigned to a section).
     """
-    try:
-        advisers = Teacher.objects.all().order_by('last_name', 'first_name')
-        subject_teachers = Teacher.objects.all().order_by('last_name', 'first_name')
+    teachers = Teacher.objects.filter(is_active=True)
 
-        advisers_data = [
-            {'id': t.id, 'name': f"{t.last_name}, {t.first_name} {t.middle_name or ''}".strip()}
-            for t in advisers
-        ]
+    adviser_list = []
+    subject_teacher_list = []
 
-        subject_teachers_data = [
-            {'id': t.id, 'name': f"{t.last_name}, {t.first_name} {t.middle_name or ''}".strip()}
-            for t in subject_teachers
-        ]
+    # Get IDs of teachers already assigned as advisers in sections
+    assigned_adviser_ids = set(
+        Section.objects.exclude(adviser__isnull=True)
+        .values_list('adviser_id', flat=True)
+    )
 
-        return JsonResponse({
-            'success': True,
-            'advisers': advisers_data,
-            'subject_teachers': subject_teachers_data
+    for t in teachers:
+        # Adviser candidates
+        if t.is_adviser:
+            adviser_list.append({
+                "id": t.id,
+                "name": t.full_name,
+                "isAssigned": t.id in assigned_adviser_ids
+            })
+
+        # Subject teacher candidates
+        if t.is_subject_teacher:
+            dept = (t.department or "").strip()
+            if dept.lower().endswith("department"):
+                dept = dept[:-len("department")].strip()
+            subject_teacher_list.append({
+                "id": t.id,
+                "name": t.full_name,
+                "department": dept.capitalize()
+            })
+
+    return JsonResponse({
+        "advisers": adviser_list,
+        "subject_teachers": subject_teacher_list
+    })
+
+def get_subject_teachers(request):
+    """
+    Returns all active subject teachers with cleaned, case-insensitive department names.
+    Example: 'English Department' → 'English'
+    """
+    teachers = Teacher.objects.filter(is_subject_teacher=True, is_active=True)
+
+    teacher_list = []
+    for t in teachers:
+        dept = (t.department or "").strip()
+        # Normalize: remove "department" regardless of case, trim spaces
+        if dept.lower().endswith("department"):
+            dept = dept[:-len("department")].strip()
+
+        # Capitalize cleanly (e.g., "english" → "English")
+        clean_department = dept.capitalize()
+
+        teacher_list.append({
+            "id": t.id,
+            "name": t.full_name,
+            "department": clean_department,
         })
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
+    return JsonResponse({"teachers": teacher_list})
 
 @login_required
 @require_http_methods(["GET"])
@@ -541,36 +580,30 @@ def get_buildings_rooms(request):
 @login_required
 @require_http_methods(["GET"])
 def get_sections_by_program(request, program):
-    """
-    Returns all sections for a given program (STE, SPFL, etc.).
-    Used by sections.html to populate the grid.
-    """
     try:
         sections = Section.objects.filter(program=program.upper()).select_related('adviser')
-        
         sections_data = []
         for section in sections:
             adviser_name = "No Adviser"
             if section.adviser:
                 adviser_name = f"{section.adviser.last_name}, {section.adviser.first_name}".strip()
                 if adviser_name == ',':
-                    adviser_name = section.adviser.username
-            
+                    adviser_name = section.adviser.user.username if hasattr(section.adviser, 'user') else adviser_name
+
             sections_data.append({
                 'id': section.id,
                 'name': section.name,
                 'adviser': adviser_name,
                 'adviserId': section.adviser.id if section.adviser else None,
+                'building': section.building,
+                'room': section.room,
                 'location': section.location,
                 'students': section.current_students,
                 'maxStudents': section.max_students,
                 'avatar': section.avatar.url if section.avatar else '/static/admin_functionalities/assets/default_section.png',
             })
-        
-        return JsonResponse({
-            'success': True,
-            'sections': sections_data
-        })
+
+        return JsonResponse({'success': True, 'sections': sections_data})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
@@ -578,33 +611,35 @@ def get_sections_by_program(request, program):
 @login_required
 @require_http_methods(["POST"])
 def add_section(request, program):
-    """
-    Creates a new section for the given program.
-    Expects FormData with: name, adviser (user ID), building, room, max_students.
-    """
     try:
+        # Program-specific defaults (can be moved to DB later)
+        program_defaults = {
+            'STE': 30,
+            'SPFL': 30,
+            'SPTVL': 30,
+            'OHSP': 30,
+            'SNED': 30,
+            'TOP5': 50,
+            'HETERO': 50,
+            'REGULAR': 40,  # fallback default
+        }
+
         form = SectionForm(request.POST, request.FILES)
-        
         if form.is_valid():
             section = form.save(commit=False)
             section.program = program.upper()
+
+            # If max_students not provided or <=0, use program default
+            max_students = form.cleaned_data.get('max_students')
+            if not max_students or int(max_students) <= 0:
+                section.max_students = program_defaults.get(section.program, 40)
+
             section.save()
-            
-            return JsonResponse({
-                'success': True,
-                'message': f'Section "{section.name}" added successfully to {program.upper()}!'
-            })
+            return JsonResponse({'success': True, 'message': f'Section \"{section.name}\" added successfully to {section.program}!'})
         else:
-            return JsonResponse({
-                'success': False,
-                'message': 'Validation failed',
-                'errors': form.errors
-            }, status=400)
+            return JsonResponse({'success': False, 'message': 'Validation failed', 'errors': form.errors}, status=400)
     except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'message': f'Error adding section: {str(e)}'
-        }, status=500)
+        return JsonResponse({'success': False, 'message': f'Error adding section: {str(e)}'}, status=500)
 
 
 @login_required
@@ -658,78 +693,130 @@ def delete_section(request, section_id):
             'message': f'Error deleting section: {str(e)}'
         }, status=500)
 
-
 @login_required
-@require_http_methods(["POST"])
-def assign_subject_teachers(request, section_id):
+@require_http_methods(["GET"])
+def get_section_students(request, section_id):
     """
-    Assigns subject teachers to a section.
-    Expects JSON body with 'assignments' list:
-    [
-        {
-            'subject': 'MATH',
-            'teacher_id': 5,
-            'day': 'DAILY',
-            'start_time': '08:00',
-            'end_time': '09:00'
-        },
-        ...
-    ]
+    Returns students currently placed in this section (approved).
     """
     try:
-        section = get_object_or_404(Section, id=section_id)
-        data = json.loads(request.body)
-        assignments = data.get('assignments', [])
-        
-        if not assignments:
+        # Assuming SectionPlacement.section FK points to Section
+        placements = SectionPlacement.objects.filter(section_id=section_id, status='approved').select_related('student').order_by('student__last_name')
+        students = [{
+            'id': p.student.id,
+            'lrn': p.student.lrn,
+            'name': f"{p.student.last_name}, {p.student.first_name} {p.student.middle_name or ''}".strip()
+        } for p in placements]
+        return JsonResponse({'success': True, 'students': students})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+def section_masterlist(request, section_id):
+    section = get_object_or_404(Section, pk=section_id)
+
+    # Get all approved students assigned to this section
+    students = Student.objects.filter(section_placements__section=section, section_placements__status='approved').select_related('studentacademic')
+
+    total_students = students.count()
+    available_slots = section.max_students - total_students
+    is_full = total_students >= section.max_students
+
+    context = {
+        'section': section,
+        'students': students,
+        'total_students': total_students,
+        'available_slots': available_slots,
+        'is_full': is_full,
+    }
+
+    return render(request, 'admin_functionalities/masterlist.html', context)
+
+@login_required
+@csrf_exempt
+@require_http_methods(["POST"])
+def assign_subject_teachers(request, section_id):
+    """Assigns teachers to subjects within a section, validating department and schedule."""
+    try:
+        section = Section.objects.get(id=section_id)
+    except Section.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Section not found.'}, status=404)
+
+    try:
+        body = json.loads(request.body)
+        assignments = body.get('assignments', [])
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Invalid JSON data.'}, status=400)
+
+    subject_department_map = {
+        'MATHEMATICS': 'Mathematics',
+        'ENGLISH': 'English',
+        'SCIENCE': 'Science',
+        'FILIPINO': 'Filipino',
+        'ARALING_PANLIPUNAN': 'Social Studies',
+        'MAPEH': 'MAPEH',
+        'EDUKASYON_SA_PAGPAPAKATAO': 'Values Education',
+    }
+
+    created_count = 0
+    for a in assignments:
+        subject = a.get('subject')
+        teacher_id = a.get('teacher_id')
+        day = a.get('day')
+        start_time = a.get('start_time')
+        end_time = a.get('end_time')
+
+        if not (subject and teacher_id and day and start_time and end_time):
+            return JsonResponse({'success': False, 'message': 'Missing required fields.'}, status=400)
+
+        # Validate teacher existence
+        try:
+            teacher = Teacher.objects.get(id=teacher_id, is_active=True)
+        except Teacher.DoesNotExist:
+            return JsonResponse({'success': False, 'message': f'Teacher with ID {teacher_id} not found.'}, status=404)
+
+        # Validate department match
+        required_department = subject_department_map.get(subject)
+        if not required_department:
+            return JsonResponse({'success': False, 'message': f'Invalid subject: {subject}'}, status=400)
+
+        if teacher.department != required_department:
             return JsonResponse({
                 'success': False,
-                'message': 'No assignments provided'
+                'message': f'{teacher.full_name} belongs to {teacher.department} department, not {required_department}.'
             }, status=400)
-        
-        created_count = 0
-        updated_count = 0
-        
-        with transaction.atomic():
-            for assignment in assignments:
-                subject = assignment.get('subject', '').upper()
-                teacher_id = assignment.get('teacher_id')
-                day = assignment.get('day')
-                start_time = assignment.get('start_time')
-                end_time = assignment.get('end_time')
-                
-                if not all([subject, teacher_id, day, start_time, end_time]):
-                    continue  # Skip incomplete assignments
-                
-                teacher = get_object_or_404(CustomUser, id=teacher_id, is_subject_teacher=True)
-                
-                # Update or create assignment
-                obj, created = SectionSubjectAssignment.objects.update_or_create(
-                    section=section,
-                    subject=subject,
-                    defaults={
-                        'teacher': teacher,
-                        'day': day,
-                        'start_time': start_time,
-                        'end_time': end_time
-                    }
-                )
-                
-                if created:
-                    created_count += 1
-                else:
-                    updated_count += 1
-        
-        return JsonResponse({
-            'success': True,
-            'message': f'Subject teachers assigned! (Created: {created_count}, Updated: {updated_count})'
-        })
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'message': f'Error assigning teachers: {str(e)}',
-            'errors': str(e)
-        }, status=500)
+
+        # Check for schedule conflict
+        conflicts = SectionSubjectAssignment.objects.filter(
+            teacher=teacher,
+            day=day,
+            start_time__lt=end_time,
+            end_time__gt=start_time
+        ).exclude(section=section)
+
+        if conflicts.exists():
+            conflict_section = conflicts.first().section
+            return JsonResponse({
+                'success': False,
+                'message': f'{teacher.full_name} already has a class ({subject}) in section {conflict_section.name} at that time.'
+            }, status=400)
+
+        # Create or update assignment
+        assignment, created = SectionSubjectAssignment.objects.update_or_create(
+            section=section,
+            subject=subject,
+            defaults={
+                'teacher': teacher.user if teacher.user else None,  # Use linked user if any
+                'day': day,
+                'start_time': start_time,
+                'end_time': end_time
+            }
+        )
+        created_count += 1 if created else 0
+
+    return JsonResponse({
+        'success': True,
+        'message': f'Successfully assigned {created_count} subject teacher(s).'
+    }, status=200)
 
 @login_required
 def enrollment_view(request):

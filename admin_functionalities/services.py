@@ -52,75 +52,82 @@ class SectionAssignmentService:
     @staticmethod
     def assign_student_to_section(student, program):
         """
-        Main assignment logic:
-        1. Get all available sections for the program
-        2. Sort sections by current load (ascending)
-        3. Assign student to the section with lowest load
-        4. Update Section.current_students counter
-        5. Create/update SectionPlacement record with 'approved' status
-
-        Returns: (success: bool, section: Section or None, message: str)
+        Main assignment logic with capacity enforcement:
+        1. Find an available section (not full)
+        2. Use transaction & row locking to prevent race conditions
+        3. Create/update SectionPlacement with proper FK to Section
+        4. Update counters safely and log results
         """
         try:
-            # Validate student has academic data
             academic_data = StudentAcademic.objects.filter(student=student).first()
             if not academic_data:
                 return False, None, f"Student {student.id} has no academic data"
 
-            # Get available sections, sorted by current load
-            sections = Section.objects.filter(
-                program=program.upper()
-            ).annotate(
-                student_count=Count(
-                    'sectionplacement',
-                    filter=Q(sectionplacement__status='approved')
+            # Fetch candidate sections for this program
+            sections = (
+                Section.objects.filter(program=program.upper())
+                .annotate(
+                    student_count=Count(
+                        'sectionplacement',
+                        filter=Q(sectionplacement__status='approved')
+                    )
                 )
-            ).order_by('student_count')  # Lowest load first
+                .order_by('student_count', 'name')
+            )
 
-            # Check if any sections exist
             if not sections.exists():
                 return False, None, f"No sections available for program {program}"
 
-            # Find section with lowest load that isn't at max capacity
+            # Choose first section under capacity
             assigned_section = None
-            for section in sections:
-                if section.student_count < section.max_students:
-                    assigned_section = section
+            for sec in sections:
+                if sec.student_count < sec.max_students:
+                    assigned_section = sec
                     break
 
             if not assigned_section:
-                return False, None, f"All sections for {program} are at max capacity"
+                return False, None, f"All sections for {program} are already full"
 
-            # Use transaction to ensure atomicity
+            # Atomic block ensures no two assignments overfill
             with transaction.atomic():
-                # Update or create SectionPlacement with 'approved' status
+                # Lock the chosen section row for update
+                sec = Section.objects.select_for_update().get(pk=assigned_section.pk)
+
+                # Double-check capacity after locking
+                if sec.current_students >= sec.max_students:
+                    return False, None, f"Section '{sec.name}' is already at capacity"
+
+                # Create or update SectionPlacement
                 placement, created = SectionPlacement.objects.update_or_create(
                     student=student,
                     selected_program=program.upper(),
                     defaults={
                         'status': 'approved',
-                        'placement_date': timezone.now()
-                    }
+                        'section': sec,             # ✅ set actual section FK
+                        'placement_date': timezone.now(),
+                    },
                 )
 
-                # Update Section.current_students counter
-                assigned_section.current_students += 1
-                assigned_section.save(update_fields=['current_students'])
+                # Increment student counter safely
+                sec.current_students = models.F('current_students') + 1
+                sec.save(update_fields=['current_students'])
+                sec.refresh_from_db(fields=['current_students'])
 
-                # Update Student model's section_placement field (CharField) for quick reference
-                student.section_placement = assigned_section.name
+                # Update student reference field for quick lookup
+                student.section_placement = sec.name
                 student.save(update_fields=['section_placement'])
 
             logger.info(
-                f"Student {student.id} assigned to {assigned_section.name} "
-                f"({program}) - Current load: {assigned_section.current_students}/{assigned_section.max_students}"
+                f"✅ Student {student.id} assigned to {sec.name} ({program}) "
+                f"Load: {sec.current_students}/{sec.max_students}"
             )
 
-            return True, assigned_section, f"Assigned to section: {assigned_section.name}"
+            return True, sec, f"Assigned to section: {sec.name}"
 
         except Exception as e:
-            logger.error(f"Error assigning student {student.id} to section: {str(e)}")
+            logger.error(f"❌ Error assigning student {student.id} to section: {str(e)}")
             return False, None, f"Assignment error: {str(e)}"
+
 
     @staticmethod
     def bulk_assign_students_by_ranking(program):

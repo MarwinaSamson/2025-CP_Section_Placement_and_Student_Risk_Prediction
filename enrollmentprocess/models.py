@@ -177,7 +177,7 @@ class SectionPlacement(models.Model):
     placement_date = models.DateTimeField(auto_now_add=True, verbose_name="Placement Date")
     # eligibility_snapshot = models.JSONField(blank=True, null=True, verbose_name="Eligibility Data Snapshot")
     # notes = models.TextField(blank=True, null=True, verbose_name="Additional Notes")
-    section = models.ForeignKey('admin_functionalities.Section', on_delete=models.CASCADE, related_name='sectionplacement')
+    section = models.ForeignKey('admin_functionalities.Section', on_delete=models.CASCADE, null=True, blank=True, related_name='sectionplacement', verbose_name="Assigned Section")
     class Meta:
         verbose_name = "Section Placement"
         verbose_name_plural = "Section Placements"

@@ -82,6 +82,8 @@ urlpatterns = [
     path('sections/update/<int:section_id>/', views.update_section, name='update_section'),
     path('sections/delete/<int:section_id>/', views.delete_section, name='delete_section'),
     path('sections/assign-subjects/<int:section_id>/', views.assign_subject_teachers, name='assign_subject_teachers'),
+    path('sections/<int:section_id>/masterlist/', views.section_masterlist, name='section_masterlist'),
+    path('api/get-subject-teachers/', views.get_subject_teachers, name='get_subject_teachers'),
     
     # ============ ALL TEACHERS RELATED PATHS ============
     path('teachers/', views.teachers_view, name='teachers'),  # Teachers management page
