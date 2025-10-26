@@ -143,12 +143,14 @@ document.addEventListener("DOMContentLoaded", () => {
   setupDropdownHandlers();
   // Setup logout handler (fixed)
   setupLogoutHandler();
+
   const programRows = document.querySelectorAll(".program-row");
   programRows.forEach((row) => {
     row.addEventListener("click", () => {
       const program = row.getAttribute("data-program");
       console.log("Clicking program row:", program);
-      window.location.href = `sections.html?program=${program}`;
+      // ✅ Correct absolute Django URL
+      window.location.href = `/admin-functionalities/sections/?program=${encodeURIComponent(program)}`;
     });
   });
 });

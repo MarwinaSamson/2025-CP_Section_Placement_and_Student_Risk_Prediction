@@ -1280,7 +1280,7 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.removeItem("isLoggedIn");
         localStorage.removeItem("username");
         localStorage.removeItem("loginTime");
-        window.location.href = '/admin-functionalities/logout/';
+        window.location.href = '/logout/';
     }
 
     setupLogoutHandler();

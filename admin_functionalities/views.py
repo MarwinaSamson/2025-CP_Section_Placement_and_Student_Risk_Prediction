@@ -382,120 +382,204 @@ def student_edit_view(request, student_id):
 #     return render(request, "admin_functionalities/student_edit.html", context)
 
 
+# @login_required
+# def admin_dashboard(request):
+#     # Debug prints (remove after fixing)
+#     print("\n=== DEBUG: Complete Students Check ===")
+#     total_students = Student.objects.count()
+#     print(f"Total Students: {total_students}")
+
+#     # Check partial completions
+#     with_family = Student.objects.filter(family_data__isnull=False).count()
+#     print(f"With Family Form: {with_family}")
+
+#     with_academic = Student.objects.filter(studentacademic__isnull=False).count()
+#     print(f"With Academic Form: {with_academic}")
+
+#     with_non_academic = Student.objects.filter(studentnonacademic__isnull=False).count()
+#     print(f"With Non-Academic Form: {with_non_academic}")
+
+#     with_program_model = Student.objects.filter(section_placements__isnull=False).count()
+#     print(f"With Program (SectionPlacement Model): {with_program_model}")
+
+#     with_program_field = Student.objects.filter(section_placement__isnull=False).count()
+#     print(f"With Program (section_placement CharField): {with_program_field}")
+
+#     # OPTION 1: Complete = All forms + SectionPlacement model (strict, for placed students)
+#     complete_students_model = Student.objects.filter(
+#         family_data__isnull=False,  # Family form filled
+#         studentacademic__isnull=False,  # Academic form filled
+#         studentnonacademic__isnull=False,  # Non-academic form filled
+#         section_placements__isnull=False  # Program chosen (via model)
+#     ).prefetch_related(
+#         Prefetch('studentacademic'),
+#         Prefetch('studentnonacademic'),
+#         Prefetch('section_placements', queryset=SectionPlacement.objects.order_by('-placement_date'))
+#     ).order_by('-section_placements__placement_date')[:50]  # Newest first, limit 50
+
+#     complete_count_model = complete_students_model.count()
+#     print(f"Complete (Using Model): {complete_count_model}")
+
+#     # OPTION 2: Complete = All forms + section_placement CharField (if no separate model used)
+#     complete_students_field = Student.objects.filter(
+#         family_data__isnull=False,  # Family form filled
+#         studentacademic__isnull=False,  # Academic form filled
+#         studentnonacademic__isnull=False,  # Non-academic form filled
+#         section_placement__isnull=False  # Program chosen (via CharField)
+#     ).prefetch_related(
+#         Prefetch('studentacademic'),
+#         Prefetch('studentnonacademic')
+#     ).order_by('-id')[:50]  # Order by ID (newest), limit 50
+
+#     complete_count_field = complete_students_field.count()
+#     print(f"Complete (Using CharField): {complete_count_field}")
+ 
+#  # NEW: Program mapping for friendly names
+#     PROGRAM_DISPLAY_NAMES = {
+#         'ste': 'STE program',
+#         'spfl': 'SPFL program',
+#         'sptve': 'SPTVE program',
+#         'sned': 'SNED program',
+#         'top5': 'TOP 5 Regular class',  # Matches your example
+#         'regular': 'Regular class',
+#         # Add more as needed, e.g., 'top5': 'TOP 5 Section'
+#     }
+    
+#     unread_enrollments = Notification.objects.filter(
+#         notification_type='student_enrollment',
+#         is_read=False
+#     ).values('program').annotate(count=Count('id')).order_by('-count')
+    
+#     notifications = []
+#     for item in unread_enrollments:
+#         program_code = item['program'].lower()  # Normalize to lowercase for mapping
+#         count = item['count']
+        
+#         # Get friendly display name (fallback to "program" if not mapped)
+#         display_name = PROGRAM_DISPLAY_NAMES.get(program_code, f"{program_code.upper()} program")
+        
+#         # Get sample message (latest student) – Use __iexact for case-insensitivity
+#         latest_notif = Notification.objects.filter(
+#             program__iexact=program_code,  # FIXED: Case-insensitive
+#             is_read=False
+#         ).order_by('-created_at').first()
+        
+#         # Get IDs – Use __iexact
+#         notification_ids = list(Notification.objects.filter(
+#             program__iexact=program_code,  # FIXED: Case-insensitive
+#             is_read=False
+#         ).values_list('id', flat=True))
+        
+#         notifications.append({
+#             'title': 'New Enrollment Requests',
+#             'message': f'{count} new enrollment request{"s" if count > 1 else ""} for {display_name}',
+#             'type': 'student_enrollment',
+#             'program': program_code,
+#             'display_program': display_name,
+#             'count': count,
+#             'icon': 'fas fa-user-plus',
+#             'sample_message': latest_notif.message if latest_notif else '',
+#             'notification_ids': notification_ids,  # List for join in template
+#             'program_slug': program_code,  # NEW/FIXED: Add this for data-program-slug (e.g., 'ste')
+#         })
+    
+#     total_unread = sum(item['count'] for item in unread_enrollments)
+
+    
+#     context = {
+#         'total_students': total_students,
+#         'complete_students': complete_students_model,  # Change to complete_students_field if needed
+#         'complete_count': complete_count_model,  # For template display
+#          'notifications': notifications,
+#         'total_unread': total_unread,
+#     }
+
+#     print("=== END DEBUG ===\n")
+#     return render(request, 'admin_functionalities/admin-dashboard.html', context)
+
 @login_required
 def admin_dashboard(request):
-    # Debug prints (remove after fixing)
-    print("\n=== DEBUG: Complete Students Check ===")
+    # === QUICK STATISTICS ===
+    total_teachers = Teacher.objects.count()
     total_students = Student.objects.count()
-    print(f"Total Students: {total_students}")
+    total_sections = Section.objects.count()
+    grade7_students = Student.objects.count()  # Temporary until grade levels exist
 
-    # Check partial completions
-    with_family = Student.objects.filter(family_data__isnull=False).count()
-    print(f"With Family Form: {with_family}")
+    programs = [choice[0] for choice in SectionPlacement.PROGRAM_CHOICES]
+    total_programs = len(programs)
 
-    with_academic = Student.objects.filter(studentacademic__isnull=False).count()
-    print(f"With Academic Form: {with_academic}")
+    # === PROGRAM OVERVIEW TABLE ===
+    program_data = []
+    for prog in programs:
+        placements = SectionPlacement.objects.filter(selected_program__iexact=prog)
+        total_applicants = placements.count()
+        approved = placements.filter(status__iexact='approved').count()
+        pending = placements.filter(status__iexact='pending').count()
+        rejected = placements.filter(status__iexact='rejected').count()
+        num_sections = Section.objects.filter(program__iexact=prog).count()
 
-    with_non_academic = Student.objects.filter(studentnonacademic__isnull=False).count()
-    print(f"With Non-Academic Form: {with_non_academic}")
+        program_data.append({
+            "program": prog,
+            "total_applicants": total_applicants,
+            "approved": approved,
+            "pending": pending,
+            "rejected": rejected,
+            "num_sections": num_sections,
+        })
 
-    with_program_model = Student.objects.filter(section_placements__isnull=False).count()
-    print(f"With Program (SectionPlacement Model): {with_program_model}")
-
-    with_program_field = Student.objects.filter(section_placement__isnull=False).count()
-    print(f"With Program (section_placement CharField): {with_program_field}")
-
-    # OPTION 1: Complete = All forms + SectionPlacement model (strict, for placed students)
-    complete_students_model = Student.objects.filter(
-        family_data__isnull=False,  # Family form filled
-        studentacademic__isnull=False,  # Academic form filled
-        studentnonacademic__isnull=False,  # Non-academic form filled
-        section_placements__isnull=False  # Program chosen (via model)
-    ).prefetch_related(
-        Prefetch('studentacademic'),
-        Prefetch('studentnonacademic'),
-        Prefetch('section_placements', queryset=SectionPlacement.objects.order_by('-placement_date'))
-    ).order_by('-section_placements__placement_date')[:50]  # Newest first, limit 50
-
-    complete_count_model = complete_students_model.count()
-    print(f"Complete (Using Model): {complete_count_model}")
-
-    # OPTION 2: Complete = All forms + section_placement CharField (if no separate model used)
-    complete_students_field = Student.objects.filter(
-        family_data__isnull=False,  # Family form filled
-        studentacademic__isnull=False,  # Academic form filled
-        studentnonacademic__isnull=False,  # Non-academic form filled
-        section_placement__isnull=False  # Program chosen (via CharField)
-    ).prefetch_related(
-        Prefetch('studentacademic'),
-        Prefetch('studentnonacademic')
-    ).order_by('-id')[:50]  # Order by ID (newest), limit 50
-
-    complete_count_field = complete_students_field.count()
-    print(f"Complete (Using CharField): {complete_count_field}")
- 
- # NEW: Program mapping for friendly names
-    PROGRAM_DISPLAY_NAMES = {
-        'ste': 'STE program',
-        'spfl': 'SPFL program',
-        'sptve': 'SPTVE program',
-        'sned': 'SNED program',
-        'top5': 'TOP 5 Regular class',  # Matches your example
-        'regular': 'Regular class',
-        # Add more as needed, e.g., 'top5': 'TOP 5 Section'
-    }
-    
+    # === ENROLLMENT NOTIFICATIONS (untouched logic) ===
     unread_enrollments = Notification.objects.filter(
         notification_type='student_enrollment',
         is_read=False
     ).values('program').annotate(count=Count('id')).order_by('-count')
-    
+
     notifications = []
     for item in unread_enrollments:
-        program_code = item['program'].lower()  # Normalize to lowercase for mapping
+        program_code = item['program'].lower()
         count = item['count']
-        
-        # Get friendly display name (fallback to "program" if not mapped)
-        display_name = PROGRAM_DISPLAY_NAMES.get(program_code, f"{program_code.upper()} program")
-        
-        # Get sample message (latest student) – Use __iexact for case-insensitivity
+
         latest_notif = Notification.objects.filter(
-            program__iexact=program_code,  # FIXED: Case-insensitive
-            is_read=False
+            program__iexact=program_code, is_read=False
         ).order_by('-created_at').first()
-        
-        # Get IDs – Use __iexact
-        notification_ids = list(Notification.objects.filter(
-            program__iexact=program_code,  # FIXED: Case-insensitive
-            is_read=False
-        ).values_list('id', flat=True))
-        
+
+        notification_ids = list(
+            Notification.objects.filter(
+                program__iexact=program_code, is_read=False
+            ).values_list('id', flat=True)
+        )
+
         notifications.append({
             'title': 'New Enrollment Requests',
-            'message': f'{count} new enrollment request{"s" if count > 1 else ""} for {display_name}',
+            'message': f'{count} new enrollment request{"s" if count > 1 else ""} for {program_code.upper()}',
             'type': 'student_enrollment',
             'program': program_code,
-            'display_program': display_name,
             'count': count,
             'icon': 'fas fa-user-plus',
             'sample_message': latest_notif.message if latest_notif else '',
-            'notification_ids': notification_ids,  # List for join in template
-            'program_slug': program_code,  # NEW/FIXED: Add this for data-program-slug (e.g., 'ste')
+            'notification_ids': notification_ids,
+            'program_slug': program_code,
         })
-    
+
     total_unread = sum(item['count'] for item in unread_enrollments)
 
-    
+    # === CONTEXT ===
     context = {
-        'total_students': total_students,
-        'complete_students': complete_students_model,  # Change to complete_students_field if needed
-        'complete_count': complete_count_model,  # For template display
-         'notifications': notifications,
-        'total_unread': total_unread,
+        # Quick Stats
+        "total_teachers": total_teachers,
+        "total_students": total_students,
+        "total_programs": total_programs,
+        "total_sections": total_sections,
+        "grade7_students": grade7_students,
+
+        # Program Overview
+        "program_data": program_data,
+
+        # Notifications
+        "notifications": notifications,
+        "total_unread": total_unread,
     }
 
-    print("=== END DEBUG ===\n")
-    return render(request, 'admin_functionalities/admin-dashboard.html', context)
+    return render(request, "admin_functionalities/admin-dashboard.html", context)
 
 # ALLVIEWS FOR SECTOIONS ARE HERE
 @login_required
@@ -635,7 +719,7 @@ def get_sections_by_program(request, program):
                 'location': section.location,
                 'students': section.current_students,
                 'maxStudents': section.max_students,
-                'avatar': section.avatar.url if section.avatar else '/static/admin_functionalities/assets/default_section.png',
+                'avatar': section.avatar.url if section.avatar else '/static/admin_functionalities/assets/spongebob.jpg',
             })
 
         return JsonResponse({'success': True, 'sections': sections_data})

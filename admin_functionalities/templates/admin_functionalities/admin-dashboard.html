@@ -1,263 +1,3 @@
-{% comment %} <!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - ZNHS West</title>
-    <link rel="stylesheet" href="../css/admin.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
-
-<body>
-    <!-- Notification Container -->
-    <div id="notificationContainer" class="notification-container"></div>
-
-    <div class="dashboard-container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo-container">
-                    <img src="../assets/westLogo.png" alt="ZNHS West Logo" class="sidebar-logo">
-                    <span class="sidebar-title">ZNHS WEST</span>
-                </div>
-            </div>
-
-            <nav class="sidebar-nav">
-                <ul>
-                    <li class="nav-item active">
-                        <a href="admin.html" class="nav-link">
-                            <i class="fas fa-tachometer-alt"></i>
-                            <span>Dashboard</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="sections.html" class="nav-link">
-                            <i class="fas fa-users"></i>
-                            <span>Sections</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="teachers.html" class="nav-link">
-                            <i class="fas fa-chalkboard-teacher"></i>
-                            <span>Teachers</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="settings.html" class="nav-link">
-                            <i class="fas fa-cog"></i>
-                            <span>Settings</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-
-            <div class="sidebar-footer">
-                <!-- Logout as link with onclick handler -->
-                <a href="#" class="logout-btn" onclick="handleLogout(); return false;">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
-                </a>
-            </div>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <h1>Admin Dashboard</h1>
-                    <p id="dashboardDate"></p>
-                </div>
-                <div class="header-right">
-                    <div class="header-filter-container">
-                        <label for="gradeLevelFilter">Grade Level:</label>
-                        <select id="gradeLevelFilter">
-                            <option value="all">All</option>
-                            <option value="grade7">Grade 7</option>
-                            <option value="grade8">Grade 8</option>
-                            <option value="grade9">Grade 9</option>
-                            <option value="grade10">Grade 10</option>
-                        </select>
-                    </div>
-                    <div class="header-filter-container">
-                        <label for="schoolYearFilter">School Year:</label>
-                        <select id="schoolYearFilter">
-                            <option value="2025-2026">2025-2026</option>
-                            <option value="2024-2025">2024-2025</option>
-                        </select>
-                    </div>
-
-                    <!-- admin profile section  -->
-                    <div class="admin-profile">
-                        <div class="profile-info">
-                            <span class="admin-name">Samson, Marwina D.</span>
-                            <span class="admin-role">Admin</span>
-                        </div>
-                        <div class="profile-avatar">
-                            <img src="..//assets/spongebob.jpg" alt="Admin" class="avatar-img">
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <section class="dashboard-content">
-                <section class="enrollment-requests">
-                    <div class="enrollment-header">
-                        <i class="fas fa-bell enrollment-bell"></i>
-                        <h2>New Enrollment Requests</h2>
-                    </div>
-
-                    <div class="enrollment-cards">
-                        <div class="enrollment-card">
-                            <i class="fas fa-user-plus enrollment-icon"></i>
-                            <span class="enrollment-text">4 new enrollment requests for SNED program</span>
-                        </div>
-
-                        <div class="enrollment-card">
-                            <i class="fas fa-user-plus enrollment-icon"></i>
-                            <span class="enrollment-text">3 new enrollment requests for SPFL program</span>
-                        </div>
-
-                        <div class="enrollment-card">
-                            <i class="fas fa-user-plus enrollment-icon"></i>
-                            <span class="enrollment-text">7 new enrollment requests for Regular Section</span>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Quick Statistics Section -->
-                <section class="card quick-statistics">
-                    <div class="card-header">
-                        <h2>Quick Statistics</h2>
-                    </div>
-                    <div class="statistics-grid">
-                        <div class="stat-item">
-                            <div class="stat-icon">
-                                <i class="fas fa-user-graduate"></i>
-                            </div>
-                            <div class="stat-text">
-                                <h3>2,500</h3>
-                                <p>Total Enrolled</p>
-                            </div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-icon">
-                                <i class="fas fa-user-check"></i>
-                            </div>
-                            <div class="stat-text">
-                                <h3>250</h3>
-                                <p>Newly Enrolled</p>
-                            </div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-icon">
-                                <i class="fas fa-hourglass-half"></i>
-                            </div>
-                            <div class="stat-text">
-                                <h3>50</h3>
-                                <p>Pending Documents</p>
-                            </div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-icon">
-                                <i class="fas fa-id-card"></i>
-                            </div>
-                            <div class="stat-text">
-                                <h3>1,800</h3>
-                                <p>Students with IDs</p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Programs Section -->
-                <section class="card programs-overview">
-                    <div class="card-header">
-                        <h2>Programs Overview</h2>
-                    </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Program</th>
-                                <th>Total Enrolled</th>
-                                <th>New Enrollees</th>
-                                <th>Students w/ IDs</th>
-                                <th>Pending Docs</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr class="program-row" data-program="STE">
-                                <td class="program-name">
-                                    <span class="program-indicator ste"></span>
-                                    STE
-                                </td>
-                                <td>250</td>
-                                <td>2</td>
-                                <td>150</td>
-                                <td>50</td>
-                            </tr>
-                            <tr class="program-row" data-program="SPFL">
-                                <td class="program-name">
-                                    <span class="program-indicator spfl"></span>
-                                    SPFL
-                                </td>
-                                <td>500</td>
-                                <td>3</td>
-                                <td>300</td>
-                                <td>100</td>
-                            </tr>
-                            <tr class="program-row" data-program="SPTVE">
-                                <td class="program-name">
-                                    <span class="program-indicator sptve"></span>
-                                    SPTVE
-                                </td>
-                                <td>150</td>
-                                <td>2</td>
-                                <td>100</td>
-                                <td>15</td>
-                            </tr>
-                            <tr class="program-row" data-program="SNED">
-                                <td class="program-name">
-                                    <span class="program-indicator sned"></span>
-                                    SNED
-                                </td>
-                                <td>30</td>
-                                <td>1</td>
-                                <td>20</td>
-                                <td>10</td>
-                            </tr>
-                            <tr class="program-row" data-program="TOP5">
-                                <td class="program-name">
-                                    <span class="program-indicator top5"></span>
-                                    TOP 5 SECTION
-                                </td>
-                                <td>200</td>
-                                <td>5</td>
-                                <td>200</td>
-                                <td>50</td>
-                            </tr>
-                            <tr class="program-row" data-program="REGULAR">
-                                <td class="program-name">
-                                    <span class="program-indicator regular"></span>
-                                    REGULAR SECTION
-                                </td>
-                                <td>1,357</td>
-                                <td>37</td>
-                                <td>1,000</td>
-                                <td>357</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </section>
-            </section>
-        </main>
-    </div>
-
-    <script src="../js/admin.js"></script>
-</body>
-
-</html> {% endcomment %}
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -406,39 +146,42 @@
                     </div>
                     <div class="statistics-grid">
                         <div class="stat-item">
-                            <div class="stat-icon">
-                                <i class="fas fa-user-graduate"></i>
-                            </div>
+                            <div class="stat-icon"><i class="fas fa-chalkboard-teacher"></i></div>
                             <div class="stat-text">
-                                <h3>2,500</h3>
-                                <p>Total Enrolled</p>
+                                <h3>{{ total_teachers }}</h3>
+                                <p>Total Teachers</p>
                             </div>
                         </div>
+
                         <div class="stat-item">
-                            <div class="stat-icon">
-                                <i class="fas fa-user-check"></i>
-                            </div>
+                            <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
                             <div class="stat-text">
-                                <h3>250</h3>
-                                <p>Newly Enrolled</p>
+                                <h3>{{ total_students }}</h3>
+                                <p>Total Students</p>
                             </div>
                         </div>
+
                         <div class="stat-item">
-                            <div class="stat-icon">
-                                <i class="fas fa-hourglass-half"></i>
-                            </div>
+                            <div class="stat-icon"><i class="fas fa-layer-group"></i></div>
                             <div class="stat-text">
-                                <h3>50</h3>
-                                <p>Pending Documents</p>
+                                <h3>{{ total_programs }}</h3>
+                                <p>Total Programs</p>
                             </div>
                         </div>
+
                         <div class="stat-item">
-                            <div class="stat-icon">
-                                <i class="fas fa-id-card"></i>
-                            </div>
+                            <div class="stat-icon"><i class="fas fa-school"></i></div>
                             <div class="stat-text">
-                                <h3>1,800</h3>
-                                <p>Students with IDs</p>
+                                <h3>{{ total_sections }}</h3>
+                                <p>Total Sections</p>
+                            </div>
+                        </div>
+
+                        <div class="stat-item">
+                            <div class="stat-icon"><i class="fas fa-book"></i></div>
+                            <div class="stat-text">
+                                <h3>{{ grade7_students }}</h3>
+                                <p>Grade 7 Students</p>
                             </div>
                         </div>
                     </div>
@@ -453,113 +196,40 @@
                         <thead>
                             <tr>
                                 <th>Program</th>
-                                <th>Total Enrolled</th>
-                                <th>New Enrollees</th>
-                                <th>Students w/ IDs</th>
-                                <th>Pending Docs</th>
+                                <th>Total applicants</th>
+                                <th>Approved</th>
+                                <th>Pending</th>
+                                <th>Rejected</th>
+                                <th>Number of Section</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr class="program-row" data-program="STE">
+                            {% for prog in program_data %}
+                            <tr class="program-row" data-program="{{ prog.program }}">
                                 <td class="program-name">
-                                    <span class="program-indicator ste"></span>
-                                    STE
+                                    <span class="program-indicator {{ prog.program|lower }}"></span>
+                                    {{ prog.program }}
                                 </td>
-                                <td>250</td>
-                                <td>2</td>
-                                <td>150</td>
-                                <td>50</td>
+                                <td>{{ prog.total_applicants }}</td>
+                                <td>{{ prog.approved }}</td>
+                                <td>{{ prog.pending }}</td>
+                                <td>{{ prog.rejected }}</td>
+                                <td>{{ prog.num_sections }}</td>
                             </tr>
-                            <tr class="program-row" data-program="SPFL">
-                                <td class="program-name">
-                                    <span class="program-indicator spfl"></span>
-                                    SPFL
-                                </td>
-                                <td>500</td>
-                                <td>3</td>
-                                <td>300</td>
-                                <td>100</td>
-                            </tr>
-                            <tr class="program-row" data-program="SPTVE">
-                                <td class="program-name">
-                                    <span class="program-indicator sptve"></span>
-                                    SPTVE
-                                </td>
-                                <td>150</td>
-                                <td>2</td>
-                                <td>100</td>
-                                <td>15</td>
-                            </tr>
-                            <tr class="program-row" data-program="SNED">
-                                <td class="program-name">
-                                    <span class="program-indicator sned"></span>
-                                    SNED
-                                </td>
-                                <td>30</td>
-                                <td>1</td>
-                                <td>20</td>
-                                <td>10</td>
-                            </tr>
-                            <tr class="program-row" data-program="TOP5">
-                                <td class="program-name">
-                                    <span class="program-indicator top5"></span>
-                                    TOP 5 SECTION
-                                </td>
-                                <td>200</td>
-                                <td>5</td>
-                                <td>200</td>
-                                <td>50</td>
-                            </tr>
-                            <tr class="program-row" data-program="REGULAR">
-                                <td class="program-name">
-                                    <span class="program-indicator regular"></span>
-                                    REGULAR SECTION
-                                </td>
-                                <td>1,357</td>
-                                <td>37</td>
-                                <td>1,000</td>
-                                <td>357</td>
-                            </tr>
+                            {% empty %}
+                            <tr><td colspan="6" style="text-align:center;">No data available</td></tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                     
-                    <div class="card-header">
-                        <h2>Complete Student Registrations</h2>
-                        <p>Students with all details (personal, family, academic, non-academic, and program placement).</p>
-                    </div>
-                    {% if complete_students %}
-                        <table class="data-table">  <!-- Matches your CSS class for tables -->
-                            <thead>
-                                <tr>
-                                    <th>Full Name</th>
-                                    <th>Registration Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for student in complete_students %}
-                                    <tr>
-                                        <td>{{ student.first_name }} {% if student.middle_name %}{{ student.middle_name }} {% endif %}{{ student.last_name }}</td>
-                                        <td>{{ student.section_placements.first.placement_date|date:"Y-m-d" }}</td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    {% else %}
-                        <p class="no-data">No complete students found. Add data via <a href="/admin/">Admin Panel</a>.</p>
-                    {% endif %}
+                    
                 </section>
             </section>
                 </section>
             </section>
         </main>
     </div>
-
-    <!-- Use static tag for JS -->
-    
-     
-
-    <!-- Add this script block just before the admin.js load, at the end of <body> -->
-<script>
+{% comment %} <script>
     // Django URLs (server-rendered)
     const MARK_READ_URL = "{% url 'admin_functionalities:mark_notification_read' %}";
     const ENROLLMENT_URL = "{% url 'admin_functionalities:enrollment' %}";
@@ -649,12 +319,156 @@
         });
         console.log('=== CLICK DEBUG END ===');
     }
+</script> {% endcomment %}
+{% comment %} <script>
+    // Django URLs (server-rendered)
+    const MARK_READ_URL = "{% url 'admin_functionalities:mark_notification_read' %}";
+    const ENROLLMENT_URL = "{% url 'admin_functionalities:enrollment' %}";
+    const SECTIONS_URL = "{% url 'admin_functionalities:sections' %}";  // ✅ Correct dynamic path
+
+    // getCookie for CSRF
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // openNotification function (kept untouched)
+    function openNotification(element) {
+        const ids = element.dataset.ids.split(',').filter(id => id.trim());
+        const programSlug = element.dataset.programSlug;
+        if (!ids.length) {
+            alert('No notifications to mark – refresh page');
+            return;
+        }
+        
+        fetch(MARK_READ_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ ids: ids })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                element.remove();
+                const redirectTo = programSlug ? `${ENROLLMENT_URL}?program=${programSlug}` : ENROLLMENT_URL;
+                window.location.href = redirectTo;
+            } else {
+                alert('Error marking as read: ' + (data.error || 'Unknown'));
+            }
+        })
+        .catch(error => alert('Request failed: ' + error.message));
+    }
+
+    // ✅ New: Clickable program rows redirect correctly to sections page
+    document.querySelectorAll(".program-row").forEach(row => {
+        row.addEventListener("click", () => {
+            const program = row.dataset.program;
+            if (program) {
+                window.location.href = `${SECTIONS_URL}?program=${program}`;  // ✅ Correct dynamic Django-safe path
+            }
+        });
+    });
 </script>
 
 <script>
 // Pass Django URL to JS (global variable for admin.js)
 window.logoutUrl = "{% url 'enrollmentprocess:logout' %}";  // '/logout/'
 </script>
+<script>
+    // ✅ Define Django-safe base URL for Sections page
+    const SECTIONS_URL = "{% url 'admin_functionalities:sections' %}";
+</script>
+<script>
+document.querySelectorAll(".program-row").forEach(row => {
+    row.addEventListener("click", () => {
+        const program = row.dataset.program;
+        if (program) {
+            // ✅ Use Django-safe dynamic URL for redirection
+            window.location.href = `${SECTIONS_URL}?program=${program}`;
+        }
+    });
+});
+</script> {% endcomment %}
+<script>
+    // === Django URLs (server-rendered) ===
+    const MARK_READ_URL = "{% url 'admin_functionalities:mark_notification_read' %}";
+    const ENROLLMENT_URL = "{% url 'admin_functionalities:enrollment' %}";
+    const SECTIONS_URL = "{% url 'admin_functionalities:sections' %}";
+    window.logoutUrl = "{% url 'enrollmentprocess:logout' %}";  // Global for admin.js
+
+    // === getCookie for CSRF ===
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // === openNotification (untouched logic) ===
+    function openNotification(element) {
+        const ids = element.dataset.ids.split(',').filter(id => id.trim());
+        const programSlug = element.dataset.programSlug;
+        if (!ids.length) {
+            alert('No notifications to mark – refresh page');
+            return;
+        }
+
+        fetch(MARK_READ_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ ids: ids })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                element.remove();
+                const redirectTo = programSlug ? `${ENROLLMENT_URL}?program=${programSlug}` : ENROLLMENT_URL;
+                window.location.href = redirectTo;
+            } else {
+                alert('Error marking as read: ' + (data.error || 'Unknown'));
+            }
+        })
+        .catch(error => alert('Request failed: ' + error.message));
+    }
+
+    // ✅ Proper redirection to sections page (Django-safe)
+    document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll(".program-row").forEach(row => {
+        row.addEventListener("click", () => {
+            const program = row.dataset.program;
+            if (program) {
+                // ✅ Use Django URL resolver (absolute path)
+                window.location.href = `${SECTIONS_URL}?program=${encodeURIComponent(program)}`;
+            }
+        });
+    });
+});
+</script>
+
 <script src="{% static 'admin_functionalities/js/admin.js' %}"></script>
 </body>
 
