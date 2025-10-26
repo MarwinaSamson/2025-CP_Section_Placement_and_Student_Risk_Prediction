@@ -575,3 +575,23 @@ class SectionSubjectAssignment(models.Model):
 
     def __str__(self):
         return f"{self.section} - {self.subject} ({self.teacher})"
+
+CustomUser = get_user_model()
+
+class ActivityLog(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    action = models.CharField(max_length=255)
+    module = models.CharField(max_length=100, blank=True, null=True)
+    timestamp = models.DateTimeField(default=timezone.now)
+
+    @property
+    def date(self):
+        return self.timestamp.strftime("%B %d, %Y")
+
+    @property
+    def time(self):
+        return self.timestamp.strftime("%I:%M %p")
+
+    @property
+    def combined_activity(self):
+        return f"{self.user.get_full_name()} - {self.action}"

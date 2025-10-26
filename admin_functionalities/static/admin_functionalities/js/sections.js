@@ -447,6 +447,7 @@ const BASE_URL = '/admin-functionalities/';
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded – Initializing sections.js');
+    
     const urlParams = new URLSearchParams(window.location.search);
     const programParam = urlParams.get('program');
     if (programParam) {
@@ -454,11 +455,16 @@ document.addEventListener('DOMContentLoaded', () => {
         updateActiveTab(programParam);
     }
 
-    // Fetch initial data
-    fetchTeachers().then(() => console.log('Teachers fetched'));
-    fetchBuildingsRooms().then(() => console.log('Buildings/rooms fetched'));
-    loadSections(currentProgram);
-    setupEventListeners();
+    // Fetch both adviser list and subject-teacher list separately
+    Promise.all([
+        fetchAdvisers().then(() => console.log('Advisers fetched')),
+        fetchTeachers().then(() => console.log('Teachers fetched')),
+        fetchBuildingsRooms().then(() => console.log('Buildings/rooms fetched'))
+    ]).then(() => {
+        console.log('All data fetched successfully');
+        loadSections(currentProgram);
+        setupEventListeners();
+    });
 });
 
 function setupEventListeners() {
@@ -537,6 +543,19 @@ function fetchTeachers() {
         .catch(error => console.error('Error fetching teachers:', error));
 }
 
+function fetchAdvisers() {
+    return fetch(`${BASE_URL}api/get-teachers/`)
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
+        .then(data => {
+            console.log('Fetched advisers data:', data);
+            advisers = data.advisers || [];
+            populateAdviserSelects();
+        })
+        .catch(error => console.error('Error fetching advisers:', error));
+}
 
 function fetchBuildingsRooms() {
     return fetch(`${BASE_URL}api/buildings-rooms/`)  // FIXED: Updated to new API path

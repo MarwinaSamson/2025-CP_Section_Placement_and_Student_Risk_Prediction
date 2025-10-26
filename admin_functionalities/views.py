@@ -18,9 +18,12 @@ from django.views.decorators.http import require_http_methods
 from django.views.generic import UpdateView
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import ensure_csrf_cookie
+from .utils import log_activity
+from django.utils.timezone import localtime
+from .models import ActivityLog  # Make sure this import exists
 
 # App-specific imports
-from .models import Notification, StudentRequirements, CustomUser , AddUserLog, Section, SectionSubjectAssignment , Teacher
+from .models import Notification, StudentRequirements, CustomUser , AddUserLog, Section, SectionSubjectAssignment , Teacher, ActivityLog
 from .forms import AddUserForm, StudentRequirementsForm, SectionForm, SectionSubjectAssignmentForm
 from admin_functionalities.services import SectionAssignmentService
 
@@ -58,6 +61,18 @@ def get_or_create_related(model, student, defaults=None):
     except Exception as e:
         print(f"Error in get_or_create for {model.__name__}: {e}")  # Temp debug
         return model(student=student)  # Fallback empty instance
+    
+def _get_user_role(user):
+    """Return a readable role name for a CustomUser."""
+    if user.is_superuser:
+        return "Administrator"
+    elif getattr(user, 'is_staff_expert', False):
+        return "Staff Expert"
+    elif getattr(user, 'is_subject_teacher', False):
+        return "Subject Teacher"
+    elif getattr(user, 'is_adviser', False):
+        return "Adviser"
+    return "User"
 
 # UPDATED: Family helper (based on FamilyForm fields)
 def get_family_or_create(student):
@@ -221,7 +236,6 @@ def student_edit_view(request, student_id):
         # A small helper: collect requirement fields that are unchecked
         def get_missing_requirements(req_cleaned):
             missing = []
-            # names here match fields in StudentRequirementsForm
             for fname, friendly in [
                 ('birth_certificate', 'Birth Certificate'),
                 ('good_moral', 'Good Moral Certificate'),
@@ -265,7 +279,6 @@ def student_edit_view(request, student_id):
                                 "placement_form": placement_form,
                                 "requirements_form": requirements_form,
                                 "is_admin": request.user.is_staff,
-                                # flags for template/JS
                                 "requirement_missing_list": missing_requirements,
                             }
                             return render(request, "admin_functionalities/student_edit.html", context)
@@ -278,9 +291,11 @@ def student_edit_view(request, student_id):
                                 request,
                                 f"✓ Student {student.first_name} {student.last_name} updated and assigned to {assigned_section.name} ({selected_program})"
                             )
+                            log_activity(request.user, "Enrollment", f"Approved and assigned {student.first_name} {student.last_name} to {assigned_section.name} ({selected_program})")
                         else:
                             # If assignment failed because sections are full, provide contextual info to template
                             messages.warning(request, f"Student updated but section assignment failed: {msg}")
+                            log_activity(request.user, "Enrollment", f"Updated {student.first_name} {student.last_name}, but section assignment failed: {msg}")
                             context = {
                                 "student": student,
                                 "student_form": student_form,
@@ -297,6 +312,7 @@ def student_edit_view(request, student_id):
                     else:
                         # Not approved: skip assignment
                         messages.success(request, f"Student {student.first_name} {student.last_name} updated. Section placement skipped (status: {placement_status}).")
+                        log_activity(request.user, "Enrollment", f"Updated student {student.first_name} {student.last_name} (status: {placement_status})")
 
                 return redirect("admin_functionalities:student_edit", student_id=student.id)
 
@@ -754,6 +770,7 @@ def add_section(request, program):
                 section.max_students = program_defaults.get(section.program, 40)
 
             section.save()
+            log_activity(request.user, "Sections", f"Added section {section.name} under {section.program}")
             return JsonResponse({'success': True, 'message': f'Section \"{section.name}\" added successfully to {section.program}!'})
         else:
             return JsonResponse({'success': False, 'message': 'Validation failed', 'errors': form.errors}, status=400)
@@ -774,6 +791,7 @@ def update_section(request, section_id):
         
         if form.is_valid():
             form.save()
+            log_activity(request.user, "Sections", f"Updated section {section.name}")
             return JsonResponse({
                 'success': True,
                 'message': f'Section "{section.name}" updated successfully!'
@@ -801,6 +819,7 @@ def delete_section(request, section_id):
         section = get_object_or_404(Section, id=section_id)
         section_name = section.name
         section.delete()
+        log_activity(request.user, "Sections", f"Deleted section {section_name}")
         
         return JsonResponse({
             'success': True,
@@ -931,6 +950,8 @@ def assign_subject_teachers(request, section_id):
             }
         )
         created_count += 1 if created else 0
+        
+    log_activity(request.user, "Sections", f"Assigned subject teachers to section {section.name}")
 
     return JsonResponse({
         'success': True,
@@ -1078,6 +1099,9 @@ def mark_notification_read(request):
                 return JsonResponse({'success': True, 'marked': len(ids)})
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
+        
+        log_activity(request.user, "Notifications", f"Marked {len(ids)} notification(s) as read")
+
     return JsonResponse({'success': False}, status=400)
 
 
@@ -1144,74 +1168,140 @@ class StudentAcademicUpdateView(AdminRequiredMixin, UpdateView):
 @method_decorator(login_required, name='dispatch')
 class AddUserView(View):
     def get(self, request):
-        # If someone directly visits the URL, just redirect them to the settings page
+        # Redirect direct visits to settings
         return redirect(reverse('admin_functionalities:settings'))
 
     def post(self, request):
-        print(f"=== DEBUG: POST received in AddUser View! Raw POST data: {dict(request.POST)} ===")
-        print(f"=== DEBUG: FILES present: {bool(request.FILES)} (userImage: {request.FILES.get('userImage', 'None')}) ===")
-
+        print(f"=== DEBUG: POST received in AddUserView ===")
         form = AddUserForm(request.POST, request.FILES)
-        print(f"=== DEBUG: Form errors before validation: {form.errors} ===")
 
         if form.is_valid():
-            print("=== DEBUG: Form VALID – Saving user... ===")
             try:
-                # ✅ Fixed: pass created_by_user so AddUserLog will be created
+                # ✅ Save user
                 user = form.save(created_by_user=request.user)
+                
+                log_activity(request.user, "Settings", f"Added new user {user.username}")
+                # ✅ Optional (if you already have ActivityLog)
+                # from .utils import log_activity
+                # log_activity(request.user, "Settings", f"Added new user {user.username}")
 
-                print(f"=== DEBUG: SUCCESS – User created! ID={user.id}, Position={user.position}, Roles: "
-                      f"is_subject_teacher={user.is_subject_teacher}, is_adviser={user.is_adviser} ===")
-
-                # AJAX response
+                # ✅ JSON Response for AJAX
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                     return JsonResponse({
                         'success': True,
-                        'message': 'User added successfully!',
-                        'user_id': user.id,
-                        'position': user.position
+                        'message': f'User {user.first_name} {user.last_name} added successfully!',
+                        'user': {
+                            'id': user.id,
+                            'first_name': user.first_name,
+                            'last_name': user.last_name,
+                            'email': user.email,
+                            'is_superuser': user.is_superuser,
+                            'is_staff_expert': getattr(user, 'is_staff_expert', False),
+                            'is_subject_teacher': getattr(user, 'is_subject_teacher', False),
+                            'is_adviser': getattr(user, 'is_adviser', False),
+                            'date_joined_formatted': user.date_joined.strftime("%B %d, %Y"),
+                        }
                     })
 
-                # Non-AJAX: redirect back to settings
+                # Non-AJAX fallback
                 return redirect(reverse('admin_functionalities:settings'))
 
             except Exception as save_err:
-                print(f"=== DEBUG: Save ERROR: {save_err} ===")
-
+                print(f"=== ERROR: {save_err} ===")
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                     return JsonResponse({'success': False, 'error': str(save_err)}, status=500)
-
-                # Non-AJAX: Redirect with error
                 from django.contrib import messages
                 messages.error(request, f"Error saving user: {save_err}")
                 return redirect(reverse('admin_functionalities:settings'))
-
         else:
-            print("=== DEBUG: Form INVALID – Returning JSON errors ===")
-
+            print("=== DEBUG: Invalid form ===", form.errors)
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({
-                    'success': False,
-                    'errors': form.errors,
-                    'message': 'Please correct the errors below.'
-                }, status=400)
-
-            # Non-AJAX: Redirect with message
+                return JsonResponse({'success': False, 'errors': form.errors}, status=400)
             from django.contrib import messages
-            messages.error(request, 'Form errors occurred. Please check and try again.')
+            messages.error(request, 'Form validation failed.')
             return redirect(reverse('admin_functionalities:settings'))
+        
+        
+        
+# class AddUserView(View):
+#     def get(self, request):
+#         # If someone directly visits the URL, just redirect them to the settings page
+#         return redirect(reverse('admin_functionalities:settings'))
 
+#     def post(self, request):
+#         print(f"=== DEBUG: POST received in AddUser View! Raw POST data: {dict(request.POST)} ===")
+#         print(f"=== DEBUG: FILES present: {bool(request.FILES)} (userImage: {request.FILES.get('userImage', 'None')}) ===")
+
+#         form = AddUserForm(request.POST, request.FILES)
+#         print(f"=== DEBUG: Form errors before validation: {form.errors} ===")
+
+#         if form.is_valid():
+#             print("=== DEBUG: Form VALID – Saving user... ===")
+#             try:
+#                 # ✅ Fixed: pass created_by_user so AddUserLog will be created
+#                 user = form.save(created_by_user=request.user)
+
+#                 print(f"=== DEBUG: SUCCESS – User created! ID={user.id}, Position={user.position}, Roles: "
+#                       f"is_subject_teacher={user.is_subject_teacher}, is_adviser={user.is_adviser} ===")
+
+#                 # AJAX response
+#                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+#                     return JsonResponse({
+#                         'success': True,
+#                         'message': 'User added successfully!',
+#                         'user_id': user.id,
+#                         'position': user.position
+#                     })
+
+#                 # Non-AJAX: redirect back to settings
+#                 return redirect(reverse('admin_functionalities:settings'))
+
+#             except Exception as save_err:
+#                 print(f"=== DEBUG: Save ERROR: {save_err} ===")
+
+#                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+#                     return JsonResponse({'success': False, 'error': str(save_err)}, status=500)
+
+#                 # Non-AJAX: Redirect with error
+#                 from django.contrib import messages
+#                 messages.error(request, f"Error saving user: {save_err}")
+#                 return redirect(reverse('admin_functionalities:settings'))
+
+#         else:
+#             print("=== DEBUG: Form INVALID – Returning JSON errors ===")
+
+#             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+#                 return JsonResponse({
+#                     'success': False,
+#                     'errors': form.errors,
+#                     'message': 'Please correct the errors below.'
+#                 }, status=400)
+
+#             # Non-AJAX: Redirect with message
+#             from django.contrib import messages
+#             messages.error(request, 'Form errors occurred. Please check and try again.')
+#             return redirect(reverse('admin_functionalities:settings'))
+
+# @login_required
+# def settings_view(request):
+#     # Dynamic context for tables
+#     users = CustomUser .objects.filter(is_active=True).order_by('-id')[:20]  # Last 20 active users
+#     logs = AddUserLog.objects.select_related('user').order_by('-date', '-time')[:20]  # Last 20 logs
+#     context = {
+#         'active_page': 'settings',
+#         'users': users,
+#         'logs': logs,
+#     }
+#     return render(request, 'admin_functionalities/settings.html', context)
 @login_required
 def settings_view(request):
-    # Dynamic context for tables
-    users = CustomUser .objects.filter(is_active=True).order_by('-id')[:20]  # Last 20 active users
-    logs = AddUserLog.objects.select_related('user').order_by('-date', '-time')[:20]  # Last 20 logs
-    context = {
-        'active_page': 'settings',
+    users = CustomUser.objects.filter(is_active=True)
+    logs = ActivityLog.objects.select_related('user').order_by('-timestamp')[:50]
+    return render(request, 'admin_functionalities/settings.html', {
         'users': users,
         'logs': logs,
-    }
-    return render(request, 'admin_functionalities/settings.html', context)
+        'active_page': 'settings'
+    })
 
 @login_required
 def get_user_profile(request, user_id):
@@ -1246,33 +1336,68 @@ def get_user_profile(request, user_id):
 
 @login_required
 def get_users_data(request):
-    users = CustomUser.objects.filter(is_active=True).order_by('-id')[:20]
-    users_html = render_to_string('admin_functionalities/partials/users_table.html', {'users': users})  # Render partial HTML
-    return JsonResponse({'users_html': users_html})
+    users = CustomUser.objects.filter(is_active=True).order_by('-id')
+
+    user_data = []
+    for user in users:
+        user_data.append({
+            'id': user.id,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'email': user.email,
+            'is_superuser': user.is_superuser,
+            'is_staff_expert': getattr(user, 'is_staff_expert', False),
+            'is_subject_teacher': getattr(user, 'is_subject_teacher', False),
+            'is_adviser': getattr(user, 'is_adviser', False),
+            'date_joined_formatted': user.date_joined.strftime("%B %d, %Y"),
+            'last_login_formatted': user.last_login.strftime("%B %d, %Y") if user.last_login else None,
+        })
+
+    return JsonResponse({'users': user_data})
+
 
 @login_required
 def get_logs_data(request):
-    logs = AddUserLog.objects.select_related('user').order_by('-date', '-time')[:20]
-    
-    # Prepare logs with combined activity
-    logs_data = []
+    """
+    Fetch recent activity logs for display in the History tab (AJAX).
+    Returns latest 50 actions made by any admin/staff user.
+    """
+    logs = ActivityLog.objects.select_related('user').order_by('-timestamp')[:50]
+
+    data = []
     for log in logs:
-        # Determine the role for the affected user
-        role = "admin" if log.affected_is_admin else \
-               "administrative staff" if log.affected_is_staff_expert else \
-               "teacher" if log.affected_is_adviser or log.affected_is_teacher or log.affected_is_subject_teacher else "user"
-        
-        # Combined activity string: "Username performed action for Role"
-        combined_activity = f"{log.user.username} {log.action} for {role}"
-        
-        logs_data.append({
-            'combined_activity': combined_activity,  # New combined field
-            'date': log.date.strftime('%B %d, %Y') if log.date else 'N/A',
-            'time': log.time.strftime('%I:%M %p') if log.time else 'N/A',
+        local_time = localtime(log.timestamp)
+        data.append({
+            'user_full_name': f"{log.user.first_name} {log.user.last_name}".strip() or log.user.username,
+            'user_role': _get_user_role(log.user),
+            'action': log.action,
+            'date_formatted': local_time.strftime("%B %d, %Y"),
+            'time_formatted': local_time.strftime("%I:%M %p"),
         })
+
+    return JsonResponse({'logs': data})
+# def get_logs_data(request):
+#     logs = AddUserLog.objects.select_related('user').order_by('-date', '-time')[:20]
     
-    logs_html = render_to_string('admin_functionalities/partials/history_table.html', {'logs': logs_data})  # Pass the new data
-    return JsonResponse({'logs_html': logs_html})
+#     # Prepare logs with combined activity
+#     logs_data = []
+#     for log in logs:
+#         # Determine the role for the affected user
+#         role = "admin" if log.affected_is_admin else \
+#                "administrative staff" if log.affected_is_staff_expert else \
+#                "teacher" if log.affected_is_adviser or log.affected_is_teacher or log.affected_is_subject_teacher else "user"
+        
+#         # Combined activity string: "Username performed action for Role"
+#         combined_activity = f"{log.user.username} {log.action} for {role}"
+        
+#         logs_data.append({
+#             'combined_activity': combined_activity,  # New combined field
+#             'date': log.date.strftime('%B %d, %Y') if log.date else 'N/A',
+#             'time': log.time.strftime('%I:%M %p') if log.time else 'N/A',
+#         })
+    
+#     logs_html = render_to_string('admin_functionalities/partials/history_table.html', {'logs': logs_data})  # Pass the new data
+#     return JsonResponse({'logs_html': logs_html})
 
 
 
