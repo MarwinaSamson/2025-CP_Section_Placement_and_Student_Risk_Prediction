@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>E-Class Record</title>
+    {% load static %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -640,6 +641,11 @@
   Using placeholders as logos might be broken.
 -->
 <div class="print-only">
+
+<div id="sidebar-root">
+     {% include 'teacher/subjectteacher/sidebar.html' %}
+</div>
+
     <div class="letterhead" id="letterhead">
         <div class="flex-left">
             <!-- Using placeholders. Replace src with valid paths to your LOGO/ folder -->

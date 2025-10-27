@@ -4,6 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>ZNHS WEST - Teacher Dashboard</title>
+  {% load static %}
+
 
   <!-- Tailwind (optional, for styling dashboard content) -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -28,7 +30,9 @@
 </head>
 <body>
   <!-- placeholder where sidebar.html will be inserted -->
-  <div id="sidebar-root"></div>
+  <div id="sidebar-root">
+    {% include 'teacher/adviser/sidebar.html' %}
+  </div>
 
   <!-- MAIN DASHBOARD CONTENT (left area) -->
   <main>

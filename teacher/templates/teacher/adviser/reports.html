@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Teacher Report - ZNHS WEST</title>
-
+{% load static %}
   <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
 
@@ -56,7 +56,9 @@
 <body class="flex">
 
   <!-- Sidebar Container (kept for compatibility) -->
-  <div id="sidebar-container" class="fixed top-0 left-0 h-full z-50"></div>
+  <div id="sidebar-root">
+    {% include 'teacher/adviser/sidebar.html' %}
+  </div>
 
   <!-- Main Content -->
   <main class="flex-1 ml-60 p-6">

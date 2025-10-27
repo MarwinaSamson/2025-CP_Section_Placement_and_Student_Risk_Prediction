@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Profile Settings — Teacher</title>
-
+  {% load static %}
   <!-- Tailwind + FontAwesome -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -136,8 +136,9 @@
   </style>
 </head>
 <body>
-  <!-- sidebar (not modified) -->
-  <div id="sidebar-root"></div>
+  <div id="sidebar-root">
+     {% include 'teacher/subjectteacher/sidebar.html' %}
+    </div>
 
   <main>
     <div class="container">
@@ -455,19 +456,6 @@
       const d = new Date();
       g.textContent = d.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
     })();
-
-    // Sidebar loader (unchanged)
-    async function loadSidebar(){
-      try {
-        const res = await fetch('sidebar.html');
-        const html = await res.text();
-        const root = document.getElementById('sidebar-root');
-        root.innerHTML = html;
-      } catch (err) {
-        console.error(err);
-      }
-    }
-    loadSidebar();
 
     // Modal helpers
     function openModal(type){

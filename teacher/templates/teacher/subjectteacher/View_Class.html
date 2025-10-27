@@ -5,10 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Akatsuki Masterlist — ZNHS WEST</title>
 
-  <!-- Tailwind for quick modern UI (optional but included) -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <!-- jsPDF and autotable -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 
@@ -36,7 +34,11 @@
       transition: margin-left 180ms ease;
     }
     @media (max-width:860px) {
-      main { margin-left: 72px; padding: 18px; }
+      /* Adjust for a potentially collapsed sidebar, if sidebar JS handles it */
+      main { margin-left: 0; padding: 18px; }
+      /* If sidebar has a collapsed state, you might use:
+      main { margin-left: 72px; padding: 18px; } 
+      */
     }
 
     .container { max-width: 1100px; margin: 0 auto; }
@@ -158,24 +160,110 @@
       overflow:auto;
       background: linear-gradient(180deg,#ffffff 0%, #fbfbfb 100%);
     }
-    .grades-table {
-      border:1px solid #eef2f4;
-      border-radius:8px;
-      overflow:hidden;
-      background:#fff;
-      width:100%;
+    
+    /* --- NEW CSS FOR GRADES BREAKDOWN --- */
+    .grades-breakdown {
+        display: grid;
+        /* Create 3 columns, but let them wrap on small screens */
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
     }
-    .grades-table table { width:100%; border-collapse:collapse; }
-    .grades-table th, .grades-table td { padding:12px 14px; border-bottom:1px solid #f4f6f8; text-align:left; }
-    .grades-table thead th { background:#fafafa; font-weight:700; color:#374151; }
-    /* average row highlight */
-    .grades-table tfoot tr.avg td {
-      background: #fff7ed;
-      font-weight:800;
-      color: #7a2a2a;
-      border-top:2px solid #fde3cf;
+    .grades-card {
+        background: #fff;
+        border: 1px solid #eef2f4;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(16,24,40,0.02);
     }
-    .grades-summary { margin-top:12px; display:flex; gap:12px; align-items:center; justify-content:flex-end; color:var(--muted); font-weight:700; }
+    .grades-card-header {
+        padding: 10px 14px;
+        background: #fafafa;
+        border-bottom: 1px solid #eef2f4;
+    }
+    .grades-card-header h4 {
+        margin:0;
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: #374151;
+    }
+    .grades-card-body {
+        padding: 14px;
+    }
+    .grades-card-body ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .grades-card-body li {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.92rem;
+        color: #374151;
+        padding: 4px 0;
+    }
+    .grades-card-body li .score {
+        font-weight: 600;
+        color: #111827;
+    }
+     .grades-card-body li .title {
+        color: var(--muted);
+        margin-right: 8px;
+    }
+    /* Special styling for the summary card */
+    .grades-summary-card {
+        background: #fffaf0; /* Light orange */
+        border: 1px solid #fde3cf;
+    }
+
+    /* --- MODIFIED CSS --- */
+    @media (min-width: 860px) {
+        .grades-breakdown {
+           /* Change to 3 cols for scores */
+           grid-template-columns: 1fr 1fr 1fr;
+        }
+         .grades-summary-card {
+            grid-column: 1 / -1; /* Span full width */
+            background: #fff7ed;
+            margin-top: 16px; /* Add space above summary */
+         }
+    }
+    /* --- END MODIFIED CSS --- */
+    
+     .grades-summary-card .grades-card-header {
+        background: #fff0de;
+        border-bottom: 1px solid #fde3cf;
+     }
+     .grades-summary-card h4 {
+         color: #7a2a2a;
+     }
+    .grades-summary-card .final-grade {
+        font-size: 2.8rem;
+        font-weight: 800;
+        color: #a23131;
+        text-align: center;
+        margin: 12px 0;
+    }
+    .grades-summary-card .summary-item {
+        display: flex;
+        justify-content: space-between;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #6c2d2d;
+        padding: 10px 0;
+        border-bottom: 1px solid #fde3cf;
+    }
+    .grades-summary-card .summary-item:last-child {
+        border-bottom: none;
+    }
+    .grades-summary-card .summary-item .grade-value {
+        font-weight: 700;
+    }
+
+    /* --- END NEW CSS --- */
+
 
     .modal-footer {
       padding:12px 16px;
@@ -214,15 +302,27 @@
       .modal-profile .photo { width:72px; height:72px; }
       .modal-profile .meta .name { font-size:1rem; }
     }
+    
+    @media (max-width:860px) {
+        main { margin-left: 0; } /* Make main content take full width */
+        #sidebar-root { 
+            /* You might need to add logic to hide/show sidebar on mobile */
+            /* For now, we'll assume it's hidden by default on mobile */
+            /* or that its own CSS handles it. */
+            display: none; 
+        }
+        /* A simple hamburger menu button would be needed here */
+    }
+
   </style>
 </head>
 <body>
-  <!-- Sidebar placeholder (will be fetched) -->
-  <div id="sidebar-root"></div>
+  <div id="sidebar-root">
+     {% include 'teacher/subjectteacher/sidebar.html' %}
+    </div>
 
   <main>
     <div class="container">
-      <!-- Page header -->
       <header class="page-header">
         <div>
           <h1>AKATSUKI MASTERLIST</h1>
@@ -230,11 +330,10 @@
         </div>
 
         <div class="flex items-center gap-20">
-          <!-- Quarter selector (replaced School Year) -->
           <div class="flex items-center gap-3">
             <label for="quarter-select" class="text-sm font-bold text-gray-700 whitespace-nowrap">Quarter</label>
             <select id="quarter-select" class="w-44 rounded-lg border border-gray-300 bg-white py-2 px-3 text-gray-700 shadow-sm
-                                        focus:border-red-600 focus:ring focus:ring-red-100 transition-all cursor-pointer font-medium">
+                          focus:border-red-600 focus:ring focus:ring-red-100 transition-all cursor-pointer font-medium">
               <option value="1" selected>Quarter 1</option>
               <option value="2">Quarter 2</option>
               <option value="3">Quarter 3</option>
@@ -242,7 +341,6 @@
             </select>
           </div>
 
-          <!-- teacher info (name then avatar) -->
           <div class="flex items-center gap-3">
             <div class="text-right">
               <div class="font-semibold" id="adviser-name">Salatan, Juliana Mae E.</div>
@@ -256,7 +354,6 @@
         </div>
       </header>
 
-      <!-- Info + Search -->
       <section class="info-card mb-6">
         <div class="info-left">
           <p><strong>Program:</strong> <span class="text-rose-600 font-semibold" id="program-label">STE (Science Technology Engineering)</span></p>
@@ -273,7 +370,6 @@
           <div class="actions">
             <button class="btn primary" id="btn-export-pdf"><i class="fa-solid fa-file-pdf"></i> Export PDF</button>
 
-            <!-- Sorting & filtering controls -->
             <div class="flex items-center gap-2">
               <select id="sort-select" class="rounded-lg border border-gray-300 bg-white py-2 px-3 text-gray-700 shadow-sm cursor-pointer">
                 <option value="az">Sort: A → Z</option>
@@ -290,8 +386,7 @@
         </div>
       </section>
 
-      <!-- Table Card -->
-<section class="card">
+      <section class="card">
   <div class="table-wrap">
     <table id="masterlist" role="table" aria-label="Masterlist table">
       <thead>
@@ -302,11 +397,9 @@
           <th class="font-medium text-left">Age</th>
           <th class="font-medium text-left">Status</th>
           <th class="font-medium text-left">Record</th>
-          <th class="font-medium text-left">Profile</th>
-        </tr>
+          </tr>
       </thead>
       <tbody>
-        <!-- sample rows for demo -->
         <tr data-quarter="1" data-program="STE">
           <td>12345678910</td>
           <td>Konan</td>
@@ -316,12 +409,7 @@
           <td>
             <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
           </td>
-          <td>
-            <a href="Learner_Profile.html" class="btn ghost transition-colors hover:bg-rose-50 hover:text-rose-700">
-              <i class="fa-solid fa-eye"></i> View
-            </a>
-          </td>
-        </tr>
+          </tr>
         <tr data-quarter="1" data-program="Regular">
           <td>12345678911</td>
           <td>Hidan</td>
@@ -331,12 +419,7 @@
           <td>
             <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
           </td>
-          <td>
-            <a href="Learner_Profile.html" class="btn ghost transition-colors hover:bg-rose-50 hover:text-rose-700">
-              <i class="fa-solid fa-eye"></i> View
-            </a>
-          </td>
-        </tr>
+          </tr>
         <tr data-quarter="1" data-program="STE">
           <td>12345678910</td>
           <td>Sasori</td>
@@ -346,12 +429,7 @@
           <td>
             <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
           </td>
-          <td>
-            <a href="Learner_Profile.html" class="btn ghost transition-colors hover:bg-rose-50 hover:text-rose-700">
-              <i class="fa-solid fa-eye"></i> View
-            </a>
-          </td>
-        </tr>
+          </tr>
         <tr data-quarter="1" data-program="STE">
           <td>12345678910</td>
           <td>Ino Yamanaka</td>
@@ -361,12 +439,7 @@
           <td>
             <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
           </td>
-          <td>
-            <a href="Learner_Profile.html" class="btn ghost transition-colors hover:bg-rose-50 hover:text-rose-700">
-              <i class="fa-solid fa-eye"></i> View
-            </a>
-          </td>
-        </tr>
+          </tr>
         <tr data-quarter="1" data-program="STE">
           <td>12345678910</td>
           <td>Yamato</td>
@@ -376,12 +449,7 @@
           <td>
             <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
           </td>
-          <td>
-            <a href="Learner_Profile.html" class="btn ghost transition-colors hover:bg-rose-50 hover:text-rose-700">
-              <i class="fa-solid fa-eye"></i> View
-            </a>
-          </td>
-        </tr>
+          </tr>
         <tr data-quarter="1" data-program="STE">
           <td>12345678910</td>
           <td>Yahiko</td>
@@ -391,12 +459,7 @@
           <td>
             <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
           </td>
-          <td>
-            <a href="Learner_Profile.html" class="btn ghost transition-colors hover:bg-rose-50 hover:text-rose-700">
-              <i class="fa-solid fa-eye"></i> View
-            </a>
-          </td>
-        </tr>
+          </tr>
         <tr data-quarter="1" data-program="STE">
           <td>12345678910</td>
           <td>Orochimaru</td>
@@ -406,12 +469,7 @@
           <td>
             <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
           </td>
-          <td>
-            <a href="Learner_Profile.html" class="btn ghost transition-colors hover:bg-rose-50 hover:text-rose-700">
-              <i class="fa-solid fa-eye"></i> View
-            </a>
-          </td>
-        </tr>
+          </tr>
         <tr data-quarter="1" data-program="STE">
           <td>12345678910</td>
           <td>Jiraiya</td>
@@ -421,12 +479,7 @@
           <td>
             <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
           </td>
-          <td>
-            <a href="Learner_Profile.html" class="btn ghost transition-colors hover:bg-rose-50 hover:text-rose-700">
-              <i class="fa-solid fa-eye"></i> View
-            </a>
-          </td>
-        </tr>
+          </tr>
         <tr data-quarter="1" data-program="STE">
           <td>12345678910</td>
           <td>Tsunade</td>
@@ -436,27 +489,7 @@
           <td>
             <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
           </td>
-          <td>
-            <a href="Learner_Profile.html" class="btn ghost transition-colors hover:bg-rose-50 hover:text-rose-700">
-              <i class="fa-solid fa-eye"></i> View
-            </a>
-          </td>
-        </tr>
-        <tr data-quarter="1" data-program="STE">
-          <td>12345678910</td>
-          <td>Konan</td>
-          <td>F</td>
-          <td>20</td>
-          <td></td>
-          <td>
-            <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
-          </td>
-          <td>
-            <a href="Learner_Profile.html" class="btn ghost transition-colors hover:bg-rose-50 hover:text-rose-700">
-              <i class="fa-solid fa-eye"></i> View
-            </a>
-          </td>
-        </tr>
+          </tr>
         <tr data-quarter="1" data-program="STE">
           <td>12345678910</td>
           <td>Killer Bee</td>
@@ -466,12 +499,7 @@
           <td>
             <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
           </td>
-          <td>
-            <a href="Learner_Profile.html" class="btn ghost transition-colors hover:bg-rose-50 hover:text-rose-700">
-              <i class="fa-solid fa-eye"></i> View
-            </a>
-          </td>
-        </tr>
+          </tr>
         <tr data-quarter="1" data-program="STE">
           <td>12345678910</td>
           <td>Temari</td>
@@ -481,12 +509,7 @@
           <td>
             <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
           </td>
-          <td>
-            <a href="Learner_Profile.html" class="btn ghost transition-colors hover:bg-rose-50 hover:text-rose-700">
-              <i class="fa-solid fa-eye"></i> View
-            </a>
-          </td>
-        </tr>
+          </tr>
         <tr data-quarter="1" data-program="STE">
           <td>12345678910</td>
           <td>Sai</td>
@@ -496,12 +519,7 @@
           <td>
             <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
           </td>
-          <td>
-            <a href="Learner_Profile.html" class="btn ghost transition-colors hover:bg-rose-50 hover:text-rose-700">
-              <i class="fa-solid fa-eye"></i> View
-            </a>
-          </td>
-        </tr>
+          </tr>
         <tr data-quarter="1" data-program="STE">
           <td>12345678910</td>
           <td>Shino</td>
@@ -511,12 +529,7 @@
           <td>
             <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
           </td>
-          <td>
-            <a href="Learner_Profile.html" class="btn ghost transition-colors hover:bg-rose-50 hover:text-rose-700">
-              <i class="fa-solid fa-eye"></i> View
-            </a>
-          </td>
-        </tr>
+          </tr>
         <tr data-quarter="1" data-program="STE">
           <td>12345678910</td>
           <td>Akamaru</td>
@@ -526,12 +539,7 @@
           <td>
             <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
           </td>
-          <td>
-            <a href="Learner_Profile.html" class="btn ghost transition-colors hover:bg-rose-50 hover:text-rose-700">
-              <i class="fa-solid fa-eye"></i> View
-            </a>
-          </td>
-        </tr>
+          </tr>
         <tr data-quarter="1" data-program="STE">
           <td>12345678910</td>
           <td>Tenten</td>
@@ -541,12 +549,7 @@
           <td>
             <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
           </td>
-          <td>
-            <a href="Learner_Profile.html" class="btn ghost transition-colors hover:bg-rose-50 hover:text-rose-700">
-              <i class="fa-solid fa-eye"></i> View
-            </a>
-          </td>
-        </tr>
+          </tr>
         <tr data-quarter="1" data-program="STE">
           <td>12345678910</td>
           <td>Hinata</td>
@@ -556,12 +559,7 @@
           <td>
             <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
           </td>
-          <td>
-            <a href="Learner_Profile.html" class="btn ghost transition-colors hover:bg-rose-50 hover:text-rose-700">
-              <i class="fa-solid fa-eye"></i> View
-            </a>
-          </td>
-        </tr>
+          </tr>
         <tr data-quarter="1" data-program="STE">
           <td>12345678910</td>
           <td>Sakura</td>
@@ -571,15 +569,7 @@
           <td>
             <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
           </td>
-          <td>
-            <a href="Learner_Profile.html" class="btn ghost transition-colors hover:bg-rose-50 hover:text-rose-700">
-              <i class="fa-solid fa-eye"></i> View
-            </a>
-          </td>
-        </tr>
-
-
-
+          </tr>
 
         <tr class="highlight" data-quarter="2" data-program="STE">
           <td>12345678913</td>
@@ -590,13 +580,8 @@
           <td>
             <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
           </td>
-          <td>
-            <a href="Learner_Profile.html" class="btn ghost transition-colors hover:bg-rose-50 hover:text-rose-700">
-              <i class="fa-solid fa-eye"></i> View
-            </a>
-          </td>
-        </tr>
-         <tr data-quarter="2" data-program="STE">
+          </tr>
+         <tr data-quarter="1" data-program="STE">
           <td>12345678910</td>
           <td>Konan</td>
           <td>F</td>
@@ -605,27 +590,19 @@
           <td>
             <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
           </td>
-          <td>
-            <a href="Learner_Profile.html" class="btn ghost transition-colors hover:bg-rose-50 hover:text-rose-700">
-              <i class="fa-solid fa-eye"></i> View
-            </a>
-          </td>
-        </tr>
-        <!-- more demo rows if needed -->
-      </tbody>
+          </tr>
+        </tbody>
     </table>
   </div>
 
-  <!-- Student details / empty state (kept for compatibility) -->
   <div id="student-details" class="details-empty">
-    Select a student row, click <strong>View</strong> or <strong>View Grades</strong> to see student details.
+    Click <strong>View Grades</strong> on any student row to see their record.
   </div>
 </section>
 
     </div>
   </main>
 
-  <!-- Grades modal (improved UI, single export, single close) -->
   <div id="grades-modal-backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal" role="document" id="grades-modal" tabindex="-1">
       <div class="modal-brand">
@@ -638,8 +615,7 @@
       <div class="modal-header">
         <div class="modal-profile">
           <div class="photo" id="modal-photo-wrap">
-            <!-- actual img or fallback inserted dynamically -->
-            <img src="Pictures/sample_student.jpg" id="modal-student-photo" alt="student photo" style="width:100%;height:100%;object-fit:cover;display:block">
+            <div class="initial-avatar">S</div>
           </div>
           <div class="meta">
             <div id="modal-student-name" class="name">Student Name</div>
@@ -655,9 +631,24 @@
       </div>
 
       <div class="modal-body" id="modal-body">
-        <!-- DATA: grades table injected here -->
-        <div class="grades-table" id="modal-grades-table" aria-live="polite"></div>
-        <div class="grades-summary" id="modal-summary" aria-hidden="false"></div>
+        <div class="grades-breakdown">
+            <div class="grades-card">
+                <div class="grades-card-header"><h4>Written Works</h4></div>
+                <div class="grades-card-body">Loading...</div>
+            </div>
+             <div class="grades-card">
+                <div class="grades-card-header"><h4>Performance Tasks</h4></div>
+                <div class="grades-card-body">Loading...</div>
+            </div>
+            <div class="grades-card">
+                <div class="grades-card-header"><h4>Quarterly Assessment</h4></div>
+                <div class="grades-card-body">Loading...</div>
+            </div>
+             <div class="grades-card grades-summary-card">
+                <div class="grades-card-header"><h4>Quarterly Grade</h4></div>
+                <div class="grades-card-body">Loading...</div>
+            </div>
+         </div>
       </div>
 
       <div class="modal-footer">
@@ -669,7 +660,6 @@
     </div>
   </div>
 
-  <!-- Inline script behaviour -->
   <script>
     // Logo paths for letterhead
     const LOGO_PATHS = {
@@ -799,333 +789,389 @@
       const tbody = document.querySelector('#masterlist tbody');
       const rows = Array.from(tbody.querySelectorAll('tr'));
       rows.sort((a,b) => {
-        const an = a.children[1].innerText.trim().toLowerCase();
-        const bn = b.children[1].innerText.trim().toLowerCase();
-        if (an < bn) return order === 'az' ? -1 : 1;
-        if (an > bn) return order === 'az' ? 1 : -1;
-        return 0;
-      });
-      rows.forEach(r => tbody.appendChild(r));
-    }
-    document.getElementById('sort-select').addEventListener('change', (e) => { sortTable(e.target.value); });
-
-    // mark probation rows
-    (function markProbationRows(){
-      document.querySelectorAll('#masterlist tbody tr').forEach(row => {
-        const statusCell = row.children[4];
-        if (statusCell && /probation/i.test(statusCell.innerText)) {
-          row.classList.add('highlight');
+        const an = a.children[1].innerText.trim(); // Full Name column
+        const bn = b.children[1].innerText.trim();
+        if (order === 'az') {
+          return an.localeCompare(bn);
+        } else {
+          return bn.localeCompare(an);
         }
       });
-    })();
+      rows.forEach(row => tbody.appendChild(row));
+    }
 
-    // Modal handling & elements
+    document.getElementById('sort-select').addEventListener('change', (e) => {
+      sortTable(e.target.value);
+    });
+
+    // --- NEW: DUMMY GRADES DATA ---
+    const baseGood = {
+        writtenWorks: [
+            { title: "WW1: Essay", score: 18, total: 20 },
+            { title: "WW2: Quiz", score: 25, total: 30 },
+            { title: "WW3: Activity", score: 10, total: 10 }
+        ],
+        performanceTasks: [
+            { title: "PT1: Reporting", score: 45, total: 50 },
+            { title: "PT2: Project", score: 88, total: 100 }
+        ],
+        quarterlyAssessment: { score: 40, total: 50 },
+        writtenWorkGrade: 89.7,
+        performanceTaskGrade: 92.5,
+        quarterlyAssessmentGrade: 80.0,
+        initialGrade: 90,
+        quarterlyGrade: 92
+    };
+
+    const baseAvg = {
+        writtenWorks: [
+            { title: "WW1: Essay", score: 15, total: 20 },
+            { title: "WW2: Quiz", score: 20, total: 30 },
+            { title: "WW3: Activity", score: 8, total: 10 }
+        ],
+        performanceTasks: [
+            { title: "PT1: Reporting", score: 40, total: 50 },
+            { title: "PT2: Project", score: 70, total: 100 }
+        ],
+        quarterlyAssessment: { score: 35, total: 50 },
+        writtenWorkGrade: 75.0,
+        performanceTaskGrade: 78.0,
+        quarterlyAssessmentGrade: 70.0,
+        initialGrade: 76,
+        quarterlyGrade: 80
+    };
+
+    const studentGradesData = {
+        "Konan": { ...baseGood },
+        "Hidan": { ...baseAvg },
+        "Sasori": { ...baseAvg, quarterlyGrade: 82 },
+        "Ino Yamanaka": { ...baseGood, quarterlyGrade: 93 },
+        "Yamato": { ...baseAvg, quarterlyGrade: 79 },
+        "Yahiko": { ...baseAvg, quarterlyGrade: 81 },
+        "Orochimaru": { ...baseAvg, quarterlyGrade: 85 },
+        "Jiraiya": { ...baseGood, quarterlyGrade: 90 },
+        "Tsunade": { ...baseGood, quarterlyGrade: 94 },
+        "Killer Bee": { ...baseAvg, quarterlyGrade: 88 },
+        "Temari": { ...baseGood, quarterlyGrade: 91 },
+        "Sai": { ...baseGood, quarterlyGrade: 89 },
+        "Shino": { ...baseAvg, quarterlyGrade: 83 },
+        "Akamaru": { ...baseAvg, quarterlyGrade: 78 },
+        "Tenten": { ...baseGood, quarterlyGrade: 90 },
+        "Hinata": { ...baseGood, quarterlyGrade: 95 },
+        "Sakura": { ...baseGood, quarterlyGrade: 96 },
+        "Uchiha, Itachi C.": {
+            writtenWorks: [
+                { title: "WW1: Essay", score: 10, total: 20 },
+                { title: "WW2: Quiz", score: 15, total: 30 },
+                { title: "WW3: Activity", score: 5, total: 10 }
+            ],
+            performanceTasks: [
+                { title: "PT1: Reporting", score: 30, total: 50 },
+                { title: "PT2: Project", score: 60, total: 100 }
+            ],
+            quarterlyAssessment: { score: 25, total: 50 },
+            writtenWorkGrade: 50.0,
+            performanceTaskGrade: 60.0,
+            quarterlyAssessmentGrade: 50.0,
+            initialGrade: 55,
+            quarterlyGrade: 70 // "On Probation"
+        },
+        "default": {
+            writtenWorks: [{ title: "N/A", score: 0, total: 0 }],
+            performanceTasks: [{ title: "N/A", score: 0, total: 0 }],
+            quarterlyAssessment: { score: 0, total: 0 },
+            writtenWorkGrade: 0,
+            performanceTaskGrade: 0,
+            quarterlyAssessmentGrade: 0,
+            initialGrade: 0,
+            quarterlyGrade: 0
+        }
+    };
+
+    // --- NEW/MODIFIED: MODAL LOGIC ---
+
     const modalBackdrop = document.getElementById('grades-modal-backdrop');
     const modal = document.getElementById('grades-modal');
     const modalBody = document.getElementById('modal-body');
     const modalStudentName = document.getElementById('modal-student-name');
     const modalStudentMeta = document.getElementById('modal-student-meta');
-    const modalStudentPhoto = document.getElementById('modal-student-photo');
     const modalPhotoWrap = document.getElementById('modal-photo-wrap');
-    const btnExportStudentPdf = document.getElementById('btn-export-student-pdf');
-    const btnCloseTop = document.getElementById('btn-close-modal');
-    const btnCloseBottom = document.getElementById('btn-close-modal-bottom');
-    const btnPrintModal = document.getElementById('btn-print-modal');
 
-    function openModal() {
-      modalBackdrop.classList.add('show');
-      modalBackdrop.setAttribute('aria-hidden', 'false');
-      modal.style.transform = 'translateY(0)';
-      setTimeout(()=> modal.focus(), 160);
-      document.body.style.overflow = 'hidden';
+    // --- MODIFIED JAVASCRIPT ---
+    // Function to generate the HTML for the modal body
+    function generateModalBodyHTML(data) {
+        // Helper to create list items for scores
+        const createScoreList = (items) => items.map(item => `
+            <li>
+                <span class="title">${item.title}</span>
+                <span class="score">${item.score} / ${item.total}</span>
+            </li>
+        `).join('');
+
+        // Calculate totals for display
+        const wwTotalScore = data.writtenWorks.reduce((acc, item) => acc + item.score, 0);
+        const wwTotalMax = data.writtenWorks.reduce((acc, item) => acc + item.total, 0);
+        const ptTotalScore = data.performanceTasks.reduce((acc, item) => acc + item.score, 0);
+        const ptTotalMax = data.performanceTasks.reduce((acc, item) => acc + item.total, 0);
+
+        return `
+        <div class="grades-breakdown">
+            <div class="grades-card">
+                <div class="grades-card-header"><h4>Written Works (${data.writtenWorkGrade}%)</h4></div>
+                <div class="grades-card-body">
+                    <ul>${createScoreList(data.writtenWorks)}</ul>
+                    <hr style="margin: 12px 0; border-color: #eef2f4;">
+                    <ul>
+                        <li>
+                            <span class="title" style="font-weight: 700;">Total</span>
+                            <span class="score" style="font-weight: 700;">${wwTotalScore} / ${wwTotalMax}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="grades-card">
+                <div class="grades-card-header"><h4>Performance Tasks (${data.performanceTaskGrade}%)</h4></div>
+                <div class="grades-card-body">
+                    <ul>${createScoreList(data.performanceTasks)}</ul>
+                    <hr style="margin: 12px 0; border-color: #eef2f4;">
+                    <ul>
+                        <li>
+                            <span class="title" style="font-weight: 700;">Total</span>
+                            <span class="score" style="font-weight: 700;">${ptTotalScore} / ${ptTotalMax}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="grades-card">
+                <div class="grades-card-header"><h4>Quarterly Assessment (${data.quarterlyAssessmentGrade}%)</h4></div>
+                <div class="grades-card-body">
+                    <ul>
+                        <li>
+                            <span class="title">Exam Score</span>
+                            <span class="score">${data.quarterlyAssessment.score} / ${data.quarterlyAssessment.total}</span>
+                        </li>
+                    </ul>
+                    <hr style="margin: 12px 0; border-color: #eef2f4;">
+                    <ul>
+                        <li>
+                            <span class="title" style="font-weight: 700;">Total</span>
+                            <span class="score" style="font-weight: 700;">${data.quarterlyAssessment.score} / ${data.quarterlyAssessment.total}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="grades-card grades-summary-card">
+                <div class="grades-card-header"><h4>Quarterly Grade Summary</h4></div>
+                <div class="grades-card-body">
+                    <div class="final-grade">${data.quarterlyGrade}</div>
+                    <div class="summary-item">
+                        <span>Written Work (WW)</span>
+                        <span class="grade-value">${data.writtenWorkGrade}%</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Performance Task (PT)</span>
+                        <span class="grade-value">${data.performanceTaskGrade}%</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Quarterly Assessment (QA)</span>
+                        <span class="grade-value">${data.quarterlyAssessmentGrade}%</span>
+                    </div>
+                     <div class="summary-item" style="color: #a23131;">
+                        <span>Initial Grade</span>
+                        <span class="grade-value">${data.initialGrade}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
     }
-    function closeModal() {
-      modalBackdrop.classList.remove('show');
-      modalBackdrop.setAttribute('aria-hidden', 'true');
-      modal.style.transform = 'translateY(16px)';
-      document.body.style.overflow = '';
+    // --- END MODIFIED JAVASCRIPT ---
+
+    // Function to open the modal
+    function openGradesModal(studentRow) {
+        const lrn = studentRow.children[0].innerText;
+        const name = studentRow.children[1].innerText;
+        const sex = studentRow.children[2].innerText;
+        const age = studentRow.children[3].innerText;
+        const program = studentRow.getAttribute('data-program'); // Get program from data attribute
+
+        // Find the grade data
+        const gradeData = studentGradesData[name] || studentGradesData["default"];
+
+        // 1. Populate Header
+        modalStudentName.textContent = name;
+        modalStudentMeta.textContent = `LRN: ${lrn} • ${sex} • ${age} y.o. • ${program}`;
+
+        // 2. Populate Photo (with initial-based fallback)
+        const initial = name.charAt(0).toUpperCase();
+        // Use a dummy photo path for demo.
+        const photoSrc = `Pictures/${name.split(' ')[0]}.jpg`; // e.g., Pictures/Konan.jpg
+        
+        modalPhotoWrap.innerHTML = `
+            <img src="${photoSrc}" id="modal-student-photo" alt="${name}'s photo" style="width:100%;height:100%;object-fit:cover;display:block"
+                 onerror='this.style.display="none"; this.parentElement.innerHTML="<div class=&quot;initial-avatar&quot;>${initial}</div>"'>
+        `;
+
+        // 3. Populate Body (NEW)
+        modalBody.innerHTML = generateModalBodyHTML(gradeData);
+
+        // 4. Show modal
+        modalBackdrop.classList.add('show');
+        modal.focus(); // For accessibility
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
     }
-    btnCloseTop.addEventListener('click', closeModal);
-    btnCloseBottom.addEventListener('click', closeModal);
-    modalBackdrop.addEventListener('click', (e) => { if (e.target === modalBackdrop) closeModal(); });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
 
-    // When clicking rows / buttons
-    document.addEventListener('click', (e) => {
-      const view = e.target.closest('a.btn') || e.target.closest('button.btn');
-      if (!view) return;
+    // Function to close the modal
+    function closeGradesModal() {
+        modalBackdrop.classList.remove('show');
+        document.body.style.overflow = '';
+    }
 
-      // profile view link demo behavior
-      if (view.tagName === 'A' && view.getAttribute('href') && view.getAttribute('href').includes('Learner_Profile.html')) {
-        const row = view.closest('tr');
-        if (!row) return;
-        showBasicDetailsFromRow(row);
-        e.preventDefault();
-        return;
-      }
+    // --- Event Listeners ---
 
-      // View Grades -> open modal
-      if (view.classList.contains('btn-record')) {
-        const row = view.closest('tr');
-        if (!row) return;
-        showGradesModal(row);
-        return;
-      }
+    // Listen for clicks on ALL "View Grades" buttons
+    document.getElementById('masterlist').addEventListener('click', (e) => {
+        const btn = e.target.closest('.btn-record');
+        if (btn) {
+            const row = btn.closest('tr');
+            openGradesModal(row);
+        }
     });
 
-  
-
-    // Show grades modal with improved UI, always-visible photo, average last row highlighted
-    function showGradesModal(row){
-      const cells = row.querySelectorAll('td');
-      const name = cells[1].innerText;
-      const program = row.getAttribute('data-program') || 'Regular';
-      const lrn = cells[0].innerText;
-      const sex = cells[2].innerText;
-      const age = cells[3].innerText;
-      const statusText = cells[4].innerText.trim() || 'Active';
-
-      // default subjects; add Research for STE
-      const baseSubjects = [
-        'Filipino','English','Mathematics','Science','Araling Panlipunan','MAPEH','TLE','Edukasyon sa Pagpapakatao'
-      ];
-      if (program.toLowerCase() === 'ste') baseSubjects.push('Research');
-
-      // demo grades
-      const subjectsAndGrades = baseSubjects.map(sub => ({ subject: sub, grade: Math.floor(Math.random()*21) + 80 }));
-
-      // header meta
-      modalStudentName.textContent = name;
-      modalStudentMeta.textContent = `LRN: ${lrn} • Sex: ${sex} • Age: ${age} • Program: ${program}`;
-
-      // photo: try show image; on error show initials fallback but ensure visible
-      const imgEl = modalStudentPhoto;
-      imgEl.src = 'Pictures/sample_student.jpg'; // try path
-      imgEl.style.display = '';
-      // remove any previous fallback
-      const wrap = modalPhotoWrap;
-      // ensure wrap only has either the image or fallback element
-      // reset
-      Array.from(wrap.children).forEach(child => wrap.removeChild(child));
-      // create fresh img
-      const fresh = document.createElement('img');
-      fresh.id = 'modal-student-photo';
-      fresh.alt = 'student photo';
-      fresh.style.width = '100%';
-      fresh.style.height = '100%';
-      fresh.style.objectFit = 'cover';
-      fresh.src = 'Pictures/sample_student.jpg';
-      // onerror -> replace with initials box
-      fresh.onerror = function(){
-        this.remove();
-        wrap.appendChild(createInitialAvatar(name));
-      };
-      // onload -> ensure it's appended (remove previous)
-      fresh.onload = function(){
-        // remove any fallback present
-        Array.from(wrap.children).forEach(child => child.remove());
-        wrap.appendChild(fresh);
-      };
-      // append immediately (if cached image loads onload fires soon)
-      wrap.appendChild(fresh);
-
-      // build table html with tfoot average row
-      const rowsHtml = subjectsAndGrades.map(sg => `<tr><td>${sg.subject}</td><td style="font-weight:700">${sg.grade}</td></tr>`).join('');
-      // compute average (rounded)
-      const avg = Math.round(subjectsAndGrades.reduce((s,g)=>s+g.grade,0) / subjectsAndGrades.length);
-
-      const tableHtml = `
-        <table aria-label="Grades table">
-          <thead><tr><th>Subject</th><th>Grade</th></thead>
-          <tbody>
-            ${rowsHtml}
-          </tbody>
-          <tfoot>
-            <tr class="avg"><td>Average</td><td>${avg}</td></tr>
-          </tfoot>
-        </table>
-      `;
-      document.getElementById('modal-grades-table').innerHTML = tableHtml;
-
-      // summary area (keeps small remark)
-      document.getElementById('modal-summary').innerHTML = `<div>Remarks: <span style="font-weight:700;color:#374151">${avg >= 75 ? 'Passing' : 'Needs Improvement'}</span></div>`;
-
-      // wire export button (single) — remove previous listeners safely
-      const copyGrades = subjectsAndGrades.slice();
-      btnExportStudentPdf.replaceWith(btnExportStudentPdf.cloneNode(true));
-      const newExportBtn = document.getElementById('btn-export-student-pdf');
-      newExportBtn.addEventListener('click', () => exportStudentPDF(name, program, copyGrades, fresh.src));
-
-      // wire print
-      btnPrintModal.replaceWith(btnPrintModal.cloneNode(true));
-      const newPrint = document.getElementById('btn-print-modal');
-      newPrint.addEventListener('click', () => { window.print(); });
-
-      openModal();
-    }
-
-    // EXPORT: Masterlist PDF with letterhead
-    async function exportPDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ unit: 'pt', format: 'letter' });
-
-      const adviserName = document.getElementById('adviser-name')?.innerText || '';
-      const adviserPosition = document.getElementById('adviser-position')?.innerText || '';
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-
-      // Add letterhead header (async)
-      await addLetterheadHeader(doc, pageWidth);
-
-      doc.setFontSize(10);
-
-      doc.autoTable({
-        html: '#masterlist',
-        startY: 115, // Start below the letterhead header
-        theme: 'striped',
-        styles: { fontSize: 9 },
-        headStyles: { fillColor: [240, 240, 240], textColor: [55, 65, 81] },
-        margin: { bottom: 80 }, // Leave more space for footer and signature
-        didDrawPage: async function (data) {
-          const currentPage = doc.internal.getNumberOfPages();
-          
-          // Add letterhead header on each page
-          if (currentPage > 1) {
-            await addLetterheadHeader(doc, pageWidth);
-          }
-
-          // Add letterhead footer
-          addLetterheadFooter(doc, pageWidth, pageHeight, currentPage);
-
-          // Add "Prepared by" section with improved formatting
-          const signatureY = pageHeight - 70;
-          doc.setTextColor(0, 0, 0);
-          doc.setFontSize(9);
-          doc.text('Prepared by:', 40, signatureY);
-          
-          // Draw a signature line
-          doc.setLineWidth(1);
-          doc.line(40, signatureY + 30, 180, signatureY + 30);
-          
-          // Add name and position
-          doc.setFontSize(10);
-          doc.setFont(undefined, "bold");
-          doc.text(adviserName, 110, signatureY + 42, { align: 'center' });
-          doc.setFont(undefined, "normal");
-          doc.setFontSize(9);
-          doc.text(adviserPosition, 110, signatureY + 54, { align: 'center' });
+    // Close button listeners
+    document.getElementById('btn-close-modal').addEventListener('click', closeGradesModal);
+    document.getElementById('btn-close-modal-bottom').addEventListener('click', closeGradesModal);
+    // Close on backdrop click
+    modalBackdrop.addEventListener('click', (e) => {
+        if (e.target === modalBackdrop) {
+            closeGradesModal();
         }
-      });
-
-      doc.save('Masterlist.pdf');
-    }
-    document.getElementById('btn-export-pdf').addEventListener('click', exportPDF);
-
-    // per-student export function with letterhead
-    async function exportStudentPDF(studentName, program, subjectsAndGrades, studentPhotoSrc) {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ unit: 'pt', format: 'letter' });
-      const adviserName = document.getElementById('adviser-name')?.innerText || '';
-      const adviserPosition = document.getElementById('adviser-position')?.innerText || '';
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-
-      // Add letterhead header
-      await addLetterheadHeader(doc, pageWidth);
-
-      // student header area
-      doc.setFontSize(12);
-      doc.setFont(undefined, "bold");
-      doc.text(studentName + ' — Student Grades', 40, 120);
-      doc.setFont(undefined, "normal");
-      doc.setFontSize(10);
-      doc.text('Program: ' + program, 40, 136);
-
-      // table body
-      const tableBody = subjectsAndGrades.map(sg => [sg.subject, String(sg.grade)]);
-      // add average row at end of body
-      const avg = Math.round(subjectsAndGrades.reduce((s,g)=>s+g.grade,0) / subjectsAndGrades.length);
-      tableBody.push(['Average', String(avg)]);
-
-      doc.autoTable({
-        head: [['Subject', 'Grade']],
-        body: tableBody,
-        startY: 150,
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: [240, 240, 240], textColor: [55, 65, 81] },
-        margin: { bottom: 50 },
-        didDrawCell: function (data) {
-          // highlight the average row: last row
-          if (data.section === 'body' && data.row.index === tableBody.length - 1) {
-            const x = data.cell.x;
-            const y = data.cell.y;
-            const w = data.cell.width;
-            const h = data.cell.height;
-            doc.setFillColor(255, 247, 237);
-            doc.rect(x, y, w, h, 'F');
-            doc.setTextColor(122, 42, 42);
-          }
-        },
-        didDrawPage: function() {
-          const currentPage = doc.internal.getNumberOfPages();
-          
-          // Add letterhead footer
-          addLetterheadFooter(doc, pageWidth, pageHeight, currentPage);
-
-          // Prepared by info
-          doc.setTextColor(0, 0, 0);
-          doc.setFontSize(10);
-          doc.text('Prepared by:', 40, pageHeight - 50);
-          doc.text(adviserName, 40, pageHeight - 34);
-          doc.text(adviserPosition, 40, pageHeight - 20);
+    });
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modalBackdrop.classList.contains('show')) {
+            closeGradesModal();
         }
-      });
+    });
 
-      const safeName = (studentName.replace(/\s+/g,'_') || 'student');
-      doc.save(safeName + '_Grades.pdf');
-    }
+    // --- PDF/Print Listeners (Completed) ---
 
-    // --- Sidebar loader (unchanged) ---
-    async function loadSidebar() {
-      try {
-        const res = await fetch('sidebar.html');
-        if (!res.ok) throw new Error('Failed to load sidebar.html: ' + res.status);
-        const html = await res.text();
-        const root = document.getElementById('sidebar-root');
-        root.innerHTML = html;
+    // Modal Print
+    document.getElementById('btn-print-modal').addEventListener('click', () => {
+        window.print();
+    });
 
-        // Execute any inline scripts found in the fetched HTML
-        const scripts = Array.from(root.querySelectorAll('script'));
-        scripts.forEach(old => {
-          const s = document.createElement('script');
-          // copy attributes
-          for (const a of old.attributes) s.setAttribute(a.name, a.value);
-          if (old.src) {
-            s.src = old.src;
-            s.async = false;
-            document.body.appendChild(s);
-          } else {
-            s.textContent = old.textContent;
-            document.body.appendChild(s);
-          }
-          old.remove();
+    // Main Table PDF Export
+    document.getElementById('btn-export-pdf').addEventListener('click', async () => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({
+            orientation: 'landscape',
+            unit: 'pt',
+            format: 'legal'
+        });
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const { quarter, sex, search } = getFilters();
+        const program = document.getElementById('program-label').innerText;
+
+        // Add Letterhead
+        await addLetterheadHeader(doc, pageWidth);
+        const headerHeight = 110; // Space for letterhead
+
+        // Add Title
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'bold');
+        doc.text("STUDENT MASTERLIST", pageWidth / 2, headerHeight, { align: 'center' });
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        doc.text(`Program: ${program} | Quarter: ${quarter}`, pageWidth / 2, headerHeight + 15, { align: 'center' });
+
+        // Add table
+        doc.autoTable({
+            html: '#masterlist',
+            startY: headerHeight + 30,
+            theme: 'grid',
+            headStyles: { fillColor: [162, 49, 49] },
+            // Exclude the last column (Record)
+            columns: [0, 1, 2, 3, 4], // LRN, Name, Sex, Age, Status
+            // Filter rows based on current view
+            willDrawCell: (data) => {
+                if (data.section === 'body') {
+                    const row = data.row.raw;
+                    // Only draw row if it's not hidden by filters
+                    return row.style.display !== 'none';
+                }
+            },
+            didDrawPage: (data) => {
+                // Add footer
+                addLetterheadFooter(doc, pageWidth, pageHeight, data.pageNumber);
+            }
         });
 
-        // Optional: sync main margin-left with CSS variable from loaded sidebar
-        const sb = document.querySelector('.sidebar');
-        if (sb) {
-          const w = getComputedStyle(sb).getPropertyValue('--sidebar-w')?.trim();
-          if (w) document.querySelector('main').style.marginLeft = w;
-        }
+        doc.save(`ZNHS-WEST-Masterlist-Q${quarter}.pdf`);
+    });
+    
+    // Student PDF Export (placeholder)
+    document.getElementById('btn-export-student-pdf').addEventListener('click', () => {
+        const studentName = document.getElementById('modal-student-name').innerText;
+        alert(`Logic to export PDF for ${studentName} goes here.`);
+        // Note: This would require re-drawing the modal content into a new jsPDF doc.
+    });
 
-      } catch (err) {
-        console.error(err);
-      }
-    }
-    loadSidebar();
 
-    // Initial filter application so rows show on load
+    // Initial call to set table state
     applyFilters();
+    sortTable('az');
+
+    // --- NEW SCRIPT: LOAD SIDEBAR ---
+    {% comment %} (function loadSidebar() {
+      const sidebarRoot = document.getElementById('sidebar-root');
+      if (!sidebarRoot) return;
+
+      fetch('sidebar.html')
+        .then(response => {
+          if (!response.ok) throw new Error('Could not fetch sidebar.html. Make sure the file exists.');
+          return response.text();
+        })
+        .then(html => {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, 'text/html');
+
+          // Find the essential parts
+          const style = doc.querySelector('style');
+          const aside = doc.querySelector('aside.sidebar');
+          const scriptLogic = doc.querySelector('script');
+
+          // Inject them into the correct places
+          if (style) {
+            document.head.appendChild(style);
+          }
+          
+          if (aside) {
+            sidebarRoot.appendChild(aside);
+          } else {
+            throw new Error('Sidebar <aside> element not found in sidebar.html');
+          }
+
+          if (scriptLogic) {
+            const script = document.createElement('script');
+            // Use .textContent to avoid script injection issues
+            script.textContent = scriptLogic.textContent; 
+            document.body.appendChild(script);
+          }
+        })
+        .catch(error => {
+          sidebarRoot.innerHTML = `<div style="padding: 1rem; color: #b91c1c; background: #fff1f2; border: 1px solid #ffe4e6; border-radius: 8px; margin: 1rem; font-family: sans-serif;">
+            <strong>Error:</strong> Could not load sidebar. ${error.message}
+          </div>`;
+          console.error('Error loading sidebar:', error);
+        });
+    })(); {% endcomment %}
+    // --- END LOAD SIDEBAR SCRIPT ---
+
   </script>
 </body>
 </html>
