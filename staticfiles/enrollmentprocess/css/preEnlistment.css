@@ -1,0 +1,809 @@
+/* Basic Form Styling */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+}
+
+
+
+.header {
+    background-color: #ffffff;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #ddd;
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    height: 60px;
+    margin-right: 15px;
+}
+
+.school-info h1 {
+    font-size: 1.2em;
+    margin: 0;
+    color: #c00;
+}
+
+.school-info p {
+    font-size: 0.9em;
+    margin: 0;
+    color: #555;
+}
+
+.header-icons {
+    display: flex;
+    gap: 10px;
+}
+
+.form-container {
+    max-width: 900px;
+    margin: 30px auto;
+    background-color: white;
+    padding: 30px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.form-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.form-header h2 {
+    color: #c00;
+    margin: 0;
+}
+
+.form-header p {
+    margin: 5px 0 0;
+    font-size: 1.1em;
+}
+
+.form-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.form-left {
+    flex: 2;
+    padding-right: 20px;
+}
+
+.form-right {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.form-field {
+    margin-bottom: 15px;
+}
+
+.form-field label,
+.grid-container label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #333;
+    font-size: 14px;
+}
+
+.form-field input[type="text"],
+.form-field select,
+.form-field input[type="date"],
+.form-field input[type="email"],
+.grid-container input[type="text"],
+.grid-container select,
+.grid-container input[type="date"],
+.grid-container input[type="email"],
+.name-fields input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+}
+
+.form-field input[type="text"]:focus,
+.form-field select:focus,
+.form-field input[type="date"]:focus,
+.form-field input[type="email"]:focus,
+.grid-container input[type="text"]:focus,
+.grid-container select:focus,
+.grid-container input[type="date"]:focus,
+.grid-container input[type="email"]:focus,
+.name-fields input:focus {
+    outline: none;
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-field select,
+.grid-container select {
+    background-color: white;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    appearance: none;
+    cursor: pointer;
+}
+
+.checkbox-group p,
+.radio-input p {
+    margin: 0 0 10px;
+}
+
+.checkbox-options,
+.radio-options {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 15px;
+}
+
+.checkbox-options input[type="checkbox"],
+.radio-options input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+    accent-color: #c00;
+}
+
+.checkbox-options label,
+.radio-options label {
+    display: flex;
+    align-items: center;
+    font-weight: normal;
+    margin-bottom: 8px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+/* Styles for "Other" text fields next to checkboxes/radios */
+.checkbox-options input[type="text"],
+.radio-options input[type="text"] {
+    width: auto;
+    flex-grow: 1;
+}
+
+.radio-options .fill-in-box {
+    flex-grow: 1;
+}
+
+.image-upload-box {
+    border: 2px dashed #ccc;
+    text-align: center;
+    padding: 20px;
+    border-radius: 8px;
+    width: 200px;
+    height: 200px;
+    position: relative;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.upload-area {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.upload-icon-container {
+    font-size: 3em;
+    color: #c00;
+    display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1;
+    }
+    
+.preview-container {
+    width: 100%;
+    height: 100%;
+    display: none;
+    /* Start hidden */
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+}
+
+#photo-preview,
+#parent-photo-preview {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+/* Show preview container when has-preview class is added */
+.upload-area.has-preview .upload-icon-container {
+    display: none !important;
+}
+
+.upload-area.has-preview .preview-container {
+    display: flex !important;
+}
+
+/* Default state - preview hidden */
+.preview-container {
+    display: none;
+}
+
+.upload-icon-container {
+    display: flex;
+}
+
+
+.file-input {
+    display: none;
+}
+
+.student-info-section,
+.family-info-section,
+.non-academic-section {
+    border: 2px solid #e0e0e0;
+    padding: 24px;
+    border-radius: 10px;
+    margin-bottom: 24px;
+    background-color: #fafafa;
+}
+
+.section-title {
+    color: #c00;
+    font-size: 1.3em;
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-weight: 600;
+}
+
+.subtitle {
+    font-size: 0.9em;
+    font-weight: normal;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.name-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+}
+
+.grid-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.name-fields input {
+    width: 100%;
+}
+
+.form-footer {
+    text-align: center;
+}
+
+.next-btn {
+    background-color: #c00;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    font-size: 1.2em;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+.next-btn:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Styling for the family info sections 
+.family-info-section h4 {
+    color: #c00;
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: 1.1em;
+    font-weight: 600;
+}
+
+.family-info-section .sub-section {
+    margin-bottom: 28px;
+    padding: 16px;
+    background-color: white;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+} */
+
+/* Style for the back button */
+.back-btn {
+    background-color: #555;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    font-size: 1.2em;
+    cursor: pointer;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    margin-right: 10px;
+}
+
+.back-btn:hover {
+    background-color: #5a6268;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Basic Form Styling */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+}
+
+.header {
+    background-color: #ffffff;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #ddd;
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    height: 60px;
+    margin-right: 15px;
+}
+
+.school-info h1 {
+    font-size: 1.2em;
+    margin: 0;
+    color: #c00;
+}
+
+.school-info p {
+    font-size: 0.9em;
+    margin: 0;
+    color: #555;
+}
+
+.header-icons {
+    display: flex;
+    gap: 10px;
+}
+
+.form-container {
+    max-width: 900px;
+    margin: 30px auto;
+    background-color: white;
+    padding: 30px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.form-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.form-header h2 {
+    color: #c00;
+    margin: 0;
+}
+
+.form-header p {
+    margin: 5px 0 0;
+    font-size: 1.1em;
+}
+
+.form-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.form-left {
+    flex: 2;
+    padding-right: 20px;
+}
+
+.form-right {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.form-field {
+    margin-bottom: 15px;
+}
+
+.form-field label,
+.grid-container label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #333;
+    font-size: 14px;
+}
+
+.form-field input[type="text"],
+.form-field select,
+.form-field input[type="date"],
+.form-field input[type="email"],
+.grid-container input[type="text"],
+.grid-container select,
+.grid-container input[type="date"],
+.grid-container input[type="email"],
+.name-fields input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+}
+
+.form-field input[type="text"]:focus,
+.form-field select:focus,
+.form-field input[type="date"]:focus,
+.form-field input[type="email"]:focus,
+.grid-container input[type="text"]:focus,
+.grid-container select:focus,
+.grid-container input[type="date"]:focus,
+.grid-container input[type="email"]:focus,
+.name-fields input:focus {
+    outline: none;
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out
+}
+
+.form-field select,
+.grid-container select {
+    background-color: white;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    appearance: none;
+    cursor: pointer;
+}
+
+.checkbox-group p,
+.radio-input p {
+    margin: 0 0 10px;
+}
+
+.checkbox-options,
+.radio-options {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 15px;
+}
+
+.checkbox-options input[type="checkbox"],
+.radio-options input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+    accent-color: #c00;
+}
+
+.checkbox-options label,
+.radio-options label {
+    display: flex;
+    align-items: center;
+    font-weight: normal;
+    margin-bottom: 8px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+/* Styles for "Other" text fields next to checkboxes/radios */
+.checkbox-options input[type="text"],
+.radio-options input[type="text"] {
+    width: auto;
+    flex-grow: 1;
+}
+
+.radio-options .fill-in-box {
+    flex-grow: 1;
+}
+
+/* .image-upload-box {
+    border: 2px dashed #ccc;
+    text-align: center;
+    padding: 20px;
+    border-radius: 8px;
+    width: 200px;
+    height: 200px;
+    position: relative;
+} */
+
+/* Styling for the family info sections */
+.family-info-section h4 {
+    color: #c00;
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: 1.1em;
+    font-weight: 600;
+}
+
+.family-info-section .sub-section {
+    margin-bottom: 28px;
+    padding: 16px;
+    background-color: white;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+
+.back-btn:hover {
+    background-color: #333;
+}
+
+/* #photo-preview,
+#parent-photo-preview {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+} */
+
+.errorlist {
+    color: #d9534f;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+    padding: 10px;
+    margin: 10px 0;
+    list-style: none;
+}
+
+.errorlist li {
+    padding: 5px 0;
+}
+
+/* .student-info-section,
+.family-info-section,
+.non-academic-section {
+    border: 2px solid #e0e0e0;
+    padding: 24px;
+    border-radius: 10px;
+    margin-bottom: 24px;
+    background-color: #fafafa;
+} */
+
+.field-error {
+    border-color: #dc3545 !important;
+    background-color: #fff5f5 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.15) !important;
+}
+
+/* .section-title {
+    color: #c00;
+    font-size: 1.3em;
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-weight: 600;
+} */
+
+.birthdate-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.age-display {
+    font-size: 0.9rem;
+    color: #495057;
+    font-weight: 500;
+    padding: 0.375rem 0.75rem;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+    white-space: nowrap;
+    min-width: 80px;
+    text-align: center;
+}
+
+/* .subtitle {
+    font-size: 0.9em;
+    font-weight: normal;
+} */
+
+.validation-message,
+.file-validation-message {
+    display: none;
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    padding: 0.5rem;
+    background-color: #fff5f5;
+    border-left: 3px solid #dc3545;
+    border-radius: 4px;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* .name-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+} */
+
+.upload-area.has-error,
+#parent-upload-area-label.has-error {
+    border-color: #dc3545 !important;
+    background-color: #fff5f5 !important;
+}
+
+.required-asterisk {
+    color: #dc3545;
+    font-weight: bold;
+    margin-left: 2px;
+}
+
+input[type="text"]:valid:not(:placeholder-shown),
+    input[type="email"]:valid:not(:placeholder-shown),
+    input[type="tel"]:valid:not(:placeholder-shown),
+    input[type="date"]:valid:not(:placeholder-shown) {
+        border-color: #28a745;
+    }
+
+.preview-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/* .form-footer {
+    text-align: center;
+} */
+
+#parent-photo-preview,
+#photo-preview {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* .next-btn {
+    background-color: #c00;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    font-size: 1.2em;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+    text-decoration: none;
+} */
+
+.student-info-banner {
+    background: #f8f9fa;
+    border-left: 4px solid #007bff;
+    padding: 10px 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+/* .next-btn:hover {
+    background-color: #a00;
+} */
+
+.student-info-banner h4 {
+    margin: 0;
+    color: #495057;
+    font-size: 16px;
+}
+
+/* Styling for the family info sections 
+.family-info-section h4 {
+    color: #c00;
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: 1.1em;
+    font-weight: 600;
+} */
+
+.form-progress {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+/* .family-info-section .sub-section {
+    margin-bottom: 28px;
+    padding: 16px;
+    background-color: white;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+} */
+
+.progress-step {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.progress-step.active {
+    background: #007bff;
+    color: white;
+}
+
+.progress-step.completed {
+    background: #28a745;
+    color: white;
+}
+
