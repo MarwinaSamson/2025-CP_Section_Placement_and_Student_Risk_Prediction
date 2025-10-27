@@ -1,30 +1,21 @@
-
-
 from pathlib import Path
 import os
 import dj_database_url
-from pathlib import Path
 
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-#SECRET_KEY = "django-insecure-yo*hksn^_rmd24$zaht=4&fhp@svdt0f!&zj$4aawoo7r74h%7"
+# --- Security ---
 SECRET_KEY = os.environ.get('SECRET_KEY', 'fallback-secret-key')
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+else:
+    ALLOWED_HOSTS.append('*')
 
-ALLOWED_HOSTS = ['*']
-
-
-# Application definition
-
+# --- Installed Apps ---
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -37,6 +28,7 @@ INSTALLED_APPS = [
     "teacher",
 ]
 
+# --- Middleware ---
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -48,12 +40,12 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-# NEW: Allow same-origin iframes (for modal; DENY blocks everything)
-SECURE_FRAME_DENY = False  # Or set to True only in production
-X_FRAME_OPTIONS = 'SAMEORIGIN'  # Allows iframes from same site (e.g., your modal)
+SECURE_FRAME_DENY = False
+X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 ROOT_URLCONF = "phase1.urls"
 
+# --- Templates ---
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -74,81 +66,53 @@ TEMPLATES = [
     },
 ]
 
-
 WSGI_APPLICATION = "phase1.wsgi.application"
 
-
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
+# --- Database ---
+# (✅ FIXED: Always has ENGINE defined properly)
 DATABASES = {
     "default": dj_database_url.config(
-        default=os.environ.get("DATABASE_URL"),
+        default="postgresql://spark_61jr_user:HndXcawx9gwBffcOgxYGhvQls094KGlt@dpg-d3vake6r433s73co7od0-a.oregon-postgres.render.com/spark_61jr",
         conn_max_age=600,
-        ssl_require=True)
-    }
+        ssl_require=True,
+    )
+}
 
-
-
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
-
+# --- Password validation ---
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
-
+# --- Internationalization ---
 LANGUAGE_CODE = "en-us"
-
 TIME_ZONE = "Asia/Manila"
-
 USE_I18N = True
-
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-
+# --- Static and Media Files ---
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'admin_functionalities', 'static'),
     os.path.join(BASE_DIR, 'enrollmentprocess', 'static'),
     os.path.join(BASE_DIR, 'teacher', 'static'),
 ]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-STATIC_ROOT = BASE_DIR / "staticfiles"  # add this line
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+# --- Upload Limits ---
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 
-# File upload settings
-FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
-DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
-  
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
+# --- Authentication ---
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'
 
 AUTH_USER_MODEL = "admin_functionalities.CustomUser"
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
