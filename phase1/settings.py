@@ -1,9 +1,15 @@
 from pathlib import Path
 import os
 import dj_database_url
+import environ
+
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+env = environ.Env()
+env_file = os.path.join(BASE_DIR, '.env')
+if os.path.exists(env_file):
+    environ.Env.read_env(env_file)
 # --- Security ---
 SECRET_KEY = os.environ.get('SECRET_KEY', 'fallback-secret-key')
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
@@ -72,7 +78,7 @@ WSGI_APPLICATION = "phase1.wsgi.application"
 # (✅ FIXED: Always has ENGINE defined properly)
 DATABASES = {
     "default": dj_database_url.config(
-        default="postgresql://spark_61jr_user:HndXcawx9gwBffcOgxYGhvQls094KGlt@dpg-d3vake6r433s73co7od0-a.oregon-postgres.render.com/spark_61jr",
+        default=os.environ.get("DATABASE_URL"),
         conn_max_age=600,
         ssl_require=True,
     )
