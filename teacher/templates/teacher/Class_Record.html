@@ -1,0 +1,1774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Class Record</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf-autotable.umd.min.js"></script>
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        /* 1. New two-column layout */
+        .page-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            max-width: 1900px;
+            margin: 20px auto;
+        }
+
+        .main-container {
+            flex: 3; /* Main content takes up 3/4 of the space */
+            min-width: 700px;
+            padding: 25px;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07);
+        }
+        
+        /* 1. New History Sidebar */
+        .history-sidebar {
+            flex: 1; /* History takes up 1/4 of the space */
+            min-width: 300px;
+            padding: 25px;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07);
+            align-self: flex-start; /* Aligns to top */
+            max-height: 80vh; /* Limit height and allow scrolling */
+            overflow-y: auto;
+        }
+        .history-sidebar h2 {
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+            color: #333;
+        }
+        #history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .history-item {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s, border-color 0.3s;
+            font-size: 14px;
+        }
+        .history-item:hover {
+            background: #f8f9fa;
+            border-color: #007bff;
+        }
+        .history-item strong {
+            color: #007bff;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .history-item span {
+            font-size: 12px;
+            color: #555;
+        }
+        #history-list-empty {
+            font-style: italic;
+            color: #888;
+        }
+
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+        .header-container h1 {
+            margin: 0;
+            color: #333;
+        }
+        .header-buttons button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            margin-left: 10px;
+            transition: all 0.3s;
+        }
+        .header-buttons button:hover {
+            opacity: 0.8;
+            transform: translateY(-2px);
+        }
+        #pdf-btn {
+            background-color: #28a745;
+            color: white;
+        }
+        #print-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+        #save-btn {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .sub-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 16px;
+            color: #555;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .subject-info {
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px; /* Spacing between items */
+        }
+        .subject-info i {
+            margin-right: 5px;
+            color: #007bff;
+        }
+        
+        /* 2. Editable Subject Style */
+        #subject-name[contenteditable="true"] {
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+        #subject-name[contenteditable="true"]:focus {
+            outline: 2px solid #007bff;
+            background: #f0f8ff;
+            box-shadow: 0 0 5px rgba(0,123,255,0.5);
+        }
+
+        /* 3. Section Dropdown Style */
+        #section-select {
+            font-weight: bold;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 4px 6px;
+            font-size: 15px;
+            background: #f9f9f9;
+        }
+
+        .back-btn {
+            background: #6c757d;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s, transform 0.3s;
+        }
+        .back-btn:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        h1, h2 {
+            color: #333;
+        }
+
+        .criteria-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #007bff;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+        }
+        .criteria-title i {
+            margin-right: 8px;
+        }
+
+        .tabs {
+            overflow: hidden;
+            border-bottom: 2px solid #007bff;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px -8px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-link {
+            background-color: #f1f1f1;
+            float: left;
+            border: 1px solid #ccc;
+            border-bottom: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            font-size: 17px;
+            transition: 0.3s;
+            border-radius: 5px 5px 0 0;
+            margin-right: 2px;
+        }
+        .tab-link:hover {
+            background-color: #ddd;
+        }
+        .tab-link.active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-top: none;
+            background-color: white;
+            border-radius: 0 0 5px 5px;
+            overflow-x: auto;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+            max-width: 600px;
+        }
+        .info-grid label {
+            font-weight: bold;
+            text-align: right;
+            padding-top: 5px;
+        }
+        .info-grid input {
+            padding: 8px;
+            width: 80px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+            min-width: 50px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+
+        td.student-name, th.student-name {
+            text-align: left;
+            min-width: 200px;
+            position: sticky;
+            left: 50px; /* Width of 'No.' column */
+            background-color: white;
+            z-index: 1;
+            border-right: 2px solid #ddd;
+        }
+        td.student-sex, th.student-sex {
+            min-width: 60px;
+            position: sticky;
+            left: 250px; /* Width of 'No.' + 'Name' */
+            background-color: white;
+            z-index: 1;
+            border-right: 2px solid #ddd;
+        }
+        
+        td:first-child, th:first-child {
+             min-width: 50px;
+             position: sticky;
+             left: 0;
+             background-color: #f9f9f9;
+             z-index: 1;
+             border-right: 2px solid #ddd;
+        }
+        th:first-child, th.student-name, th.student-sex {
+            z-index: 2; /* Ensures headers are above */
+        }
+        
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        tbody tr:hover td:first-child {
+            background-color: #f1f1f1;
+        }
+        tbody tr:hover td.student-name,
+        tbody tr:hover td.student-sex {
+            background-color: #f1f1f1;
+        }
+
+
+        td input {
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            text-align: center;
+            padding: 6px 2px;
+            -moz-appearance: textfield; /* Firefox */
+        }
+        td input:focus {
+            outline: 2px solid #007bff;
+            border-color: #007bff;
+        }
+
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        td.locked, tr.hps-row .locked {
+            background-color: #eee;
+            font-weight: bold;
+            color: #333;
+        }
+
+        tr.hps-row {
+            background-color: #fffacd;
+        }
+        th.hps-label {
+            background-color: #fffacd;
+            font-weight: bold;
+            text-align: left;
+        }
+        th.hps-label.student-name {
+            background-color: #fffacd;
+        }
+        th.hps-label.student-sex {
+            background-color: #fffacd;
+        }
+
+        tr.hps-row .hps-total {
+            background-color: #fffacd;
+            font-weight: bold;
+        }
+
+        tr.hps-row input {
+            background-color: #fffacd;
+            font-weight: bold;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 0;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            animation: fadeIn 0.3s;
+        }
+        .modal-header {
+            padding: 16px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 8px 8px 0 0;
+        }
+        .modal-header h2 {
+            margin: 0;
+            color: white;
+        }
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            line-height: 1;
+            cursor: pointer;
+        }
+        .close-btn:hover,
+        .close-btn:focus {
+            color: #000;
+            text-decoration: none;
+        }
+        .modal-body {
+            padding: 20px;
+            font-size: 16px;
+        }
+        @keyframes fadeIn {
+            from {opacity: 0}
+            to {opacity: 1}
+        }
+        
+        .footer-prepared {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        .footer-prepared p {
+            font-size: 16px;
+            color: #333;
+            margin: 0;
+        }
+        .footer-prepared .signature {
+            margin-top: 60px;
+            width: 300px;
+        }
+        .footer-prepared .name {
+            font-weight: bold;
+            font-size: 16px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #000;
+            display: block;
+            text-align: center;
+        }
+        .footer-prepared .position {
+            font-size: 15px;
+            color: #555;
+            display: block;
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        .letterhead {
+            background-color: #a10f0f;
+            color: #fff;
+            padding: 10px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .flex-left,
+        .flex-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo {
+            width: 85px;
+            height: 85px;
+            object-fit: contain;
+            background: transparent;
+            padding: 4px;
+        }
+        #logo4 {
+            width: 120px;
+            height: auto;
+        }
+        .center-content {
+            flex: 1;
+            text-align: center;
+            line-height: 1.35;
+            padding: 0 10px;
+        }
+        .center-content h2 {
+            font-size: 0.9rem;
+            margin: 3px 0;
+            font-weight: 600;
+            color: #fff;
+        }
+        .center-content h1 {
+            font-size: 1.3rem;
+            margin: 3px 0;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #fff;
+        }
+        .center-content p {
+            font-size: 0.85rem;
+            margin: 2px 0;
+        }
+        .footer {
+            background-color: #a10f0f;
+            color: #fff;
+            padding: 4px 20px;
+            font-size: 0.75rem;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .print-only {
+            display: none;
+        }
+
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+                background: #fff;
+                font-size: 10pt;
+            }
+            .page-wrapper {
+                display: block; /* Stack main and history */
+            }
+            .main-container {
+                box-shadow: none;
+                border: none;
+                padding: 0;
+                margin: 0;
+                max-width: 100%;
+                flex: none;
+                width: 100%;
+            }
+            
+            .print-only {
+                display: block;
+            }
+            .footer {
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+            }
+
+            .no-print, .history-sidebar {
+                display: none !important;
+            }
+            
+            .tab-content {
+                display: none !important;
+                border: none;
+                padding: 0;
+                overflow: visible;
+            }
+            .tab-content[style*="display: block"] {
+                display: block !important;
+            }
+            
+            .sub-header {
+                display: block;
+            }
+            
+            table, th, td {
+                border: 1px solid #000 !important;
+            }
+            td.student-name, th.student-name, 
+            td.student-sex, th.student-sex,
+            td:first-child, th:first-child {
+                position: static;
+                left: auto;
+                background-color: inherit;
+                border-right: 1px solid #000 !important;
+            }
+
+            tr.hps-row, tr.hps-row input, tr.hps-row .hps-total, th.hps-label {
+                background-color: #fffacd !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            th {
+                background-color: #f2f2f2 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            td.locked, tr.hps-row .locked {
+                background-color: #eee !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            tr {
+                page-break-inside: avoid;
+            }
+            h2 {
+                page-break-before: always;
+            }
+            .footer-prepared {
+                 page-break-inside: avoid;
+            }
+            #Summary h2 {
+                page-break-before: always;
+            }
+            #Q1 h2 {
+                 page-break-before: auto;
+            }
+            
+            /* 5. Fix for print visibility: Use a simple B&W header */
+            .letterhead, .letterhead h1, .letterhead h2, .letterhead p {
+                color: #000 !important; /* Force black text */
+            }
+            .letterhead {
+                background-color: #fff !important; /* Remove red background */
+                border-bottom: 2px solid #000;
+                padding: 10px;
+            }
+            .footer {
+                color: #000 !important;
+                background-color: #fff !important;
+                border-top: 1px solid #000;
+                justify-content: flex-end;
+            }
+            .logo {
+                display: none; /* Hide logos as paths may be broken */
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 
+  These hidden images are used by the PDF generator. 
+  Provide valid URLs or local paths relative to the HTML file.
+  Using placeholders as logos might be broken.
+-->
+<div class="print-only">
+    <div class="letterhead" id="letterhead">
+        <div class="flex-left">
+            <!-- Using placeholders. Replace src with valid paths to your LOGO/ folder -->
+            <img class="logo" id="logo1" src="https://placehold.co/85x85/ffffff/a10f0f?text=Logo+1" alt="Left Logo 1">
+            <img class="logo" id="logo2" src="https://placehold.co/85x85/ffffff/a10f0f?text=Logo+2" alt="Left Logo 2">
+        </div>
+        <div class="center-content" id="header-text">
+            <h2>Republic of the Philippines</h2>
+            <h2>Department of Education</h2>
+            <h2>REGION IX – ZAMBOANGA PENINSULA</h2>
+            <h2>Schools Division Office of Zamboanga City</h2>
+            <h1>Zamboanga National High School West</h1>
+            <p>R.T. Lim Boulevard, Zamboanga City, Philippines</p>
+            <p><strong>School ID:</strong> 303942</p>
+        </div>
+        <div class="flex-right">
+            <img class="logo" id="logo3" src="https://placehold.co/85x85/ffffff/a10f0f?text=Logo+3" alt="Right Logo 1">
+            <img class="logo" id="logo4" src="https://placehold.co/120x85/ffffff/a10f0f?text=Logo+4" alt="Right Logo 2">
+        </div>
+    </div>
+</div>
+
+<!-- 1. New Page Wrapper -->
+<div class="page-wrapper">
+
+    <div class="main-container">
+
+        <div class="header-container no-print">
+            <h1>E-Class Record</h1>
+            <div class="header-buttons">
+                <button id="save-btn" title="Save Progress"><i class="fa-solid fa-save"></i> Save</button>
+                <button id="pdf-btn" title="Download as PDF"><i class="fa-solid fa-file-arrow-down"></i> Download PDF</button>
+                <button id="print-btn" title="Print"><i class="fa-solid fa-print"></i> Print</button>
+            </div>
+        </div>
+
+        <div class="sub-header">
+            <div class="subject-info">
+                <!-- 2. Editable Subject -->
+                <span><i class="fa-solid fa-book"></i>Subject: <strong id="subject-name" contenteditable="true">English</strong></span>
+                <!-- 3. Section Dropdown -->
+                <span>
+                    <i class="fa-solid fa-users"></i>Section: 
+                    <select id="section-select" class="no-print">
+                        <option value="Section-A">Section A</option>
+                        <option value="Section-B">Section B</option>
+                        <option value="Section-C">Section C</option>
+                    </select>
+                </span>
+                <span><i class="fa-solid fa-calendar-days"></i>S.Y. <strong>2025-2026</strong></span>
+            </div>
+            <button class="back-btn no-print" title="Go Back"><i class="fa-solid fa-arrow-left"></i> Back</button>
+        </div>
+
+        <nav class="tabs no-print">
+            <button class="tab-link active" onclick="openTab(event, 'Q1')">Quarter 1</button>
+            <button class="tab-link" onclick="openTab(event, 'Q2')">Quarter 2</button>
+            <button class="tab-link" onclick="openTab(event, 'Q3')">Quarter 3</button>
+            <button class="tab-link" onclick="openTab(event, 'Q4')">Quarter 4</button>
+            <button class="tab-link" onclick="openTab(event, 'Summary')">Summary</button>
+        </nav>
+
+        <div id="Q1" class="tab-content" style="display: block;">
+            <h2>First Quarter</h2>
+            
+            <h3 class="criteria-title no-print">
+                <i class="fa-solid fa-sliders"></i> Grading Criteria Configuration
+            </h3>
+            <div class="info-grid no-print">
+                <label>Written Works %:</label><input type="number" class="weight-input" id="q1-ww-weight" data-quarter="1" value="30" min="0" max="100">
+                <label>Performance Tasks %:</label><input type="number" class="weight-input" id="q1-pt-weight" data-quarter="1" value="50" min="0" max="100">
+                <label>Quarterly Assessment %:</label><input type="number" class="weight-input" id="q1-qa-weight" data-quarter="1" value="20" min="0" max="100">
+            </div>
+
+            <table id="q1-table">
+                <thead>
+                    <tr>
+                        <th rowspan="2">No.</th>
+                        <th rowspan="2" class="student-name">Learners' Names</th>
+                        <th rowspan="2" class="student-sex">Sex</th>
+                        <th colspan="13" id="q1-ww-header">Written Works (30%)</th>
+                        <th colspan="13" id="q1-pt-header">Performance Tasks (50%)</th>
+                        <th colspan="3" id="q1-qa-header">Quarterly Assessment (20%)</th>
+                        <th rowspan="2">Initial Grade</th>
+                        <th rowspan="2">Quarterly Grade</th>
+                    </tr>
+                    <tr>
+                        <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
+                        <th>6</th><th>7</th><th>8</th><th>9</th><th>10</th>
+                        <th>Total</th><th>PS</th><th>WS</th>
+                        <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
+                        <th>6</th><th>7</th><th>8</th><th>9</th><th>10</th>
+                        <th>Total</th><th>PS</th><th>WS</th>
+                        <th>1</th><th>PS</th><th>WS</th>
+                    </tr>
+                    <tr class="hps-row">
+                        <th class="hps-label"></th>
+                        <th class="hps-label student-name">Highest Possible Score</th>
+                        <th class="hps-label student-sex"></th>
+                        <td><input type="number" class="hps" id="q1-ww-hps-1" data-quarter="1" value="10"></td>
+                        <td><input type="number" class="hps" id="q1-ww-hps-2" data-quarter="1" value="10"></td>
+                        <td><input type="number" class="hps" id="q1-ww-hps-3" data-quarter="1" value="10"></td>
+                        <td><input type="number" class="hps" id="q1-ww-hps-4" data-quarter="1" value="10"></td>
+                        <td><input type="number" class="hps" id="q1-ww-hps-5" data-quarter="1" value="10"></td>
+                        <td><input type="number" class="hps" id="q1-ww-hps-6" data-quarter="1" value="10"></td>
+                        <td><input type="number" class="hps" id="q1-ww-hps-7" data-quarter="1" value="10"></td>
+                        <td><input type="number" class="hps" id="q1-ww-hps-8" data-quarter="1" value="10"></td>
+                        <td><input type="number" class="hps" id="q1-ww-hps-9" data-quarter="1" value="10"></td>
+                        <td><input type="number" class="hps" id="q1-ww-hps-10" data-quarter="1" value="10"></td>
+                        <td class="hps-total" id="q1-ww-hps-total">100</td>
+                        <td class="locked">100</td><td class="locked" id="q1-ww-hps-ws">30.00</td>
+                        
+                        <td><input type="number" class="hps" id="q1-pt-hps-1" data-quarter="1" value="10"></td>
+                        <td><input type="number" class="hps" id="q1-pt-hps-2" data-quarter="1" value="10"></td>
+                        <td><input type="number" class="hps" id="q1-pt-hps-3" data-quarter="1" value="10"></td>
+                        <td><input type="number" class="hps" id="q1-pt-hps-4" data-quarter="1" value="10"></td>
+                        <td><input type="number" class="hps" id="q1-pt-hps-5" data-quarter="1" value="10"></td>
+                        <td><input type="number" class="hps" id="q1-pt-hps-6" data-quarter="1" value="10"></td>
+                        <td><input type="number" class="hps" id="q1-pt-hps-7" data-quarter="1" value="10"></td>
+                        <td><input type="number" class="hps" id="q1-pt-hps-8" data-quarter="1" value="10"></td>
+                        <td><input type="number" class="hps" id="q1-pt-hps-9" data-quarter="1" value="10"></td>
+                        <td><input type="number" class="hps" id="q1-pt-hps-10" data-quarter="1" value="10"></td>
+                        <td class="hps-total" id="q1-pt-hps-total">100</td>
+                        <td class="locked">100</td><td class="locked" id="q1-pt-hps-ws">50.00</td>
+                        
+                        <td><input type="number" class="hps" id="q1-qa-hps-1" data-quarter="1" value="50"></td>
+                        <td class="hps-total" id="q1-qa-hps-total">50</td>
+                        <td class="locked" id="q1-qa-hps-ws">20.00</td>
+                    </tr>
+                </thead>
+                <tbody id="q1-body">
+                    <!-- Student rows will be injected here by JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <div id="Q2" class="tab-content">
+            <h2>Second Quarter</h2>
+            
+            <h3 class="criteria-title no-print">
+                <i class="fa-solid fa-sliders"></i> Grading Criteria Configuration
+            </h3>
+            <div class="info-grid no-print">
+                <label>Written Works %:</label><input type="number" class="weight-input" id="q2-ww-weight" data-quarter="2" value="30" min="0" max="100">
+                <label>Performance Tasks %:</label><input type="number" class="weight-input" id="q2-pt-weight" data-quarter="2" value="50" min="0" max="100">
+                <label>Quarterly Assessment %:</label><input type="number" class="weight-input" id="q2-qa-weight" data-quarter="2" value="20" min="0" max="100">
+            </div>
+
+            <table id="q2-table">
+                <thead>
+                    <tr>
+                        <th rowspan="2">No.</th>
+                        <th rowspan="2" class="student-name">Learners' Names</th>
+                        <th rowspan="2" class="student-sex">Sex</th>
+                        <th colspan="13" id="q2-ww-header">Written Works (30%)</th>
+                        <th colspan="13" id="q2-pt-header">Performance Tasks (50%)</th>
+                        <th colspan="3" id="q2-qa-header">Quarterly Assessment (20%)</th>
+                        <th rowspan="2">Initial Grade</th>
+                        <th rowspan="2">Quarterly Grade</th>
+                    </tr>
+                    <tr>
+                        <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
+                        <th>6</th><th>7</th><th>8</th><th>9</th><th>10</th>
+                        <th>Total</th><th>PS</th><th>WS</th>
+                        <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
+                        <th>6</th><th>7</th><th>8</th><th>9</th><th>10</th>
+                        <th>Total</th><th>PS</th><th>WS</th>
+                        <th>1</th><th>PS</th><th>WS</th>
+                    </tr>
+                    <tr class="hps-row">
+                        <th class="hps-label"></th>
+                        <th class="hps-label student-name">Highest Possible Score</th>
+                        <th class="hps-label student-sex"></th>
+                        <td><input type="number" class="hps" id="q2-ww-hps-1" data-quarter="2" value="10"></td>
+                        <td><input type="number" class="hps" id="q2-ww-hps-2" data-quarter="2" value="10"></td>
+                        <td><input type="number" class="hps" id="q2-ww-hps-3" data-quarter="2" value="10"></td>
+                        <td><input type="number" class="hps" id="q2-ww-hps-4" data-quarter="2" value="10"></td>
+                        <td><input type="number" class="hps" id="q2-ww-hps-5" data-quarter="2" value="10"></td>
+                        <td><input type="number" class="hps" id="q2-ww-hps-6" data-quarter="2" value="10"></td>
+                        <td><input type="number" class="hps" id="q2-ww-hps-7" data-quarter="2" value="10"></td>
+                        <td><input type="number" class="hps" id="q2-ww-hps-8" data-quarter="2" value="10"></td>
+                        <td><input type="number" class="hps" id="q2-ww-hps-9" data-quarter="2" value="10"></td>
+                        <td><input type="number" class="hps" id="q2-ww-hps-10" data-quarter="2" value="10"></td>
+                        <td class="hps-total" id="q2-ww-hps-total">100</td>
+                        <td class="locked">100</td><td class="locked" id="q2-ww-hps-ws">30.00</td>
+                        
+                        <td><input type="number" class="hps" id="q2-pt-hps-1" data-quarter="2" value="10"></td>
+                        <td><input type="number" class="hps" id="q2-pt-hps-2" data-quarter="2" value="10"></td>
+                        <td><input type="number" class="hps" id="q2-pt-hps-3" data-quarter="2" value="10"></td>
+                        <td><input type="number" class="hps" id="q2-pt-hps-4" data-quarter="2" value="10"></td>
+                        <td><input type="number" class="hps" id="q2-pt-hps-5" data-quarter="2" value="10"></td>
+                        <td><input type="number" class="hps" id="q2-pt-hps-6" data-quarter="2" value="10"></td>
+                        <td><input type="number" class="hps" id="q2-pt-hps-7" data-quarter="2" value="10"></td>
+                        <td><input type="number" class="hps" id="q2-pt-hps-8" data-quarter="2" value="10"></td>
+                        <td><input type="number" class="hps" id="q2-pt-hps-9" data-quarter="2" value="10"></td>
+                        <td><input type="number" class="hps" id="q2-pt-hps-10" data-quarter="2" value="10"></td>
+                        <td class="hps-total" id="q2-pt-hps-total">100</td>
+                        <td class="locked">100</td><td class="locked" id="q2-pt-hps-ws">50.00</td>
+                        
+                        <td><input type="number" class="hps" id="q2-qa-hps-1" data-quarter="2" value="50"></td>
+                        <td class="hps-total" id="q2-qa-hps-total">50</td>
+                        <td class="locked" id="q2-qa-hps-ws">20.00</td>
+                    </tr>
+                </thead>
+                <tbody id="q2-body">
+                    <!-- Student rows will be injected here by JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <div id="Q3" class="tab-content">
+            <h2>Third Quarter</h2>
+            
+            <h3 class="criteria-title no-print">
+                <i class="fa-solid fa-sliders"></i> Grading Criteria Configuration
+            </h3>
+            <div class="info-grid no-print">
+                <label>Written Works %:</label><input type="number" class="weight-input" id="q3-ww-weight" data-quarter="3" value="30" min="0" max="100">
+                <label>Performance Tasks %:</label><input type="number" class="weight-input" id="q3-pt-weight" data-quarter="3" value="50" min="0" max="100">
+                <label>Quarterly Assessment %:</label><input type="number" class="weight-input" id="q3-qa-weight" data-quarter="3" value="20" min="0" max="100">
+            </div>
+
+            <table id="q3-table">
+                <thead>
+                    <tr>
+                        <th rowspan="2">No.</th>
+                        <th rowspan="2" class="student-name">Learners' Names</th>
+                        <th rowspan="2" class="student-sex">Sex</th>
+                        <th colspan="13" id="q3-ww-header">Written Works (30%)</th>
+                        <th colspan="13" id="q3-pt-header">Performance Tasks (50%)</th>
+                        <th colspan="3" id="q3-qa-header">Quarterly Assessment (20%)</th>
+                        <th rowspan="2">Initial Grade</th>
+                        <th rowspan="2">Quarterly Grade</th>
+                    </tr>
+                    <tr>
+                        <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
+                        <th>6</th><th>7</th><th>8</th><th>9</th><th>10</th>
+                        <th>Total</th><th>PS</th><th>WS</th>
+                        <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
+                        <th>6</th><th>7</th><th>8</th><th>9</th><th>10</th>
+                        <th>Total</th><th>PS</th><th>WS</th>
+                        <th>1</th><th>PS</th><th>WS</th>
+                    </tr>
+                    <tr class="hps-row">
+                        <th class="hps-label"></th>
+                        <th class="hps-label student-name">Highest Possible Score</th>
+                        <th class="hps-label student-sex"></th>
+                        <td><input type="number" class="hps" id="q3-ww-hps-1" data-quarter="3" value="10"></td>
+                        <td><input type="number" class="hps" id="q3-ww-hps-2" data-quarter="3" value="10"></td>
+                        <td><input type="number" class="hps" id="q3-ww-hps-3" data-quarter="3" value="10"></td>
+                        <td><input type="number" class="hps" id="q3-ww-hps-4" data-quarter="3" value="10"></td>
+                        <td><input type="number" class="hps" id="q3-ww-hps-5" data-quarter="3" value="10"></td>
+                        <td><input type="number" class="hps" id="q3-ww-hps-6" data-quarter="3" value="10"></td>
+                        <td><input type="number" class="hps" id="q3-ww-hps-7" data-quarter="3" value="10"></td>
+                        <td><input type="number" class="hps" id="q3-ww-hps-8" data-quarter="3" value="10"></td>
+                        <td><input type="number" class="hps" id="q3-ww-hps-9" data-quarter="3" value="10"></td>
+                        <td><input type="number" class="hps" id="q3-ww-hps-10" data-quarter="3" value="10"></td>
+                        <td class="hps-total" id="q3-ww-hps-total">100</td>
+                        <td class="locked">100</td><td class="locked" id="q3-ww-hps-ws">30.00</td>
+                        
+                        <td><input type="number" class="hps" id="q3-pt-hps-1" data-quarter="3" value="10"></td>
+                        <td><input type="number" class="hps" id="q3-pt-hps-2" data-quarter="3" value="10"></td>
+                        <td><input type="number" class="hps" id="q3-pt-hps-3" data-quarter="3" value="10"></td>
+                        <td><input type="number" class="hps" id="q3-pt-hps-4" data-quarter="3" value="10"></td>
+                        <td><input type="number" class="hps" id="q3-pt-hps-5" data-quarter="3" value="10"></td>
+                        <td><input type="number" class="hps" id="q3-pt-hps-6" data-quarter="3" value="10"></td>
+                        <td><input type="number" class="hps" id="q3-pt-hps-7" data-quarter="3" value="10"></td>
+                        <td><input type="number" class="hps" id="q3-pt-hps-8" data-quarter="3" value="10"></td>
+                        <td><input type="number" class="hps" id="q3-pt-hps-9" data-quarter="3" value="10"></td>
+                        <td><input type="number" class="hps" id="q3-pt-hps-10" data-quarter="3" value="10"></td>
+                        <td class="hps-total" id="q3-pt-hps-total">100</td>
+                        <td class="locked">100</td><td class="locked" id="q3-pt-hps-ws">50.00</td>
+                        
+                        <td><input type="number" class="hps" id="q3-qa-hps-1" data-quarter="3" value="50"></td>
+                        <td class="hps-total" id="q3-qa-hps-total">50</td>
+                        <td class="locked" id="q3-qa-hps-ws">20.00</td>
+                    </tr>
+                </thead>
+                <tbody id="q3-body">
+                    <!-- Student rows will be injected here by JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <div id="Q4" class="tab-content">
+            <h2>Fourth Quarter</h2>
+            
+            <h3 class="criteria-title no-print">
+                <i class="fa-solid fa-sliders"></i> Grading Criteria Configuration
+            </h3>
+            <div class="info-grid no-print">
+                <label>Written Works %:</label><input type="number" class="weight-input" id="q4-ww-weight" data-quarter="4" value="30" min="0" max="100">
+                <label>Performance Tasks %:</label><input type="number" class="weight-input" id="q4-pt-weight" data-quarter="4" value="50" min="0" max="100">
+                <label>Quarterly Assessment %:</label><input type="number" class="weight-input" id="q4-qa-weight" data-quarter="4" value="20" min="0" max="100">
+            </div>
+
+            <table id="q4-table">
+                <thead>
+                    <tr>
+                        <th rowspan="2">No.</th>
+                        <th rowspan="2" class="student-name">Learners' Names</th>
+                        <th rowspan="2" class="student-sex">Sex</th>
+                        <th colspan="13" id="q4-ww-header">Written Works (30%)</th>
+                        <th colspan="13" id="q4-pt-header">Performance Tasks (50%)</th>
+                        <th colspan="3" id="q4-qa-header">Quarterly Assessment (20%)</th>
+                        <th rowspan="2">Initial Grade</th>
+                        <th rowspan="2">Quarterly Grade</th>
+                    </tr>
+                    <tr>
+                        <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
+                        <th>6</th><th>7</th><th>8</th><th>9</th><th>10</th>
+                        <th>Total</th><th>PS</th><th>WS</th>
+                        <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
+                        <th>6</th><th>7</th><th>8</th><th>9</th><th>10</th>
+                        <th>Total</th><th>PS</th><th>WS</th>
+                        <th>1</th><th>PS</th><th>WS</th>
+                    </tr>
+                    <tr class="hps-row">
+                        <th class="hps-label"></th>
+                        <th class="hps-label student-name">Highest Possible Score</th>
+                        <th class="hps-label student-sex"></th>
+                        <td><input type="number" class="hps" id="q4-ww-hps-1" data-quarter="4" value="10"></td>
+                        <td><input type="number" class="hps" id="q4-ww-hps-2" data-quarter="4" value="10"></td>
+                        <td><input type="number" class="hps" id="q4-ww-hps-3" data-quarter="4" value="10"></td>
+                        <td><input type="number" class="hps" id="q4-ww-hps-4" data-quarter="4" value="10"></td>
+                        <td><input type="number" class="hps" id="q4-ww-hps-5" data-quarter="4" value="10"></td>
+                        <td><input type="number" class="hps" id="q4-ww-hps-6" data-quarter="4" value="10"></td>
+                        <td><input type="number" class="hps" id="q4-ww-hps-7" data-quarter="4" value="10"></td>
+                        <td><input type="number" class="hps" id="q4-ww-hps-8" data-quarter="4" value="10"></td>
+                        <td><input type="number" class="hps" id="q4-ww-hps-9" data-quarter="4" value="10"></td>
+                        <td><input type="number" class="hps" id="q4-ww-hps-10" data-quarter="4" value="10"></td>
+                        <td class="hps-total" id="q4-ww-hps-total">100</td>
+                        <td class="locked">100</td><td class="locked" id="q4-ww-hps-ws">30.00</td>
+                        
+                        <td><input type="number" class="hps" id="q4-pt-hps-1" data-quarter="4" value="10"></td>
+                        <td><input type="number" class="hps" id="q4-pt-hps-2" data-quarter="4" value="10"></td>
+                        <td><input type="number" class="hps" id="q4-pt-hps-3" data-quarter="4" value="10"></td>
+                        <td><input type="number" class="hps" id="q4-pt-hps-4" data-quarter="4" value="10"></td>
+                        <td><input type="number" class="hps" id="q4-pt-hps-5" data-quarter="4" value="10"></td>
+                        <td><input type="number" class="hps" id="q4-pt-hps-6" data-quarter="4" value="10"></td>
+                        <td><input type="number" class="hps" id="q4-pt-hps-7" data-quarter="4" value="10"></td>
+                        <td><input type="number" class="hps" id="q4-pt-hps-8" data-quarter="4" value="10"></td>
+                        <td><input type="number" class="hps" id="q4-pt-hps-9" data-quarter="4" value="10"></td>
+                        <td><input type="number" class="hps" id="q4-pt-hps-10" data-quarter="4" value="10"></td>
+                        <td class="hps-total" id="q4-pt-hps-total">100</td>
+                        <td class="locked">100</td><td class="locked" id="q4-pt-hps-ws">50.00</td>
+                        
+                        <td><input type="number" class="hps" id="q4-qa-hps-1" data-quarter="4" value="50"></td>
+                        <td class="hps-total" id="q4-qa-hps-total">50</td>
+                        <td class="locked" id="q4-qa-hps-ws">20.00</td>
+                    </tr>
+                </thead>
+                <tbody id="q4-body">
+                    <!-- Student rows will be injected here by JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <div id="Summary" class="tab-content">
+            <!-- 4. Summary Title Update -->
+            <h2>Summary of Quarterly Grades for <span id="summary-section-name">Section A</span></h2>
+            <table id="summary-table">
+                <thead>
+                    <tr>
+                        <th>No.</th>
+                        <th class="student-name">Learners' Names</th>
+                        <th class="student-sex">Sex</th>
+                        <th>1st Quarter</th>
+                        <th>2nd Quarter</th>
+                        <th>3rd Quarter</th>
+                        <th>4th Quarter</th>
+                        <th>Final Grade</th>
+                        <th>Remarks</th>
+                    </tr>
+                </thead>
+                <tbody id="summary-body">
+                    <!-- Summary rows will be injected here by JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="footer-prepared">
+            <p>Prepared by:</p>
+            <div class="signature">
+                <span class="name" contenteditable="true">Juana D. Cruz</span>
+                <span class="position">Teacher I</span>
+            </div>
+        </div>
+
+
+    </div> <!-- End .main-container -->
+
+    <!-- 1. New History Sidebar -->
+    <div class="history-sidebar no-print">
+        <h2><i class="fa-solid fa-clock-rotate-left"></i> Saved History</h2>
+        <div id="history-list">
+            <p id="history-list-empty">No history saved yet. Click the 'Save' button to create a snapshot.</p>
+            <!-- History items will be injected here by JS -->
+        </div>
+    </div>
+
+</div> <!-- End .page-wrapper -->
+
+
+<div class="print-only">
+    <footer class="footer">
+        <span id="page-number">Page 1</span>
+    </footer>
+</div>
+
+<div id="saveModal" class="modal no-print">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="close-btn">&times;</span>
+            <h2><i class="fa-solid fa-check-circle"></i> Save Confirmation</h2>
+        </div>
+        <div class="modal-body">
+            <p>Your work has been successfully saved to the history panel!</p>
+            
+        </div>
+    </div>
+</div>
+
+<script>
+// --- Tab Navigation ---
+function openTab(event, tabName) {
+    let tabContent = document.getElementsByClassName("tab-content");
+    for (let i = 0; i < tabContent.length; i++) {
+        tabContent[i].style.display = "none";
+    }
+    let tabLinks = document.getElementsByClassName("tab-link");
+    for (let i = 0; i < tabLinks.length; i++) {
+        tabLinks[i].className = tabLinks[i].className.replace(" active", "");
+    }
+    document.getElementById(tabName).style.display = "block";
+    event.currentTarget.className += " active";
+}
+
+// --- Student Management ---
+let studentCount = 0;
+
+// 3. New Data Structure for Students by Section
+const studentDataBySection = {
+    "Section-A": [
+        { name: "Aguilar, Juan D.", gender: "M" },
+        { name: "Bautista, Maria L.", gender: "F" },
+        { name: "Cruz, Jose P.", gender: "M" },
+        { name: "Dela Cruz, Ana S.", gender: "F" },
+        { name: "Garcia, Pedro M.", gender: "M" },
+    ],
+    "Section-B": [
+        { name: "Mendoza, Luis R.", gender: "M" },
+        { name: "Reyes, Sofia T.", gender: "F" },
+        { name: "Santos, Miguel A.", gender: "M" },
+    ],
+    "Section-C": [
+        { name: "Gonzales, Bianca N.", gender: "F" },
+        { name: "Lim, David K.", gender: "M" },
+        { name: "Tan, Chloe J.", gender: "F" },
+        { name: "Villanueva, Marco P.", gender: "M" }
+    ]
+};
+
+// 3. New function to load a section's data
+function loadSection(sectionName) {
+    const studentList = studentDataBySection[sectionName] || [];
+    
+    // Clear all existing student rows
+    document.querySelectorAll('tbody[id$="-body"]').forEach(tbody => {
+        tbody.innerHTML = '';
+    });
+    
+    // Reset student count
+    studentCount = 0;
+    
+    // Populate tables with new students
+    populateStudents(studentList);
+    
+    // Update summary title
+    document.getElementById('summary-section-name').textContent = sectionName;
+    
+    // Recalculate all grades for the new section (they will be 0)
+    for (let q = 1; q <= 4; q++) {
+        calculateQuarterGrades(q);
+    }
+}
+
+function populateStudents(studentList) {
+    studentList.forEach((student) => {
+        // addStudentRow will now use the global studentCount
+        addStudentRow(student);
+    });
+}
+
+/**
+ * @param {number} qNum - The quarter number (1-4).
+ * @param {object} student - The student object {name, gender}.
+ * @returns {string} The innerHTML for the table row.
+ */
+function generateStudentRowHTML(qNum, studentId, student) {
+    // Note: Added data-student-id to inputs for easier data mapping
+    return `
+        <td>${studentId}</td>
+        <td class="student-name">${student.name}</td>
+        <td class="student-sex">${student.gender}</td>
+        
+        <td><input type="number" class="score q${qNum}-ww" data-item="ww-1"></td>
+        <td><input type="number" class="score q${qNum}-ww" data-item="ww-2"></td>
+        <td><input type="number" class="score q${qNum}-ww" data-item="ww-3"></td>
+        <td><input type="number" class="score q${qNum}-ww" data-item="ww-4"></td>
+        <td><input type="number" class="score q${qNum}-ww" data-item="ww-5"></td>
+        <td><input type="number" class="score q${qNum}-ww" data-item="ww-6"></td>
+        <td><input type="number" class="score q${qNum}-ww" data-item="ww-7"></td>
+        <td><input type="number" class="score q${qNum}-ww" data-item="ww-8"></td>
+        <td><input type="number" class="score q${qNum}-ww" data-item="ww-9"></td>
+        <td><input type="number" class="score q${qNum}-ww" data-item="ww-10"></td>
+        <td class="locked q${qNum}-ww-total">0</td>
+        <td class="locked q${qNum}-ww-ps">0.00</td>
+        <td class="locked q${qNum}-ww-ws">0.00</td>
+        
+        <td><input type="number" class="score q${qNum}-pt" data-item="pt-1"></td>
+        <td><input type="number" class="score q${qNum}-pt" data-item="pt-2"></td>
+        <td><input type="number" class="score q${qNum}-pt" data-item="pt-3"></td>
+        <td><input type="number" class="score q${qNum}-pt" data-item="pt-4"></td>
+        <td><input type="number" class="score q${qNum}-pt" data-item="pt-5"></td>
+        <td><input type="number" class="score q${qNum}-pt" data-item="pt-6"></td>
+        <td><input type="number" class="score q${qNum}-pt" data-item="pt-7"></td>
+        <td><input type="number" class="score q${qNum}-pt" data-item="pt-8"></td>
+        <td><input type="number" class="score q${qNum}-pt" data-item="pt-9"></td>
+        <td><input type="number" class="score q${qNum}-pt" data-item="pt-10"></td>
+        <td class="locked q${qNum}-pt-total">0</td>
+        <td class="locked q${qNum}-pt-ps">0.00</td>
+        <td class="locked q${qNum}-pt-ws">0.00</td>
+        
+        <td><input type="number" class="score q${qNum}-qa" data-item="qa-1"></td>
+        <td class="locked q${qNum}-qa-ps">0.00</td>
+        <td class="locked q${qNum}-qa-ws">0.00</td>
+        
+        <td class="locked q${qNum}-initial-grade">0.00</td>
+        <td class="locked q${qNum}-quarterly-grade">0</td>
+    `;
+}
+
+/**
+ * @param {object} student - The student object {name, gender}.
+ */
+function addStudentRow(student) {
+    studentCount++; // Use global counter
+
+    // Add to all 4 Quarter tables
+    for (let q = 1; q <= 4; q++) {
+        const tableBody = document.getElementById(`q${q}-body`);
+        if (tableBody) {
+            let row = tableBody.insertRow();
+            row.id = `q${q}-student-${studentCount}`;
+            row.dataset.studentId = studentCount; // Add student-id for reference
+            row.innerHTML = generateStudentRowHTML(q, studentCount, student);
+        }
+    }
+    
+    // Add to Summary table
+    const summaryTable = document.getElementById("summary-body");
+    let summaryRow = summaryTable.insertRow();
+    summaryRow.id = `summary-student-${studentCount}`;
+    summaryRow.dataset.studentId = studentCount; // Add student-id for reference
+    summaryRow.innerHTML = `
+        <td>${studentCount}</td>
+        <td class="student-name">${student.name}</td>
+        <td class="student-sex">${student.gender}</td>
+        <td class="locked q1-grade">0</td>
+        <td class="locked q2-grade">0</td>
+        <td class="locked q3-grade">0</td>
+        <td class="locked q4-grade">0</td>
+        <td class="locked final-grade">0</td>
+        <td class="locked remarks">---</td>
+    `;
+}
+
+// --- Calculation Logic (No changes) ---
+
+function updateQuarterWeights(qNum) {
+    let ww = Number(document.getElementById(`q${qNum}-ww-weight`).value) || 0;
+    let pt = Number(document.getElementById(`q${qNum}-pt-weight`).value) || 0;
+    let qa = Number(document.getElementById(`q${qNum}-qa-weight`).value) || 0;
+
+    document.getElementById(`q${qNum}-ww-header`).innerText = `Written Works (${ww}%)`;
+    document.getElementById(`q${qNum}-pt-header`).innerText = `Performance Tasks (${pt}%)`;
+    document.getElementById(`q${qNum}-qa-header`).innerText = `Quarterly Assessment (${qa}%)`;
+
+    document.getElementById(`q${qNum}-ww-hps-ws`).innerText = (ww).toFixed(2);
+    document.getElementById(`q${qNum}-pt-hps-ws`).innerText = (pt).toFixed(2);
+    document.getElementById(`q${qNum}-qa-hps-ws`).innerText = (qa).toFixed(2);
+
+    calculateQuarterGrades(qNum);
+}
+
+function transmute(initialGrade) {
+    if (initialGrade >= 100) return 100;
+    if (initialGrade >= 98.40) return 99;
+    if (initialGrade >= 96.80) return 98;
+    if (initialGrade >= 95.20) return 97;
+    if (initialGrade >= 93.60) return 96;
+    if (initialGrade >= 92.00) return 95;
+    if (initialGrade >= 90.40) return 94;
+    if (initialGrade >= 88.80) return 93;
+    if (initialGrade >= 87.20) return 92;
+    if (initialGrade >= 85.60) return 91;
+    if (initialGrade >= 84.00) return 90;
+    if (initialGrade >= 82.40) return 89;
+    if (initialGrade >= 80.80) return 88;
+    if (initialGrade >= 79.20) return 87;
+    if (initialGrade >= 77.60) return 86;
+    if (initialGrade >= 76.00) return 85;
+    if (initialGrade >= 74.40) return 84;
+    if (initialGrade >= 72.80) return 83;
+    if (initialGrade >= 71.20) return 82;
+    if (initialGrade >= 69.60) return 81;
+    if (initialGrade >= 68.00) return 80;
+    if (initialGrade >= 66.40) return 79;
+    if (initialGrade >= 64.80) return 78;
+    if (initialGrade >= 63.20) return 77;
+    if (initialGrade >= 61.60) return 76;
+    if (initialGrade >= 60.00) return 75;
+    if (initialGrade >= 56.00) return 74;
+    if (initialGrade >= 52.00) return 73;
+    if (initialGrade >= 48.00) return 72;
+    if (initialGrade >= 44.00) return 71;
+    if (initialGrade >= 40.00) return 70;
+    if (initialGrade >= 36.00) return 69;
+    if (initialGrade >= 32.00) return 68;
+    if (initialGrade >= 28.00) return 67;
+    if (initialGrade >= 24.00) return 66;
+    if (initialGrade >= 20.00) return 65;
+    if (initialGrade >= 16.00) return 64;
+    if (initialGrade >= 12.00) return 63;
+    if (initialGrade >= 8.00) return 62;
+    if (initialGrade >= 4.00) return 61;
+    if (initialGrade >= 0) return 60;
+    return 0;
+}
+
+function calculateQuarterHPS(qNum) {
+    let wwHpsTotal = 0;
+    document.querySelectorAll(`#q${qNum}-table .hps-row .hps[id^="q${qNum}-ww-hps-"]`).forEach(input => {
+        wwHpsTotal += Number(input.value) || 0;
+    });
+    document.getElementById(`q${qNum}-ww-hps-total`).innerText = wwHpsTotal;
+
+    let ptHpsTotal = 0;
+    document.querySelectorAll(`#q${qNum}-table .hps-row .hps[id^="q${qNum}-pt-hps-"]`).forEach(input => {
+        ptHpsTotal += Number(input.value) || 0;
+    });
+    document.getElementById(`q${qNum}-pt-hps-total`).innerText = ptHpsTotal;
+    
+    let qaHpsTotal = Number(document.getElementById(`q${qNum}-qa-hps-1`).value) || 0;
+    document.getElementById(`q${qNum}-qa-hps-total`).innerText = qaHpsTotal;
+    
+    calculateQuarterGrades(qNum);
+}
+
+
+function calculateQuarterGrades(qNum) {
+    const WW_WEIGHT = (Number(document.getElementById(`q${qNum}-ww-weight`).value) || 0) / 100;
+    const PT_WEIGHT = (Number(document.getElementById(`q${qNum}-pt-weight`).value) || 0) / 100;
+    const QA_WEIGHT = (Number(document.getElementById(`q${qNum}-qa-weight`).value) || 0) / 100;
+
+    const wwHpsTotal = Number(document.getElementById(`q${qNum}-ww-hps-total`).innerText) || 1;
+    const ptHpsTotal = Number(document.getElementById(`q${qNum}-pt-hps-total`).innerText) || 1;
+    const qaHpsTotal = Number(document.getElementById(`q${qNum}-qa-hps-total`).innerText) || 1;
+
+    for (let i = 1; i <= studentCount; i++) {
+        const row = document.getElementById(`q${qNum}-student-${i}`);
+        if (!row) continue;
+
+        let wwTotal = 0;
+        row.querySelectorAll(`.q${qNum}-ww`).forEach(input => {
+            wwTotal += Number(input.value) || 0;
+        });
+        const wwPS = (wwTotal / wwHpsTotal) * 100;
+        const wwWS = wwPS * WW_WEIGHT;
+        
+        row.querySelector(`.q${qNum}-ww-total`).innerText = wwTotal;
+        row.querySelector(`.q${qNum}-ww-ps`).innerText = wwPS.toFixed(2);
+        row.querySelector(`.q${qNum}-ww-ws`).innerText = wwWS.toFixed(2);
+
+        let ptTotal = 0;
+        row.querySelectorAll(`.q${qNum}-pt`).forEach(input => {
+            ptTotal += Number(input.value) || 0;
+        });
+        const ptPS = (ptTotal / ptHpsTotal) * 100;
+        const ptWS = ptPS * PT_WEIGHT;
+        
+        row.querySelector(`.q${qNum}-pt-total`).innerText = ptTotal;
+        row.querySelector(`.q${qNum}-pt-ps`).innerText = ptPS.toFixed(2);
+        row.querySelector(`.q${qNum}-pt-ws`).innerText = ptWS.toFixed(2);
+
+        let qaTotal = 0;
+        row.querySelectorAll(`.q${qNum}-qa`).forEach(input => {
+            qaTotal += Number(input.value) || 0;
+        });
+        const qaPS = (qaTotal / qaHpsTotal) * 100;
+        const qaWS = qaPS * QA_WEIGHT;
+        
+        row.querySelector(`.q${qNum}-qa-ps`).innerText = qaPS.toFixed(2);
+        row.querySelector(`.q${qNum}-qa-ws`).innerText = qaWS.toFixed(2);
+
+        const initialGrade = wwWS + ptWS + qaWS;
+        const quarterlyGrade = transmute(initialGrade);
+        
+        row.querySelector(`.q${qNum}-initial-grade`).innerText = initialGrade.toFixed(2);
+        row.querySelector(`.q${qNum}-quarterly-grade`).innerText = quarterlyGrade;
+        
+        calculateSummary(i);
+    }
+}
+
+function calculateSummary(studentId) {
+    const summaryRow = document.getElementById(`summary-student-${studentId}`);
+    if (!summaryRow) return;
+
+    let q1Grade = 0;
+    let q2Grade = 0;
+    let q3Grade = 0;
+    let q4Grade = 0;
+
+    const q1Row = document.getElementById(`q1-student-${studentId}`);
+    if (q1Row) q1Grade = Number(q1Row.querySelector('.q1-quarterly-grade').innerText) || 0;
+    
+    const q2Row = document.getElementById(`q2-student-${studentId}`);
+    if (q2Row) q2Grade = Number(q2Row.querySelector('.q2-quarterly-grade').innerText) || 0;
+    
+    const q3Row = document.getElementById(`q3-student-${studentId}`);
+    if (q3Row) q3Grade = Number(q3Row.querySelector('.q3-quarterly-grade').innerText) || 0;
+
+    const q4Row = document.getElementById(`q4-student-${studentId}`);
+    if (q4Row) q4Grade = Number(q4Row.querySelector('.q4-quarterly-grade').innerText) || 0;
+    
+    summaryRow.querySelector('.q1-grade').innerText = q1Grade;
+    summaryRow.querySelector('.q2-grade').innerText = q2Grade;
+    summaryRow.querySelector('.q3-grade').innerText = q3Grade;
+    summaryRow.querySelector('.q4-grade').innerText = q4Grade;
+
+    const finalGrade = Math.round((q1Grade + q2Grade + q3Grade + q4Grade) / 4);
+    
+    summaryRow.querySelector('.final-grade').innerText = finalGrade > 0 ? finalGrade : 0;
+    
+    const remarks = finalGrade >= 75 ? "PASSED" : (finalGrade > 0 ? "FAILED" : "---");
+    summaryRow.querySelector('.remarks').innerText = remarks;
+}
+
+// --- PDF Generation Helper Functions (Unchanged) ---
+const loadImage = (src) => new Promise((resolve, reject) => {
+    const img = new Image();
+    img.src = src;
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = (e) => reject(new Error(`Failed to load image: ${src}`));
+});
+
+async function addPdfHeaderFooter(doc, pageNum) {
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    
+    doc.setFillColor(161, 15, 15);
+    doc.rect(0, 0, pageWidth, 100, "F");
+
+    try {
+        const [logo1, logo2, logo3, logo4] = await Promise.all([
+            loadImage(document.getElementById('logo1').src),
+            loadImage(document.getElementById('logo2').src),
+            loadImage(document.getElementById('logo3').src),
+            loadImage(document.getElementById('logo4').src)
+        ]);
+        doc.addImage(logo1, 'PNG', 40, 15, 55, 55);
+        doc.addImage(logo2, 'PNG', 105, 15, 55, 55);
+        doc.addImage(logo3, 'PNG', pageWidth - 165, 15, 55, 55);
+        doc.addImage(logo4, 'PNG', pageWidth - 100, 15, 85, 55);
+    } catch (e) {
+        console.warn("Some logos failed to load for PDF. Continuing without them.", e);
+    }
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(9);
+    doc.text("Republic of the Philippines", pageWidth / 2, 20, { align: "center" });
+    doc.text("Department of Education", pageWidth / 2, 32, { align: "center" });
+    doc.text("REGION IX – ZAMBOANGA PENINSULA", pageWidth / 2, 44, { align: "center" });
+    doc.text("Schools Division Office of Zamboanga City", pageWidth / 2, 56, { align: "center" });
+    doc.setFontSize(11);
+    doc.setFont(undefined, "bold");
+    doc.text("Zamboanga National High School West", pageWidth / 2, 72, { align: "center" });
+    doc.setFontSize(9);
+    doc.setFont(undefined, "normal");
+    doc.text("R.T. Lim Boulevard, Zamboanga City, Philippines", pageWidth / 2, 84, { align: "center" });
+    doc.text("School ID: 303942", pageWidth / 2, 96, { align: "center" });
+
+    const footerHeight = 30;
+    doc.setFillColor(161, 15, 15);
+    doc.rect(0, pageHeight - footerHeight, pageWidth, footerHeight, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(8);
+    doc.text("Page " + pageNum, pageWidth - 40, pageHeight - 14, { align: "right" });
+}
+
+// --- 1. History Save/Load Functions ---
+const HISTORY_KEY = 'classRecordHistory';
+
+function getActiveQuarterInfo() {
+    const activeTab = document.querySelector('.tab-link.active');
+    const activeContent = document.querySelector('.tab-content[style*="display: block"]');
+    
+    if (!activeTab || !activeContent || !activeContent.id.startsWith('Q')) {
+        return null;
+    }
+    
+    return {
+        qId: activeContent.id, // "Q1"
+        qNum: activeContent.id.replace('Q', ''), // "1"
+        qName: activeTab.textContent // "Quarter 1"
+    };
+}
+
+function serializeQuarterData(qNum) {
+    const data = {
+        hps: {},
+        scores: {}
+    };
+
+    // Save HPS scores
+    document.querySelectorAll(`#q${qNum}-table .hps-row .hps`).forEach(input => {
+        data.hps[input.id] = input.value;
+    });
+
+    // Save Student scores
+    for (let i = 1; i <= studentCount; i++) {
+        const studentId = i;
+        data.scores[studentId] = {};
+        document.querySelectorAll(`#q${qNum}-student-${studentId} .score`).forEach(input => {
+            data.scores[studentId][input.dataset.item] = input.value;
+        });
+    }
+    return data;
+}
+
+function loadQuarterData(qNum, data) {
+    if (!data) return;
+
+    // Load HPS scores
+    if (data.hps) {
+        for (const [id, value] of Object.entries(data.hps)) {
+            const input = document.getElementById(id);
+            if (input) input.value = value;
+        }
+    }
+
+    // Load Student scores
+    if (data.scores) {
+        for (const [studentId, scores] of Object.entries(data.scores)) {
+            const row = document.getElementById(`q${qNum}-student-${studentId}`);
+            if (row) {
+                for (const [item, value] of Object.entries(scores)) {
+                    const input = row.querySelector(`.score[data-item="${item}"]`);
+                    if (input) input.value = value;
+                }
+            }
+        }
+    }
+    
+    // Recalculate everything after loading
+    calculateQuarterHPS(qNum);
+}
+
+function renderHistoryList() {
+    const historyList = document.getElementById('history-list');
+    const emptyMsg = document.getElementById('history-list-empty');
+    let history = [];
+    try {
+        history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+    } catch (e) {
+        console.error("Could not parse history:", e);
+        localStorage.removeItem(HISTORY_KEY);
+    }
+    
+    historyList.innerHTML = ''; // Clear list
+    
+    if (history.length === 0) {
+        historyList.appendChild(emptyMsg);
+        emptyMsg.style.display = 'block';
+        return;
+    }
+
+    emptyMsg.style.display = 'none';
+    
+    // Show newest first
+    history.slice().reverse().forEach((entry, index) => {
+        const historyItem = document.createElement('div');
+        historyItem.className = 'history-item';
+        // Use the original index from the un-reversed array for data-id
+        historyItem.dataset.index = history.length - 1 - index; 
+        
+        historyItem.innerHTML = `
+            <strong>${entry.section} - ${entry.quarterName}</strong>
+            <span>Saved: ${entry.timestamp}</span>
+        `;
+        
+        historyItem.addEventListener('click', loadHistoryEntry);
+        historyList.appendChild(historyItem);
+    });
+}
+
+function loadHistoryEntry(event) {
+    const index = event.currentTarget.dataset.index;
+    let history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+    const entry = history[index];
+    
+    if (!entry) {
+        alert("Error: Could not find history entry.");
+        return;
+    }
+    
+    // 1. Set section dropdown
+    document.getElementById('section-select').value = entry.section;
+    
+    // 2. Load the student data for that section
+    loadSection(entry.section);
+    
+    // 3. Click the correct quarter tab
+    const tabLinks = document.getElementsByClassName("tab-link");
+    for (let tab of tabLinks) {
+        if (tab.textContent === entry.quarterName) {
+            tab.click();
+            break;
+        }
+    }
+    
+    // 4. Load the saved data
+    // We need a slight delay for the tab switch and section load to complete
+    setTimeout(() => {
+        loadQuarterData(entry.qNum, entry.data);
+    }, 100);
+}
+
+// --- Event Listeners ---
+function addEventListeners() {
+    
+    // 3. Refactored event delegation for dynamic inputs
+    const mainContainer = document.querySelector('.main-container');
+    
+    mainContainer.addEventListener('input', (e) => {
+        const target = e.target;
+        
+        if (target.classList.contains('score')) {
+            const qNum = target.closest('.tab-content').id.replace('Q', '');
+            calculateQuarterGrades(qNum);
+        }
+        else if (target.classList.contains('hps')) {
+            const qNum = target.dataset.quarter;
+            calculateQuarterHPS(qNum);
+        }
+        else if (target.classList.contains('weight-input')) {
+            const qNum = target.dataset.quarter;
+            updateQuarterWeights(qNum);
+        }
+    });
+
+    // Save Modal Listeners
+    const modal = document.getElementById('saveModal');
+    const saveBtn = document.getElementById('save-btn');
+    const closeBtn = document.querySelector('.close-btn');
+    
+    // 1. Updated Save Button logic
+    saveBtn.onclick = () => {
+        const activeQuarter = getActiveQuarterInfo();
+        if (!activeQuarter) {
+            alert("Please select a Quarter (1-4) to save.");
+            return;
+        }
+        
+        const currentSection = document.getElementById('section-select').value;
+        const historyEntry = {
+            section: currentSection,
+            qId: activeQuarter.qId,
+            qNum: activeQuarter.qNum,
+            quarterName: activeQuarter.qName,
+            timestamp: new Date().toLocaleString(),
+            data: serializeQuarterData(activeQuarter.qNum)
+        };
+        
+        let history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+        history.push(historyEntry);
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+        
+        renderHistoryList();
+        modal.style.display = "block";
+    };
+    
+    closeBtn.onclick = () => modal.style.display = "none";
+    window.onclick = (event) => {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Print Button Listener
+    document.getElementById('print-btn').addEventListener('click', () => {
+        document.getElementById("page-number").textContent = "Page 1";
+        window.print();
+    });
+    
+    // PDF Download Button Listener
+    document.getElementById('pdf-btn').addEventListener('click', async () => {
+        const { jsPDF } = window.jspdf;
+        const pdfBtn = document.getElementById('pdf-btn');
+        
+        const activeTab = document.querySelector('.tab-content[style*="display: block"]');
+        if (!activeTab) {
+            alert("Could not find active tab to download.");
+            return;
+        }
+
+        const activeTable = activeTab.querySelector('table');
+        if (!activeTable) {
+            alert("Could not find table in active tab.");
+            return;
+        }
+        
+        const originalBtnText = pdfBtn.innerHTML;
+        pdfBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Generating...`;
+        pdfBtn.disabled = true;
+
+        try {
+            const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+            
+            await addPdfHeaderFooter(doc, 1);
+            
+            // Get current subject and section
+            const subject = document.getElementById('subject-name').textContent;
+            const section = document.getElementById('section-select').value;
+            
+            doc.setFontSize(10);
+            doc.setFont(undefined, "bold");
+            doc.setTextColor(0, 0, 0);
+            doc.text(`Subject: ${subject}`, 40, 120);
+            doc.text(`Section: ${section}`, 40, 135);
+            doc.text("S.Y. 2025-2026", 40, 150);
+
+            doc.autoTable({
+                html: activeTable,
+                startY: 165, // Adjusted Y-pos
+                margin: { top: 110, right: 40, bottom: 40, left: 40 },
+                theme: 'grid',
+                styles: {
+                    fontSize: 7,
+                    cellPadding: 2,
+                },
+                headStyles: {
+                    fillColor: [242, 242, 242],
+                    textColor: [33, 33, 33],
+                    fontStyle: 'bold',
+                },
+                didDrawPage: (data) => {
+                    if (data.pageNumber > 1) {
+                        addPdfHeaderFooter(doc, data.pageNumber);
+                    }
+                }
+            });
+
+            const finalY = doc.lastAutoTable.finalY || 150;
+            const teacherName = document.querySelector('.footer-prepared .name').textContent;
+            const teacherPos = document.querySelector('.footer-prepared .position').textContent;
+            
+            doc.setFontSize(10);
+            doc.setFont(undefined, "normal");
+            doc.setTextColor(0, 0, 0);
+            doc.text("Prepared by:", 40, finalY + 40);
+            
+            doc.setFont(undefined, "bold");
+            doc.text(teacherName, 60, finalY + 80);
+            doc.line(60, finalY + 82, 260, finalY + 82);
+            doc.setFont(undefined, "normal");
+            doc.text(teacherPos, 60, finalY + 95);
+
+            doc.save(`E-Class-Record-${section}-${activeTab.id}.pdf`);
+
+        } catch (err) {
+            console.error("Error generating PDF:", err);
+            alert("Error generating PDF. See console for details. (Did the logos fail to load?)");
+        } finally {
+            pdfBtn.innerHTML = originalBtnText;
+            pdfBtn.disabled = false;
+        }
+    });
+
+    // Back Button Listener
+    document.querySelector('.back-btn').addEventListener('click', () => {
+        history.back();
+    });
+    
+    // 3. Section Select Listener
+    document.getElementById('section-select').addEventListener('change', (e) => {
+        loadSection(e.target.value);
+    });
+}
+
+// --- Initial Setup ---
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // 3. Load default section
+    const defaultSection = document.getElementById('section-select').value;
+    loadSection(defaultSection);
+
+    // Add all static and delegated event listeners
+    addEventListeners();
+    
+    // Initialize quarter weights and HPS for default section
+    for (let q = 1; q <= 4; q++) {
+        updateQuarterWeights(q);
+        calculateQuarterHPS(q);
+    }
+    
+    // 1. Render history on load
+    renderHistoryList();
+});
+</script>
+</body>
+</html>
