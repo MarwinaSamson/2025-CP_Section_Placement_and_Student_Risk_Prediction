@@ -11,15 +11,13 @@ env_file = os.path.join(BASE_DIR, '.env')
 if os.path.exists(env_file):
     environ.Env.read_env(env_file)
 # --- Security ---
-SECRET_KEY = os.environ.get('SECRET_KEY', 'fallback-secret-key')
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+SECRET_KEY = env('SECRET_KEY', default='fallback-secret-key')
+DEBUG = env.bool('DEBUG', default=False)
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
-RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['127.0.0.1', 'localhost'])
+RENDER_EXTERNAL_HOSTNAME = env('RENDER_EXTERNAL_HOSTNAME', default=None)
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
-else:
-    ALLOWED_HOSTS.append('*')
 
 # --- Installed Apps ---
 INSTALLED_APPS = [
@@ -76,13 +74,23 @@ WSGI_APPLICATION = "phase1.wsgi.application"
 
 # --- Database ---
 # (✅ FIXED: Always has ENGINE defined properly)
-DATABASES = {
-    "default": dj_database_url.config(
-        default=os.environ.get("DATABASE_URL"),
-        conn_max_age=600,
-        ssl_require=True,
-    )
-}
+DATABASE_URL = os.environ.get("DATABASE_URL")
+if DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.config(default=DATABASE_URL, conn_max_age=600, ssl_require=True)
+    }
+else:
+    # Simple PostgreSQL fallback for local dev
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": "SPARK_db",  
+            "USER": "postgres", 
+            "PASSWORD": "011304",  
+            "HOST": "localhost",  
+            "PORT": "5432",  
+        }
+    }
 
 # --- Password validation ---
 AUTH_PASSWORD_VALIDATORS = [

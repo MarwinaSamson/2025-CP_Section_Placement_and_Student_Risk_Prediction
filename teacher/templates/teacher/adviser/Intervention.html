@@ -790,7 +790,7 @@
     // --- Events and initial load ---
     document.addEventListener('DOMContentLoaded', () => {
       // load sidebar dynamically
-      fetch('Sidebar.html').then(resp => {
+      fetch('sidebar.html').then(resp => {
         if (!resp.ok) throw new Error('Sidebar load failed');
         return resp.text();
       }).then(html => {
