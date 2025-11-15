@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Profile Settings — Teacher</title>
   {% load static %}
-  <!-- Tailwind + FontAwesome -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
@@ -30,7 +29,6 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* Sidebar placeholder (unchanged) */
     #sidebar-root { position: fixed; left: 0; top: 0; z-index: 60; }
 
     main {
@@ -42,12 +40,10 @@
 
     .container { max-width: 1100px; margin: 0 auto; }
 
-    /* Page Header */
     .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
     .page-title { font-size:1.6rem; font-weight:800; letter-spacing: -0.4px; }
     .greeting { color:var(--muted); font-size:0.95rem; }
 
-    /* Cards */
     .card { background:var(--card-bg); border-radius:var(--radius); box-shadow:var(--shadow); border:1px solid rgba(15,23,42,0.04); overflow:hidden; }
     .section-header {
       background: var(--section-pink);
@@ -69,11 +65,13 @@
       font-size:0.78rem;
       border: 1px solid rgba(0,0,0,0.04);
       cursor: pointer;
+      transition: all 0.2s;
+    }
+    .small-update:hover {
+      background: #ff8888;
     }
 
-    /* Teacher Layout */
     .teacher-layout { display:flex; gap:24px; flex-wrap:wrap; align-items:flex-start; }
-    /* ENLARGED PHOTO */
     .photo-box {
       width:220px; height:240px; border-radius:8px; background:#fff; border:2px solid #eee; padding:6px; text-align:center; overflow:hidden;
       display:flex; align-items:center; justify-content:center;
@@ -87,25 +85,13 @@
     .detail-label { font-weight:800; color:#111827; font-size:0.92rem; margin-bottom:6px }
     .detail-value { color:var(--muted); font-size:0.92rem; }
 
-    /* Contact box */
     .contact-body { background:#fff; padding:18px; border-radius:8px; border:1px solid #f1eaea; }
 
-    /* Table styles (teaching load & history) */
     table { width:100%; border-collapse:collapse; background:#fff; }
     thead th { text-align:left; padding:10px 12px; font-weight:800; background:transparent; color:#111827; border-bottom:1px solid #e9e2e2 }
     tbody td { padding:12px; border-bottom:1px solid #f3e3e3; color:var(--muted) }
     .table-wrap { overflow-x:auto; }
 
-    .section-sub {
-      background: linear-gradient(90deg, rgba(162,49,49,0.06), rgba(255,255,255,0));
-      padding:10px 14px; border-radius:6px; margin-top:14px;
-      font-weight:700; color: #2a1a1a;
-      text-align:center;
-    }
-
-    .change-history-title { text-align:center; font-weight:800; padding:8px 0; color:#3a1b1b; }
-
-    /* Modal */
     .modal-backdrop {
       position: fixed; inset: 0; background: rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center;
       z-index: 80; opacity:0; pointer-events:none; transition: opacity .18s ease;
@@ -113,6 +99,7 @@
     .modal-backdrop.show { opacity:1; pointer-events:auto; }
     .modal {
       background: white; width: 720px; max-width:95%; border-radius:12px; padding:18px; box-shadow: var(--shadow);
+      max-height: 90vh; overflow-y: auto;
     }
     .modal h3 { font-weight:800; margin-bottom:8px; color:#111827 }
     .form-grid { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
@@ -122,44 +109,58 @@
 
     .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:12px; }
 
-    .btn { padding:8px 12px; border-radius:8px; cursor:pointer; border:0; font-weight:700 }
+    .btn { padding:8px 12px; border-radius:8px; cursor:pointer; border:0; font-weight:700; transition: all 0.2s; }
     .btn-primary { background:var(--accent); color:white }
+    .btn-primary:hover { background:var(--accent-dark); }
     .btn-ghost { background:#fff; border:1px solid #e6e6e6; color:#111827 }
+    .btn-ghost:hover { background:#f9f9f9; }
 
     .hidden { display:none !important }
 
     .toast {
       position:fixed; right:20px; bottom:20px; background:#16a34a; color:#fff; padding:10px 16px; border-radius:8px;
-      box-shadow: var(--shadow); opacity:0; transform: translateY(10px); transition: all .25s ease;
+      box-shadow: var(--shadow); opacity:0; transform: translateY(10px); transition: all .25s ease; z-index: 100;
     }
     .toast.show { opacity:1; transform:none }
+    .toast.error { background:#dc2626; }
+
+    .loading {
+      pointer-events: none;
+      opacity: 0.6;
+    }
   </style>
 </head>
 <body>
   <div id="sidebar-root">
-     {% include 'teacher/adviser/sidebar.html' %}
-    </div>
+    {% include 'teacher/adviser/sidebar.html' %}
+  </div>
 
   <main>
     <div class="container">
       <header class="header">
         <div>
           <div class="page-title">Profile Settings</div>
-          <div id="greeting" class="greeting">Good afternoon, Salatan</div>
+          <div id="greeting" class="greeting"></div>
         </div>
         <div class="flex items-center gap-3">
           <div class="text-right">
-            <div class="font-bold">Salatan, Juliana Mae E.</div>
-            <div class="text-sm text-gray-500">Adviser</div>
+            <div class="font-bold">{{ teacher.full_name }}</div>
+            <div class="text-sm text-gray-500">
+              {% if teacher.is_adviser %}Adviser{% elif teacher.is_subject_teacher %}Subject Teacher{% else %}Teacher{% endif %}
+            </div>
           </div>
           <div class="w-11 h-11 rounded-full overflow-hidden border-2 border-white">
-            <img id="top-avatar" src="logo/miming.jfif" alt="Adviser" class="w-full h-full object-cover"
-              onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'bg-red-700 text-white flex items-center justify-center w-full h-full font-bold\'>S</div>'">
+            {% if teacher.profile_photo %}
+              <img src="{{ teacher.profile_photo.url }}" alt="{{ teacher.full_name }}" class="w-full h-full object-cover">
+            {% else %}
+              <div class="bg-red-700 text-white flex items-center justify-center w-full h-full font-bold">
+                {{ teacher.first_name.0 }}
+              </div>
+            {% endif %}
           </div>
         </div>
       </header>
 
-      <!-- Back -->
       <div class="mb-4">
         <button onclick="history.back()" class="flex items-center gap-2 text-red-700 font-semibold hover:text-red-900 transition">
           <i class="fa-solid fa-arrow-left"></i> Back
@@ -175,63 +176,68 @@
 
         <div class="section-body">
           <div class="teacher-layout">
-            <!-- Photo -->
             <div class="photo-box">
-              <img id="teacher-photo" src="Pictures/teacher-sample.jpg" alt="Teacher Photo"
-                onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'bg-red-700 text-white font-bold flex items-center justify-center w-full h-full rounded\'>T</div>'">
+              {% if teacher.profile_photo %}
+                <img id="teacher-photo" src="{{ teacher.profile_photo.url }}" alt="{{ teacher.full_name }}">
+              {% else %}
+                <div class="bg-red-700 text-white font-bold flex items-center justify-center w-full h-full rounded">
+                  {{ teacher.first_name.0 }}
+                </div>
+              {% endif %}
             </div>
 
-            <!-- Details -->
             <div class="teacher-details">
               <div class="two-col">
                 <div>
                   <div class="detail-label">Employee ID</div>
-                  <div class="detail-value" data-key="employee_id">12345678913</div>
+                  <div class="detail-value" data-key="employee_id">{{ teacher.employee_id }}</div>
                 </div>
 
                 <div>
                   <div class="detail-label">Position</div>
-                  <div class="detail-value" data-key="position">Teacher - I</div>
+                  <div class="detail-value" data-key="position">{{ teacher.position }}</div>
                 </div>
 
                 <div>
                   <div class="detail-label">Last Name</div>
-                  <div class="detail-value" data-key="lastname">Ackerman</div>
+                  <div class="detail-value" data-key="lastname">{{ teacher.last_name }}</div>
                 </div>
 
                 <div>
                   <div class="detail-label">Department</div>
-                  <div class="detail-value" data-key="department">Science</div>
+                  <div class="detail-value" data-key="department">{{ teacher.department|default:"N/A" }}</div>
                 </div>
 
                 <div>
                   <div class="detail-label">First Name</div>
-                  <div class="detail-value" data-key="firstname">Mikasa</div>
+                  <div class="detail-value" data-key="firstname">{{ teacher.first_name }}</div>
                 </div>
 
                 <div>
                   <div class="detail-label">Gender</div>
-                  <div class="detail-value" data-key="gender">Female</div>
+                  <div class="detail-value" data-key="gender">{{ teacher.get_gender_display }}</div>
                 </div>
 
                 <div>
                   <div class="detail-label">Middle Name</div>
-                  <div class="detail-value" data-key="middlename">Ambot</div>
+                  <div class="detail-value" data-key="middlename">{{ teacher.middle_name|default:"N/A" }}</div>
                 </div>
 
                 <div>
                   <div class="detail-label">Date of Birth</div>
-                  <div class="detail-value" data-key="dob">June 01, 2000</div>
+                  <div class="detail-value" data-key="dob">
+                    {% if teacher.date_of_birth %}{{ teacher.date_of_birth|date:"F d, Y" }}{% else %}N/A{% endif %}
+                  </div>
                 </div>
 
                 <div>
                   <div class="detail-label">Age</div>
-                  <div class="detail-value" data-key="age">25</div>
+                  <div class="detail-value" data-key="age">{{ teacher.age|default:"N/A" }}</div>
                 </div>
 
                 <div>
                   <div class="detail-label">Employment Status</div>
-                  <div class="detail-value" data-key="employment_status">Permanent</div>
+                  <div class="detail-value" data-key="employment_status">{{ teacher.employment_status }}</div>
                 </div>
               </div>
             </div>
@@ -251,15 +257,15 @@
             <div class="grid md:grid-cols-3 gap-4">
               <div>
                 <div class="detail-label">Email</div>
-                <div class="detail-value" data-key="email">mikasasackerman@deped.gov</div>
+                <div class="detail-value" data-key="email">{{ teacher.email }}</div>
               </div>
               <div>
                 <div class="detail-label">Phone</div>
-                <div class="detail-value" data-key="phone">+63 912 345 6789</div>
+                <div class="detail-value" data-key="phone">{{ teacher.phone }}</div>
               </div>
               <div>
                 <div class="detail-label">Address</div>
-                <div class="detail-value" data-key="address">Eden</div>
+                <div class="detail-value" data-key="address">{{ teacher.address|default:"N/A" }}</div>
               </div>
             </div>
           </div>
@@ -270,7 +276,6 @@
       <section class="card mt-6">
         <div class="section-header">
           <div class="section-title">Teaching Load (Handled Classes)</div>
-          <div></div>
         </div>
 
         <div class="section-body">
@@ -284,21 +289,17 @@
                 </tr>
               </thead>
               <tbody>
+                {% for load in teaching_load %}
                 <tr>
-                  <td>Physics</td>
-                  <td>Grade 9 – St. Anne</td>
-                  <td>45</td>
+                  <td>{{ load.subject }}</td>
+                  <td>{{ load.grade_section }}</td>
+                  <td>{{ load.num_students }}</td>
                 </tr>
+                {% empty %}
                 <tr>
-                  <td>Science</td>
-                  <td>Grade 8 – St. John</td>
-                  <td>50</td>
+                  <td colspan="3" class="text-center">No teaching load assigned</td>
                 </tr>
-                <tr>
-                  <td>Science (Lab)</td>
-                  <td>Grade 8 – St. John</td>
-                  <td>50</td>
-                </tr>
+                {% endfor %}
               </tbody>
             </table>
           </div>
@@ -322,16 +323,17 @@
                 </tr>
               </thead>
               <tbody id="history-body">
+                {% for entry in change_history %}
                 <tr>
-                  <td>Record Created</td>
-                  <td>07/09/2025</td>
-                  <td>10:30 am</td>
+                  <td>{{ entry.get_action_display }}</td>
+                  <td>{{ entry.date|date:"m/d/Y" }}</td>
+                  <td>{{ entry.time|date:"h:i A" }}</td>
                 </tr>
+                {% empty %}
                 <tr>
-                  <td>Updated Profile</td>
-                  <td>07/09/2025</td>
-                  <td>10:30 am</td>
+                  <td colspan="3" class="text-center">No change history</td>
                 </tr>
+                {% endfor %}
               </tbody>
             </table>
           </div>
@@ -346,76 +348,92 @@
       <h3>Edit Teacher Details</h3>
       <p class="text-sm text-gray-600 mb-4">Update the teacher's personal information. Changes will reflect immediately after saving.</p>
 
-      <div class="grid md:grid-cols-3 gap-4 mb-4">
-        <div class="col-span-1">
-          <div class="detail-label mb-2">Photo Preview</div>
-          <div style="width:100%;height:160px;border:1px solid #eee;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center">
-            <img id="photo-preview" src="Pictures/teacher-sample.jpg" style="width:100%;height:100%;object-fit:cover" alt="preview"
-              onerror="this.style.display='none'">
+      <form id="teacher-form" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="grid md:grid-cols-3 gap-4 mb-4">
+          <div class="col-span-1">
+            <div class="detail-label mb-2">Photo Preview</div>
+            <div style="width:100%;height:160px;border:1px solid #eee;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center">
+              <img id="photo-preview" src="{% if teacher.profile_photo %}{{ teacher.profile_photo.url }}{% endif %}" 
+                   style="width:100%;height:100%;object-fit:cover" alt="preview">
+            </div>
+            <div class="mt-2">
+              <input id="teacher-photo-input" name="profile_photo" type="file" accept="image/*" class="mt-2 text-sm">
+            </div>
           </div>
-          <div class="mt-2">
-            <input id="teacher-photo-input" type="file" accept="image/*" class="mt-2 text-sm">
+
+          <div class="col-span-2">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="inp-employee-id">Employee ID</label>
+                <input id="inp-employee-id" name="employee_id" type="text" value="{{ teacher.employee_id }}" />
+              </div>
+              <div class="form-group">
+                <label for="inp-position">Position</label>
+                <select id="inp-position" name="position">
+                  {% for value, label in teacher.POSITION_CHOICES %}
+                  <option value="{{ value }}" {% if teacher.position == value %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="inp-lastname">Last Name</label>
+                <input id="inp-lastname" name="last_name" type="text" value="{{ teacher.last_name }}" />
+              </div>
+              <div class="form-group">
+                <label for="inp-department">Department</label>
+                <select id="inp-department" name="department">
+                  <option value="">Select Department</option>
+                  {% for value, label in teacher.DEPARTMENT_CHOICES %}
+                  <option value="{{ value }}" {% if teacher.department == value %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="inp-firstname">First Name</label>
+                <input id="inp-firstname" name="first_name" type="text" value="{{ teacher.first_name }}" />
+              </div>
+              <div class="form-group">
+                <label for="inp-gender">Gender</label>
+                <select id="inp-gender" name="gender">
+                  <option value="M" {% if teacher.gender == 'M' %}selected{% endif %}>Male</option>
+                  <option value="F" {% if teacher.gender == 'F' %}selected{% endif %}>Female</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="inp-middlename">Middle Name</label>
+                <input id="inp-middlename" name="middle_name" type="text" value="{{ teacher.middle_name }}" />
+              </div>
+              <div class="form-group">
+                <label for="inp-dob">Date of Birth</label>
+                <input id="inp-dob" name="date_of_birth" type="date" 
+                       value="{% if teacher.date_of_birth %}{{ teacher.date_of_birth|date:'Y-m-d' }}{% endif %}" />
+              </div>
+
+              <div class="form-group">
+                <label for="inp-age">Age (Auto-calculated)</label>
+                <input id="inp-age" type="number" value="{{ teacher.age }}" readonly disabled />
+              </div>
+              <div class="form-group">
+                <label for="inp-employment-status">Employment Status</label>
+                <select id="inp-employment-status" name="employment_status">
+                  {% for value, label in teacher.EMPLOYMENT_STATUS_CHOICES %}
+                  <option value="{{ value }}" {% if teacher.employment_status == value %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="col-span-2">
-          <div class="form-grid">
-            <div class="form-group">
-              <label for="inp-employee-id">Employee ID</label>
-              <input id="inp-employee-id" type="text" />
-            </div>
-            <div class="form-group">
-              <label for="inp-position">Position</label>
-              <input id="inp-position" type="text" />
-            </div>
-
-            <div class="form-group">
-              <label for="inp-lastname">Last Name</label>
-              <input id="inp-lastname" type="text" />
-            </div>
-            <div class="form-group">
-              <label for="inp-department">Department</label>
-              <input id="inp-department" type="text" />
-            </div>
-
-            <div class="form-group">
-              <label for="inp-firstname">First Name</label>
-              <input id="inp-firstname" type="text" />
-            </div>
-            <div class="form-group">
-              <label for="inp-gender">Gender</label>
-              <select id="inp-gender">
-                <option>Female</option>
-                <option>Male</option>
-                <option>Other</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="inp-middlename">Middle Name</label>
-              <input id="inp-middlename" type="text" />
-            </div>
-            <div class="form-group">
-              <label for="inp-dob">Date of Birth</label>
-              <input id="inp-dob" type="date" />
-            </div>
-
-            <div class="form-group">
-              <label for="inp-age">Age</label>
-              <input id="inp-age" type="number" min="0" />
-            </div>
-            <div class="form-group">
-              <label for="inp-employment-status">Employment Status</label>
-              <input id="inp-employment-status" type="text" />
-            </div>
-          </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" onclick="closeModal('teacher')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save changes</button>
         </div>
-      </div>
-
-      <div class="modal-actions">
-        <button class="btn btn-ghost" onclick="closeModal('teacher')">Cancel</button>
-        <button class="btn btn-primary" onclick="saveTeacherChanges()">Save changes</button>
-      </div>
+      </form>
     </div>
   </div>
 
@@ -425,32 +443,52 @@
       <h3>Edit Contact Details</h3>
       <p class="text-sm text-gray-600 mb-4">Update contact information.</p>
 
-      <div class="form-grid">
-        <div class="form-group">
-          <label for="inp-email">Email</label>
-          <input id="inp-email" type="email" />
+      <form id="contact-form">
+        {% csrf_token %}
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="inp-email">Email</label>
+            <input id="inp-email" name="email" type="email" value="{{ teacher.email }}" />
+          </div>
+          <div class="form-group">
+            <label for="inp-phone">Phone</label>
+            <input id="inp-phone" name="phone" type="text" value="{{ teacher.phone }}" />
+          </div>
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label for="inp-address">Address</label>
+            <input id="inp-address" name="address" type="text" value="{{ teacher.address }}" />
+          </div>
         </div>
-        <div class="form-group">
-          <label for="inp-phone">Phone</label>
-          <input id="inp-phone" type="text" />
-        </div>
-        <div class="form-group">
-          <label for="inp-address">Address</label>
-          <input id="inp-address" type="text" />
-        </div>
-      </div>
 
-      <div class="modal-actions">
-        <button class="btn btn-ghost" onclick="closeModal('contact')">Cancel</button>
-        <button class="btn btn-primary" onclick="saveContactChanges()">Save</button>
-      </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" onclick="closeModal('contact')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
     </div>
   </div>
 
   <div id="toast" class="toast">Saved</div>
 
   <script>
-    // Greeting date (keeps same approach but shows long date like screenshot)
+    // Get CSRF token
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    // Greeting
     (function(){
       const g = document.getElementById('greeting');
       const d = new Date();
@@ -461,28 +499,23 @@
     function openModal(type){
       const mb = document.getElementById('modal-' + type);
       if (!mb) return;
-      // populate modal fields with existing values
-      if (type === 'teacher') populateTeacherModal();
-      if (type === 'contact') populateContactModal();
       mb.classList.add('show');
       mb.setAttribute('aria-hidden','false');
     }
+    
     function closeModal(type){
       const mb = document.getElementById('modal-' + type);
       if (!mb) return;
       mb.classList.remove('show');
       mb.setAttribute('aria-hidden','true');
-      // reset file input preview if needed - do not auto clear to avoid data loss
     }
 
-    // Wire open buttons
     document.getElementById('open-teacher-modal').addEventListener('click', ()=> openModal('teacher'));
     document.getElementById('open-contact-modal').addEventListener('click', ()=> openModal('contact'));
 
-    // Photo preview handling
+    // Photo preview
     const photoInput = document.getElementById('teacher-photo-input');
     const photoPreview = document.getElementById('photo-preview');
-    const teacherPhotoMain = document.getElementById('teacher-photo');
 
     photoInput.addEventListener('change', function(e){
       const f = this.files && this.files[0];
@@ -494,143 +527,154 @@
       reader.readAsDataURL(f);
     });
 
-    // Populate teacher modal from current view values
-    function populateTeacherModal(){
-      document.getElementById('inp-employee-id').value = getText('[data-key="employee_id"]');
-      document.getElementById('inp-position').value = getText('[data-key="position"]');
-      document.getElementById('inp-lastname').value = getText('[data-key="lastname"]');
-      document.getElementById('inp-department').value = getText('[data-key="department"]');
-      document.getElementById('inp-firstname').value = getText('[data-key="firstname"]');
-      document.getElementById('inp-gender').value = getText('[data-key="gender"]') || 'Female';
-      document.getElementById('inp-middlename').value = getText('[data-key="middlename"]');
-      // convert display dob (like "June 01, 2000") to yyyy-mm-dd if possible
-      const dobText = getText('[data-key="dob"]');
-      let dd = '';
-      if (dobText) {
-        const parsed = new Date(dobText);
-        if (!isNaN(parsed)) {
-          dd = parsed.toISOString().slice(0,10);
-        } else {
-          // if not parseable, leave empty
-          dd = '';
-        }
-      }
-      document.getElementById('inp-dob').value = dd;
-      document.getElementById('inp-age').value = getText('[data-key="age"]');
-      document.getElementById('inp-employment-status').value = getText('[data-key="employment_status"]');
-
-      // preview current photo
-      if (teacherPhotoMain && teacherPhotoMain.src) {
-        photoPreview.src = teacherPhotoMain.src;
-      }
-      // clear file input
-      photoInput.value = '';
-    }
-
-    function populateContactModal(){
-      document.getElementById('inp-email').value = getText('[data-key="email"]');
-      document.getElementById('inp-phone').value = getText('[data-key="phone"]');
-      document.getElementById('inp-address').value = getText('[data-key="address"]');
-    }
-
-    // utils
-    function getText(selector){
-      const el = document.querySelector(selector);
-      return el ? el.textContent.trim() : '';
-    }
+    // Utils
     function setText(selector, value){
       const el = document.querySelector(selector);
       if (el) el.textContent = value ?? '';
     }
 
-    // Saving changes
-    function saveTeacherChanges(){
-      // update text fields
-      setText('[data-key="employee_id"]', document.getElementById('inp-employee-id').value);
-      setText('[data-key="position"]', document.getElementById('inp-position').value);
-      setText('[data-key="lastname"]', document.getElementById('inp-lastname').value);
-      setText('[data-key="department"]', document.getElementById('inp-department').value);
-      setText('[data-key="firstname"]', document.getElementById('inp-firstname').value);
-      setText('[data-key="gender"]', document.getElementById('inp-gender').value);
-      setText('[data-key="middlename"]', document.getElementById('inp-middlename').value);
-
-      // Date formatting: if date provided, format to readable string
-      const dobVal = document.getElementById('inp-dob').value;
-      if (dobVal) {
-        const d = new Date(dobVal);
-        if (!isNaN(d)) {
-          const opts = { year:'numeric', month:'long', day:'2-digit' };
-          setText('[data-key="dob"]', d.toLocaleDateString('en-US', opts));
-        } else {
-          setText('[data-key="dob"]', dobVal);
-        }
+    function showToast(msg, isError = false){
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      if (isError) {
+        t.classList.add('error');
       } else {
-        setText('[data-key="dob"]', '');
+        t.classList.remove('error');
       }
-
-      setText('[data-key="age"]', document.getElementById('inp-age').value);
-      setText('[data-key="employment_status"]', document.getElementById('inp-employment-status').value);
-
-      // Update photo if a new file selected (use preview image src)
-      const f = photoInput.files && photoInput.files[0];
-      if (f) {
-        const reader = new FileReader();
-        reader.onload = function(ev){
-          teacherPhotoMain.src = ev.target.result;
-        }
-        reader.readAsDataURL(f);
-      } else {
-        // If user only previewed but didn't choose file, the preview stays local in modal; set main photo to preview src
-        if (photoPreview.src) {
-          teacherPhotoMain.src = photoPreview.src;
-        }
-      }
-
-      // Add change history entry
-      addHistoryEntry('Updated Profile');
-
-      closeModal('teacher');
-      showToast('Teacher details updated');
+      t.classList.add('show');
+      setTimeout(()=>t.classList.remove('show'), 3000);
     }
 
-    function saveContactChanges(){
-      setText('[data-key="email"]', document.getElementById('inp-email').value);
-      setText('[data-key="phone"]', document.getElementById('inp-phone').value);
-      setText('[data-key="address"]', document.getElementById('inp-address').value);
-
-      addHistoryEntry('Updated Contact Data');
-
-      closeModal('contact');
-      showToast('Contact details updated');
-    }
-
-    // History helper
-    function addHistoryEntry(action){
+    function addHistoryEntry(action, date, time){
       const tb = document.getElementById('history-body');
       if (!tb) return;
-      const now = new Date();
-      const date = now.toLocaleDateString('en-GB'); // dd/mm/yyyy
-      const time = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12:true});
+      
+      // Remove "No change history" row if exists
+      const emptyRow = tb.querySelector('td[colspan="3"]');
+      if (emptyRow) {
+        emptyRow.parentElement.remove();
+      }
+      
       const tr = document.createElement('tr');
       tr.innerHTML = `<td>${action}</td><td>${date}</td><td>${time}</td>`;
       tb.insertBefore(tr, tb.firstChild);
     }
 
-    // Toast
-    let toastTimer = 0;
-    function showToast(msg){
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.classList.add('show');
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(()=>t.classList.remove('show'),3000);
-    }
+    // Teacher form submit
+    document.getElementById('teacher-form').addEventListener('submit', async function(e){
+      e.preventDefault();
+      
+      const form = e.target;
+      const formData = new FormData(form);
+      const submitBtn = form.querySelector('button[type="submit"]');
+      
+      submitBtn.classList.add('loading');
+      submitBtn.disabled = true;
+      
+      try {
+        const response = await fetch('{% url "teacher:api-update-teacher-data" %}', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrftoken
+          },
+          body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          // Update UI with new data
+          setText('[data-key="employee_id"]', data.data.employee_id);
+          setText('[data-key="position"]', data.data.position);
+          setText('[data-key="lastname"]', data.data.last_name);
+          setText('[data-key="department"]', data.data.department || 'N/A');
+          setText('[data-key="firstname"]', data.data.first_name);
+          setText('[data-key="gender"]', data.data.gender);
+          setText('[data-key="middlename"]', data.data.middle_name || 'N/A');
+          setText('[data-key="dob"]', data.data.date_of_birth || 'N/A');
+          setText('[data-key="age"]', data.data.age || 'N/A');
+          setText('[data-key="employment_status"]', data.data.employment_status);
+          
+          // Update photo if changed
+          if (data.data.profile_photo) {
+            const mainPhoto = document.getElementById('teacher-photo');
+            if (mainPhoto) {
+              mainPhoto.src = data.data.profile_photo;
+            }
+          }
+          
+          // Add history entry
+          const now = new Date();
+          const dateStr = now.toLocaleDateString('en-US', {month:'2-digit', day:'2-digit', year:'numeric'});
+          const timeStr = now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true});
+          addHistoryEntry('Updated Profile', dateStr, timeStr);
+          
+          closeModal('teacher');
+          showToast(data.message);
+        } else {
+          showToast(data.message, true);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        showToast('An error occurred while updating', true);
+      } finally {
+        submitBtn.classList.remove('loading');
+        submitBtn.disabled = false;
+      }
+    });
 
-    // Close modal when clicking backdrop outside modal content
+    // Contact form submit
+    document.getElementById('contact-form').addEventListener('submit', async function(e){
+      e.preventDefault();
+      
+      const form = e.target;
+      const formData = new FormData(form);
+      const submitBtn = form.querySelector('button[type="submit"]');
+      
+      submitBtn.classList.add('loading');
+      submitBtn.disabled = true;
+      
+      try {
+        const response = await fetch('{% url "teacher:api-update-contact-data" %}', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrftoken
+          },
+          body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          // Update UI
+          setText('[data-key="email"]', data.data.email);
+          setText('[data-key="phone"]', data.data.phone);
+          setText('[data-key="address"]', data.data.address || 'N/A');
+          
+          // Add history entry
+          const now = new Date();
+          const dateStr = now.toLocaleDateString('en-US', {month:'2-digit', day:'2-digit', year:'numeric'});
+          const timeStr = now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:true});
+          addHistoryEntry('Updated Contact Data', dateStr, timeStr);
+          
+          closeModal('contact');
+          showToast(data.message);
+        } else {
+          showToast(data.message, true);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        showToast('An error occurred while updating', true);
+      } finally {
+        submitBtn.classList.remove('loading');
+        submitBtn.disabled = false;
+      }
+    });
+
+    // Close modal on backdrop click
     document.querySelectorAll('.modal-backdrop').forEach(backdrop=>{
       backdrop.addEventListener('click', (e)=>{
         if (e.target === backdrop) {
-          // determine type
           const id = backdrop.id;
           if (id === 'modal-teacher') closeModal('teacher');
           if (id === 'modal-contact') closeModal('contact');
@@ -638,7 +682,7 @@
       });
     });
 
-    // Keyboard: Esc to close modals
+    // Keyboard: Esc to close
     document.addEventListener('keydown', (e)=>{
       if (e.key === 'Escape') {
         closeModal('teacher');

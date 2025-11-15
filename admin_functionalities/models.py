@@ -399,6 +399,14 @@ class Teacher(models.Model):
         ('History', 'History'),
         # Add more
     ]
+    
+    EMPLOYMENT_STATUS_CHOICES = [
+        ('Full-time', 'Full-time Employee'),
+        ('Part-time', 'Part-time Employee'),
+        ('Temporary', 'Temporary Worker'),
+    ]
+    
+    employment_status = models.CharField(max_length=20, choices=EMPLOYMENT_STATUS_CHOICES, default='Full-time', verbose_name="Employment Status")
     department = models.CharField(max_length=50, choices=DEPARTMENT_CHOICES, blank=True, verbose_name="Department")
 
     # Roles (for adviser/subject teacher)
@@ -540,11 +548,12 @@ SUBJECT_CHOICES = [
 class Section(models.Model):
     program = models.CharField(max_length=10, choices=PROGRAM_CHOICES, verbose_name="Program")
     name = models.CharField(max_length=100, verbose_name="Section Name")
-    adviser = models.ForeignKey('Teacher', on_delete=models.SET_NULL, null=True, blank=True)
+    adviser = models.ForeignKey('Teacher', on_delete=models.SET_NULL, null=True, blank=True, related_name='adviser_sections')
     building = models.PositiveIntegerField(verbose_name="Building Number")
     room = models.CharField(max_length=10, verbose_name="Room Number")
     current_students = models.PositiveIntegerField(default=0, verbose_name="Current Students")
     max_students = models.PositiveIntegerField(default=40, verbose_name="Max Students")
+    is_active = models.BooleanField(default=True)
     avatar = models.ImageField(upload_to='section_avatars/', blank=True, null=True, verbose_name="Section Avatar")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -555,7 +564,11 @@ class Section(models.Model):
 
     def __str__(self):
         return f"{self.program} - {self.name}"
-
+    @property
+    def adviser_sections(self):
+        """Get all sections where this teacher is adviser"""
+        return Section.objects.filter(adviser=self)
+    
     @property
     def location(self):
         return f"Bldg {self.building} Room {self.room}"
@@ -564,7 +577,7 @@ class Section(models.Model):
 class SectionSubjectAssignment(models.Model): 
     section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name='subject_assignments')
     subject = models.CharField(max_length=50, choices=SUBJECT_CHOICES, verbose_name="Subject")
-    teacher = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='assigned_subjects', limit_choices_to={'is_teacher': True}, verbose_name="Teacher")
+    teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, null=True, related_name='assigned_subjects', limit_choices_to={'is_teacher': True}, verbose_name="Teacher")
     day = models.CharField(max_length=10, choices=[('DAILY', 'Daily'), ('MWF', 'MWF'), ('TTH', 'TTH')], verbose_name="Day")
     start_time = models.TimeField(verbose_name="Start Time")
     end_time = models.TimeField(verbose_name="End Time")
@@ -595,3 +608,271 @@ class ActivityLog(models.Model):
     @property
     def combined_activity(self):
         return f"{self.user.get_full_name()} - {self.action}"
+    
+
+
+class Subject(models.Model):
+    """
+    Subject model to handle all subjects across different programs.
+    Supports core subjects, program-specific subjects, and MAPEH sub-subjects.
+    """
+    
+    # Program choices (matching your existing PROGRAM_CHOICES)
+    PROGRAM_CHOICES = [
+        ('STE', 'Science Technology and Engineering'),
+        ('SPFL', 'Special Program in Foreign Language'),
+        ('SPTVL', 'Special Program in Technical Vocational Livelihood'),
+        ('TOP5', 'Top 5 Regular Class'),
+        ('HETERO', 'Hetero Regular class'),
+        ('OHSP', 'Open High School Program'),
+        ('SNED', 'Special Needs Education Program'),
+    ]
+    
+    # Subject type to help organize
+    SUBJECT_TYPE_CHOICES = [
+        ('CORE', 'Core Subject'),
+        ('MAPEH_SUB', 'MAPEH Sub-Subject'),
+        ('PROGRAM_SPECIFIC', 'Program-Specific Subject'),
+    ]
+    
+    # Basic Information
+    subject_code = models.CharField(
+        max_length=20,
+        unique=True,
+        verbose_name="Subject Code",
+        help_text="Unique code (e.g., MATH7, ENG7, RESEARCH7)"
+    )
+    subject_name = models.CharField(
+        max_length=100,
+        verbose_name="Subject Name",
+        help_text="Full subject name (e.g., Mathematics, English)"
+    )
+    subject_type = models.CharField(
+        max_length=20,
+        choices=SUBJECT_TYPE_CHOICES,
+        default='CORE',
+        verbose_name="Subject Type"
+    )
+    
+    # Program Association
+    program = models.CharField(
+        max_length=20,
+        choices=PROGRAM_CHOICES,
+        default='ALL',
+        verbose_name="Program",
+        help_text="Which program(s) offer this subject"
+    )
+    
+    # MAPEH Parent (for sub-subjects only)
+    parent_subject = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='sub_subjects',
+        verbose_name="Parent Subject",
+        help_text="Only for MAPEH sub-subjects (Music, Arts, PE, Health)"
+    )
+    
+    # Additional Info
+    description = models.TextField(
+        blank=True,
+        verbose_name="Description",
+        help_text="Optional subject description"
+    )
+    
+    # Order for display
+    display_order = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Display Order",
+        help_text="Lower numbers appear first"
+    )
+    
+    # Status
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name="Is Active",
+        help_text="Inactive subjects won't appear in dropdowns"
+    )
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Subject"
+        verbose_name_plural = "Subjects"
+        ordering = ['display_order', 'subject_name']
+        indexes = [
+            models.Index(fields=['program', 'is_active']),
+            models.Index(fields=['subject_type']),
+        ]
+    
+    def __str__(self):
+        if self.parent_subject:
+            return f"{self.parent_subject.subject_name} - {self.subject_name}"
+        return self.subject_name
+    
+    def get_full_name(self):
+        """Get full subject name including parent if applicable"""
+        if self.parent_subject:
+            return f"{self.parent_subject.subject_name} ({self.subject_name})"
+        return self.subject_name
+    
+    def is_mapeh_sub(self):
+        """Check if this is a MAPEH sub-subject"""
+        return self.subject_type == 'MAPEH_SUB' and self.parent_subject is not None
+    
+    @classmethod
+    def get_subjects_for_program(cls, program_code):
+        """
+        Get all subjects available for a specific program.
+        Includes 'ALL' subjects and program-specific subjects.
+        """
+        from django.db.models import Q
+        return cls.objects.filter(
+            Q(program='ALL') | Q(program=program_code),
+            is_active=True
+        ).order_by('display_order', 'subject_name')
+
+
+class SchoolYear(models.Model):
+    """
+    Manages school year configuration with flexible quarter date ranges.
+    Example: 2025-2026 school year with 4 quarters.
+    """
+    name = models.CharField(
+        max_length=9,
+        unique=True,
+        verbose_name="School Year",
+        help_text="Format: 2025-2026"
+    )
+    start_date = models.DateField(
+        verbose_name="School Year Start Date",
+        help_text="First day of classes"
+    )
+    end_date = models.DateField(
+        verbose_name="School Year End Date",
+        help_text="Last day of classes"
+    )
+    
+    # Quarter 1
+    q1_start = models.DateField(verbose_name="Q1 Start Date")
+    q1_end = models.DateField(verbose_name="Q1 End Date")
+    
+    # Quarter 2
+    q2_start = models.DateField(verbose_name="Q2 Start Date")
+    q2_end = models.DateField(verbose_name="Q2 End Date")
+    
+    # Quarter 3
+    q3_start = models.DateField(verbose_name="Q3 Start Date")
+    q3_end = models.DateField(verbose_name="Q3 End Date")
+    
+    # Quarter 4
+    q4_start = models.DateField(verbose_name="Q4 Start Date")
+    q4_end = models.DateField(verbose_name="Q4 End Date")
+    
+    # Status
+    is_current = models.BooleanField(
+        default=False,
+        verbose_name="Is Current School Year",
+        help_text="Only one school year should be current at a time"
+    )
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name="Is Active"
+    )
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "School Year"
+        verbose_name_plural = "School Years"
+        ordering = ['-start_date']
+        indexes = [
+            models.Index(fields=['is_current', 'is_active']),
+        ]
+    
+    def __str__(self):
+        return self.name
+    
+    def clean(self):
+        """Validate date ranges"""
+        super().clean()
+        
+        # Check school year dates
+        if self.start_date >= self.end_date:
+            raise ValidationError("School year end date must be after start date")
+        
+        # Check quarter dates
+        quarters = [
+            (self.q1_start, self.q1_end, "Quarter 1"),
+            (self.q2_start, self.q2_end, "Quarter 2"),
+            (self.q3_start, self.q3_end, "Quarter 3"),
+            (self.q4_start, self.q4_end, "Quarter 4"),
+        ]
+        
+        for start, end, name in quarters:
+            if start >= end:
+                raise ValidationError(f"{name} end date must be after start date")
+            if start < self.start_date or end > self.end_date:
+                raise ValidationError(f"{name} must be within school year dates")
+    
+    def save(self, *args, **kwargs):
+        """Ensure only one current school year"""
+        if self.is_current:
+            SchoolYear.objects.filter(is_current=True).exclude(pk=self.pk).update(is_current=False)
+        super().save(*args, **kwargs)
+    
+    @classmethod
+    def get_current(cls):
+        """Get the current active school year"""
+        return cls.objects.filter(is_current=True, is_active=True).first()
+    
+    def get_quarter_dates(self, quarter):
+        """Get start and end dates for a specific quarter"""
+        quarter_map = {
+            'Q1': (self.q1_start, self.q1_end),
+            'Q2': (self.q2_start, self.q2_end),
+            'Q3': (self.q3_start, self.q3_end),
+            'Q4': (self.q4_start, self.q4_end),
+            '1': (self.q1_start, self.q1_end),
+            '2': (self.q2_start, self.q2_end),
+            '3': (self.q3_start, self.q3_end),
+            '4': (self.q4_start, self.q4_end),
+        }
+        return quarter_map.get(quarter)
+    
+    def get_months_in_quarter(self, quarter):
+        """Get list of (year, month) tuples for a quarter"""
+        start_date, end_date = self.get_quarter_dates(quarter)
+        if not start_date or not end_date:
+            return []
+        
+        months = []
+        current = start_date.replace(day=1)
+        end = end_date.replace(day=1)
+        
+        while current <= end:
+            months.append((current.year, current.month))
+            # Move to next month
+            if current.month == 12:
+                current = current.replace(year=current.year + 1, month=1)
+            else:
+                current = current.replace(month=current.month + 1)
+        
+        return months
+    
+    def get_quarter_for_date(self, date):
+        """Determine which quarter a date falls in"""
+        if self.q1_start <= date <= self.q1_end:
+            return 'Q1'
+        elif self.q2_start <= date <= self.q2_end:
+            return 'Q2'
+        elif self.q3_start <= date <= self.q3_end:
+            return 'Q3'
+        elif self.q4_start <= date <= self.q4_end:
+            return 'Q4'
+        return None

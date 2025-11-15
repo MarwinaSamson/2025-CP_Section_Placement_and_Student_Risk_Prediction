@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Learner Profile — ZNHS WEST</title>
-
+  {% load static %}
   <!-- Tailwind + FontAwesome -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -54,12 +54,6 @@
     .section-title { font-weight:700; color:var(--accent); }
     .section-body { padding:20px; }
 
-    .update-btn {
-      background:var(--accent); color:white; border-radius:8px; padding:8px 12px; border:0; cursor:pointer; font-weight:600;
-      transition:transform .12s ease, box-shadow .12s ease;
-    }
-    .update-btn:hover { transform:translateY(-2px); box-shadow: 0 6px 18px rgba(162,49,49,0.12) }
-
     /* Student Layout */
     .student-layout { display:flex; gap:28px; flex-wrap:wrap; }
     .photo-box, .parent-photo {
@@ -74,194 +68,244 @@
     .detail-item label { display:block; font-weight:700; color:#111827; margin-bottom:6px; font-size:0.92rem }
     .detail-item span { color:var(--muted); font-size:0.92rem }
 
-    /* Form */
-    .profile-form { display:grid; gap:18px; margin-top:6px }
-    .form-section { display:grid; grid-template-columns: 1fr 1fr; gap:12px; padding:12px; border:1px solid #f1f1f1; border-radius:10px; background:#fff }
-    .form-section legend { font-weight:700; color:var(--accent); margin-bottom:6px }
-    .form-group label { display:block; font-weight:600; margin-bottom:6px; font-size:0.9rem }
-    .form-group input, .form-group select {
-      width:100%; padding:9px 10px; border-radius:8px; border:1px solid #e6e6e6; background:#fff;
-    }
-    .form-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:6px }
-
     .hidden { display:none !important }
     .muted { color: var(--muted) }
 
-    .toast {
-      position:fixed; right:20px; bottom:20px; background:#16a34a; color:#fff; padding:10px 16px; border-radius:8px;
-      box-shadow: var(--shadow); opacity:0; transform: translateY(10px); transition: all .25s ease;
+    .initial-avatar {
+      width:100%;
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:white;
+      font-weight:800;
+      font-size:48px;
+      background: linear-gradient(180deg,#c0392b 0%, #a22a2a 100%);
+      border-radius:8px;
     }
-    .toast.show { opacity:1; transform:none }
   </style>
 </head>
 <body>
   <!-- sidebar -->
-  <div id="sidebar-root"></div>
+  <div id="sidebar-root">
+    {% include 'teacher/adviser/sidebar.html' %}
+  </div>
 
   <main>
     <div class="container">
       <header class="header">
         <div>
           <div class="page-title">Learner Profile</div>
-          <div id="greeting" class="greeting">Good afternoon, Salatan</div>
+          <div id="greeting" class="greeting"></div>
         </div>
         <div class="flex items-center gap-3">
           <div class="text-right">
-            <div class="font-bold">Salatan, Juliana Mae E.</div>
-            <div class="text-sm text-gray-500">Admin</div>
+            <div class="font-bold">{{ teacher.full_name }}</div>
+            <div class="text-sm text-gray-500">
+              {% if teacher.is_adviser %}Adviser{% elif teacher.is_subject_teacher %}Subject Teacher{% else %}Teacher{% endif %}
+            </div>
           </div>
           <div class="w-11 h-11 rounded-full overflow-hidden border-2 border-white">
-            <img id="top-avatar" src="logo/miming.jfif" alt="Adviser" class="w-full h-full object-cover"
-              onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'bg-red-700 text-white flex items-center justify-center w-full h-full font-bold\'>S</div>'">
+            {% if teacher.profile_photo %}
+              <img src="{{ teacher.profile_photo.url }}" alt="{{ teacher.full_name }}" class="w-full h-full object-cover">
+            {% else %}
+              <div class="bg-red-700 text-white flex items-center justify-center w-full h-full font-bold">
+                {{ teacher.first_name.0 }}
+              </div>
+            {% endif %}
           </div>
         </div>
       </header>
 
       <!-- Back Button -->
-<div class="mb-4">
-  <button onclick="history.back()" 
-          class="flex items-center gap-2 text-red-700 font-semibold hover:text-red-900 transition">
-    <i class="fa-solid fa-arrow-left"></i>
-    Back
-  </button>
-</div>
-
+      <div class="mb-4">
+        <button onclick="history.back()" 
+                class="flex items-center gap-2 text-red-700 font-semibold hover:text-red-900 transition">
+          <i class="fa-solid fa-arrow-left"></i>
+          Back to Masterlist
+        </button>
+      </div>
 
      <!-- Student Data -->
-<section class="card">
-  <div class="section-header">
-    <div class="section-title">Student Data</div>
-    <!-- <button class="update-btn" onclick="enableEdit('student')">Update Data</button> -->
-  </div>
+      <section class="card">
+        <div class="section-header">
+          <div class="section-title">Student Data</div>
+        </div>
 
-  <div class="section-body" id="student-view">
-    <div class="student-layout">
-      <!-- Student Photo -->
-      <div class="photo-box">
-        <img src="Pictures/7ec9a6dc-a0e1-4421-8dbe-ea75d01e6e00.jfif" alt="Student photo"
-          onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'bg-red-700 text-white font-bold flex items-center justify-center w-full h-full rounded-lg\'>S</div>'">
-      </div>
+        <div class="section-body" id="student-view">
+          <div class="student-layout">
+            <!-- Student Photo -->
+            <div class="photo-box">
+              {% if student.photo_url %}
+                <img src="{{ student.photo_url }}" alt="{{ student.full_name }}">
+              {% else %}
+                <div class="initial-avatar">
+                  {{ student.first_name.0 }}{{ student.last_name.0 }}
+                </div>
+              {% endif %}
+            </div>
 
-      <!-- Student Info -->
-      <div class="flex-1 min-w-[260px] space-y-6">
-        <!-- Personal Information -->
-        <fieldset class="border p-4 rounded-lg bg-white">
-          <legend class="font-bold text-red-700">Personal Information</legend>
-          <div class="details-grid">
-            <div class="detail-item">
-              <label>LRN Number</label>
-              <span data-key="lrn">12345678913</span>
-            </div><br><br><n></n>
-            <div class="detail-item">
-              <label>Last Name</label>
-              <span data-key="lastname">Uchiha</span>
-            </div>
-            <div class="detail-item">
-              <label>First Name</label>
-              <span data-key="firstname">Itachi</span>
-            </div>
-            <div class="detail-item">
-              <label>Middle Name</label>
-              <span data-key="middlename">Madara</span>
-            </div>
-            <div class="detail-item">
-              <label>Gender</label>
-              <span data-key="gender">Male</span>
-            </div>
-            <div class="detail-item">
-              <label>Age</label>
-              <span data-key="age">25</span>
-            </div>
-            <div class="detail-item">
-              <label>Date of Birth</label>
-              <span data-key="dob">2000-06-12</span>
+            <!-- Student Info -->
+            <div class="flex-1 min-w-[260px] space-y-6">
+              <!-- Personal Information -->
+              <fieldset class="border p-4 rounded-lg bg-white">
+                <legend class="font-bold text-red-700">Personal Information</legend>
+                <div class="details-grid">
+                  <div class="detail-item">
+                    <label>LRN Number</label>
+                    <span>{{ student.lrn }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Last Name</label>
+                    <span>{{ student.last_name }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>First Name</label>
+                    <span>{{ student.first_name }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Middle Name</label>
+                    <span>{{ student.middle_name }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Gender</label>
+                    <span>{{ student.gender }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Age</label>
+                    <span>{{ student.age }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Date of Birth</label>
+                    <span>{{ student.date_of_birth }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Place of Birth</label>
+                    <span>{{ student.place_of_birth }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Current Address</label>
+                    <span>{{ student.address }}</span>
+                  </div>
+                </div>
+              </fieldset>
+
+              <!-- School Background -->
+              <fieldset class="border p-4 rounded-lg bg-white">
+                <legend class="font-bold text-red-700">School Background</legend>
+                <div class="details-grid">
+                  <div class="detail-item">
+                    <label>Last School Attended</label>
+                    <span>{{ student.last_school }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Previous Grade & Section</label>
+                    <span>{{ student.prev_grade_section }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>School Year Last Attended</label>
+                    <span>{{ student.last_school_year }}</span>
+                  </div>
+                </div>
+              </fieldset>
+
+              <!-- Enrollment Details -->
+              <fieldset class="border p-4 rounded-lg bg-white">
+                <legend class="font-bold text-red-700">Enrollment Details</legend>
+                <div class="details-grid">
+                  <div class="detail-item">
+                    <label>Date Enrolled</label>
+                    <span>{{ student.date_enrolled }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Current Program</label>
+                    <span>{{ student.current_program }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Current Section</label>
+                    <span>{{ student.current_section }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Current Grade Level</label>
+                    <span>{{ student.current_grade }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Enrollment Status</label>
+                    <span>{{ student.enrollment_status }}</span>
+                  </div>
+                </div>
+              </fieldset>
+
+              <!-- Special Needs (if applicable) -->
+              {% if student.is_sped or student.is_working_student %}
+              <fieldset class="border p-4 rounded-lg bg-white">
+                <legend class="font-bold text-red-700">Additional Information</legend>
+                <div class="details-grid">
+                  {% if student.is_sped %}
+                  <div class="detail-item">
+                    <label>Special Education Needs</label>
+                    <span>{{ student.sped_details }}</span>
+                  </div>
+                  {% endif %}
+                  {% if student.is_working_student %}
+                  <div class="detail-item">
+                    <label>Working Student Details</label>
+                    <span>{{ student.working_details }}</span>
+                  </div>
+                  {% endif %}
+                </div>
+              </fieldset>
+              {% endif %}
             </div>
           </div>
-        </fieldset>
-
-        <!-- School Background -->
-        <fieldset class="border p-4 rounded-lg bg-white">
-          <legend class="font-bold text-red-700">School Background</legend>
-          <div class="details-grid">
-            <div class="detail-item">
-              <label>Last School Attended</label>
-              <span data-key="last_school">Konoha Ninja Academy</span>
-            </div>
-            <div class="detail-item">
-              <label>Previous Grade & Section</label>
-              <span data-key="prev_grade">Grade 6 - Pearl</span>
-            </div>
-            <div class="detail-item">
-              <label>School Year Last Attended</label>
-              <span data-key="last_sy">2019-2020</span>
-            </div>
-          </div>
-        </fieldset>
-
-        <!-- Enrollment Details -->
-        <fieldset class="border p-4 rounded-lg bg-white">
-          <legend class="font-bold text-red-700">Enrollment Details</legend>
-          <div class="details-grid">
-            <div class="detail-item">
-              <label>Date Enrolled</label>
-              <span data-key="date_enrolled">2025-06-01</span>
-            </div>
-            <div class="detail-item">
-              <label>Date of First Attendance</label>
-              <span data-key="date_attended">2025-06-01</span>
-            </div>
-            <div class="detail-item">
-              <label>Current Grade Level</label>
-              <span data-key="grade">Grade 7</span>
-            </div>
-          </div>
-        </fieldset>
-      </div>
-    </div>
-  </div>
-</section>
+        </div>
+      </section>
 
       <!-- Parents / Guardian -->
       <section class="card mt-6" id="parents-section">
         <div class="section-header">
           <div class="section-title">Parents & Guardian</div>
-          <!-- <button class="update-btn" onclick="enableEdit('parents')">Update Data</button> -->
         </div>
 
         <div id="parents-view" class="section-body">
           <div class="flex flex-wrap gap-6 items-start">
             <div class="parent-photo">
-              <img id="parent-photo-img" src="Pictures/7ec9a6dc-a0e1-4421-8dbe-ea75d01e6e00.jfif" alt="Parent photo"
-                onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'bg-red-700 text-white font-bold flex items-center justify-center w-full h-full rounded-lg\'>P</div>'">
+              {% if family.parent_photo_url %}
+                <img src="{{ family.parent_photo_url }}" alt="Parent photo">
+              {% else %}
+                <div class="initial-avatar">
+                  P
+                </div>
+              {% endif %}
             </div>
             <div class="flex-1 min-w-[240px] space-y-6">
               <!-- Father -->
               <fieldset class="border p-4 rounded-lg bg-white">
-                <legend class="font-bold text-red-700">Father’s Details</legend>
+                <legend class="font-bold text-red-700">Father's Details</legend>
                 <div class="grid md:grid-cols-3 gap-3">
-                  <div class="detail-item"><label>Last Name</label><span data-key="father_name">Uchiha</span></div>
-                   <div class="detail-item"><label>First Name</label><span data-key="father_name">Fugaku </span></div>
-                    <div class="detail-item"><label>Middle Name</label><span data-key="father_name"> Uchiha</span></div>
-                  <div class="detail-item"><label>Date of Birth</label><span data-key="father_dob">1970-03-10</span></div>
-                  <div class="detail-item"><label>Age</label><span data-key="father_age">55</span></div>
-                  <div class="detail-item"><label>Occupation</label><span data-key="father_occupation">Police</span></div>
-                  <div class="detail-item"><label>Contact</label><span data-key="father_contact">0987654321</span></div>
-                   <div class="detail-item"><label>Email</label><span data-key="mother_contact">fugakuuchiha@gmail.com</span></div>
+                  <div class="detail-item"><label>Last Name</label><span>{{ family.father_last_name }}</span></div>
+                  <div class="detail-item"><label>First Name</label><span>{{ family.father_first_name }}</span></div>
+                  <div class="detail-item"><label>Middle Name</label><span>{{ family.father_middle_name }}</span></div>
+                  <div class="detail-item"><label>Date of Birth</label><span>{{ family.father_dob }}</span></div>
+                  <div class="detail-item"><label>Age</label><span>{{ family.father_age }}</span></div>
+                  <div class="detail-item"><label>Occupation</label><span>{{ family.father_occupation }}</span></div>
+                  <div class="detail-item"><label>Contact</label><span>{{ family.father_contact }}</span></div>
+                  <div class="detail-item"><label>Email</label><span>{{ family.father_email }}</span></div>
                 </div>
               </fieldset>
 
               <!-- Mother -->
               <fieldset class="border p-4 rounded-lg bg-white">
-                <legend class="font-bold text-red-700">Mother’s Details</legend>
+                <legend class="font-bold text-red-700">Mother's Details</legend>
                 <div class="grid md:grid-cols-3 gap-3">
-                   <div class="detail-item"><label>Last Name</label><span data-key="father_name">Uchiha</span></div>
-                   <div class="detail-item"><label>First Name</label><span data-key="father_name">Mikoto </span></div>
-                    <div class="detail-item"><label>Middle Name</label><span data-key="father_name"> Uchiha</span></div>
-                  <div class="detail-item"><label>Date of Birth</label><span data-key="mother_dob">1972-05-02</span></div>
-                  <div class="detail-item"><label>Age</label><span data-key="mother_age">53</span></div>
-                  <div class="detail-item"><label>Occupation</label><span data-key="mother_occupation">Housewife</span></div>
-                  <div class="detail-item"><label>Contact</label><span data-key="mother_contact">0987654321</span></div>
-                   <div class="detail-item"><label>Email</label><span data-key="mother_contact">mikotouchiha@gmail.com</span></div>
+                  <div class="detail-item"><label>Last Name</label><span>{{ family.mother_last_name }}</span></div>
+                  <div class="detail-item"><label>First Name</label><span>{{ family.mother_first_name }}</span></div>
+                  <div class="detail-item"><label>Middle Name</label><span>{{ family.mother_middle_name }}</span></div>
+                  <div class="detail-item"><label>Date of Birth</label><span>{{ family.mother_dob }}</span></div>
+                  <div class="detail-item"><label>Age</label><span>{{ family.mother_age }}</span></div>
+                  <div class="detail-item"><label>Occupation</label><span>{{ family.mother_occupation }}</span></div>
+                  <div class="detail-item"><label>Contact</label><span>{{ family.mother_contact }}</span></div>
+                  <div class="detail-item"><label>Email</label><span>{{ family.mother_email }}</span></div>
                 </div>
               </fieldset>
 
@@ -269,87 +313,94 @@
               <fieldset class="border p-4 rounded-lg bg-white">
                 <legend class="font-bold text-red-700">Other Details</legend>
                 <div class="grid md:grid-cols-4 gap-3">
-                  <div class="detail-item"><label>Current Address</label><span data-key="address">Konoha</span></div>
-                  <div class="detail-item"><label>Religion</label><span data-key="religion">Uchihanism</span></div>
-                  <div class="detail-item"><label>Dialect</label><span data-key="dialect">Japanese</span></div>
-                  <div class="detail-item"><label>Ethnicity</label><span data-key="ethnicity">Uchiha</span></div>
+                  <div class="detail-item"><label>Current Address</label><span>{{ student.address }}</span></div>
+                  <div class="detail-item"><label>Religion</label><span>{{ student.religion }}</span></div>
+                  <div class="detail-item"><label>Dialect</label><span>{{ student.dialect }}</span></div>
+                  <div class="detail-item"><label>Ethnicity</label><span>{{ student.ethnicity }}</span></div>
                 </div>
               </fieldset>
 
               <!-- Guardian -->
               <fieldset class="border p-4 rounded-lg bg-white">
-                <legend class="font-bold text-red-700">Guardian’s Details</legend>
+                <legend class="font-bold text-red-700">Guardian's Details</legend>
                 <div class="grid md:grid-cols-3 gap-3">
-                 <div class="detail-item"><label>Last Name</label><span data-key="father_name">Uchiha</span></div>
-                   <div class="detail-item"><label>First Name</label><span data-key="father_name">Mikoto </span></div>
-                    <div class="detail-item"><label>Middle Name</label><span data-key="father_name"> Uchiha</span></div>
-                  <div class="detail-item"><label>Relationship</label><span data-key="guardian_rel">-</span></div>
-                  <div class="detail-item"><label>Contact</label><span data-key="guardian_contact">-</span></div>
-                  <div class="detail-item"><label>Current Address</label><span data-key="address">Konoha</span></div>
-                  <div class="detail-item"><label>Religion</label><span data-key="religion">Uchihanism</span></div>
-                  <div class="detail-item"><label>Dialect</label><span data-key="dialect">Japanese</span></div>
-                  <div class="detail-item"><label>Ethnicity</label><span data-key="ethnicity">Uchiha</span></div>
+                  <div class="detail-item"><label>Last Name</label><span>{{ family.guardian_last_name }}</span></div>
+                  <div class="detail-item"><label>First Name</label><span>{{ family.guardian_first_name }}</span></div>
+                  <div class="detail-item"><label>Middle Name</label><span>{{ family.guardian_middle_name }}</span></div>
+                  <div class="detail-item"><label>Relationship</label><span>{{ family.guardian_relationship }}</span></div>
+                  <div class="detail-item"><label>Contact</label><span>{{ family.guardian_contact }}</span></div>
+                  <div class="detail-item"><label>Address</label><span>{{ family.guardian_address }}</span></div>
                 </div>
               </fieldset>
             </div>
           </div>
         </div>
       </section>
+
+      <!-- Academic Information (if available) -->
+      {% if academic %}
+      <section class="card mt-6">
+        <div class="section-header">
+          <div class="section-title">Grade 6 Academic Record</div>
+        </div>
+        <div class="section-body">
+          <div class="grid md:grid-cols-4 gap-4">
+            <div class="detail-item">
+              <label>Mathematics</label>
+              <span class="font-semibold">{{ academic.mathematics }}</span>
+            </div>
+            <div class="detail-item">
+              <label>English</label>
+              <span class="font-semibold">{{ academic.english }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Science</label>
+              <span class="font-semibold">{{ academic.science }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Filipino</label>
+              <span class="font-semibold">{{ academic.filipino }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Araling Panlipunan</label>
+              <span class="font-semibold">{{ academic.araling_panlipunan }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Edukasyon sa Pagpapakatao</label>
+              <span class="font-semibold">{{ academic.edukasyon_pagpapakatao }}</span>
+            </div>
+            <div class="detail-item">
+              <label>MAPEH</label>
+              <span class="font-semibold">{{ academic.mapeh }}</span>
+            </div>
+            <div class="detail-item">
+              <label>TLE</label>
+              <span class="font-semibold">{{ academic.edukasyon_pangkabuhayan }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Overall Average</label>
+              <span class="font-bold text-red-700 text-lg">{{ academic.overall_average }}</span>
+            </div>
+            <div class="detail-item">
+              <label>DOST Exam Result</label>
+              <span>{{ academic.dost_exam_result }}</span>
+            </div>
+          </div>
+        </div>
+      </section>
+      {% endif %}
+
     </div>
   </main>
-
-  <div id="toast" class="toast">Saved</div>
 
   <script>
     // Greeting
     (function(){
       const g = document.getElementById('greeting');
       const d = new Date();
-      g.textContent = d.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      g.textContent = d.toLocaleDateString('en-US', options);
     })();
-
-    // Toggle Edit (future support)
-    function toggleEditState(section, isEditing){
-      const view = document.getElementById(section + '-view');
-      const form = document.getElementById(section + '-form');
-      const sectionEl = document.getElementById(section + '-section');
-      const updateBtn = sectionEl?.querySelector('.update-btn');
-
-      if (isEditing) {
-        view?.classList.add('hidden');
-        form?.classList.remove('hidden');
-        updateBtn?.classList.add('hidden');
-      } else {
-        form?.classList.add('hidden');
-        view?.classList.remove('hidden');
-        updateBtn?.classList.remove('hidden');
-      }
-    }
-    function enableEdit(section){ toggleEditState(section,true); }
-    function cancelEdit(section){ toggleEditState(section,false); }
-
-    // Toast
-    let toastTimer = 0;
-    function showToast(msg){
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.classList.add('show');
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(()=>t.classList.remove('show'),3000);
-    }
-
-    // Sidebar loader
-    async function loadSidebar(){
-      try {
-        const res = await fetch('sidebar.html');
-        const html = await res.text();
-        const root = document.getElementById('sidebar-root');
-        root.innerHTML = html;
-      } catch (err) {
-        console.error(err);
-      }
-    }
-    loadSidebar();
   </script>
 </body>
 </html>
