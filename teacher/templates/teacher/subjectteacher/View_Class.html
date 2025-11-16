@@ -1126,52 +1126,7 @@
     applyFilters();
     sortTable('az');
 
-    // --- NEW SCRIPT: LOAD SIDEBAR ---
-    {% comment %} (function loadSidebar() {
-      const sidebarRoot = document.getElementById('sidebar-root');
-      if (!sidebarRoot) return;
-
-      fetch('sidebar.html')
-        .then(response => {
-          if (!response.ok) throw new Error('Could not fetch sidebar.html. Make sure the file exists.');
-          return response.text();
-        })
-        .then(html => {
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(html, 'text/html');
-
-          // Find the essential parts
-          const style = doc.querySelector('style');
-          const aside = doc.querySelector('aside.sidebar');
-          const scriptLogic = doc.querySelector('script');
-
-          // Inject them into the correct places
-          if (style) {
-            document.head.appendChild(style);
-          }
-          
-          if (aside) {
-            sidebarRoot.appendChild(aside);
-          } else {
-            throw new Error('Sidebar <aside> element not found in sidebar.html');
-          }
-
-          if (scriptLogic) {
-            const script = document.createElement('script');
-            // Use .textContent to avoid script injection issues
-            script.textContent = scriptLogic.textContent; 
-            document.body.appendChild(script);
-          }
-        })
-        .catch(error => {
-          sidebarRoot.innerHTML = `<div style="padding: 1rem; color: #b91c1c; background: #fff1f2; border: 1px solid #ffe4e6; border-radius: 8px; margin: 1rem; font-family: sans-serif;">
-            <strong>Error:</strong> Could not load sidebar. ${error.message}
-          </div>`;
-          console.error('Error loading sidebar:', error);
-        });
-    })(); {% endcomment %}
-    // --- END LOAD SIDEBAR SCRIPT ---
-
+    
   </script>
 </body>
 </html>
