@@ -9,6 +9,8 @@ from admin_functionalities.models import Teacher, Subject, Section, SchoolYear
 from django.core.validators import MinValueValidator, MaxValueValidator
 from datetime import date, datetime
 
+
+
 class Intervention(models.Model):
     """
     Intervention plans created by advisers for students who need support.
@@ -1051,3 +1053,466 @@ class MasterlistNote(models.Model):
     
 # Attendance
 
+class AttendanceRecord(models.Model):
+    """
+    Main attendance record for a section.
+    Represents the complete attendance data for one section in one month/quarter.
+    One record per section per month.
+    """
+    
+    # Core Information
+    section = models.ForeignKey(
+        Section,
+        on_delete=models.CASCADE,
+        related_name='attendance_records',
+        verbose_name="Section"
+    )
+    teacher = models.ForeignKey(
+        Teacher,
+        on_delete=models.CASCADE,
+        related_name='attendance_records',
+        verbose_name="Teacher (Adviser)",
+        help_text="Teacher who manages this attendance record"
+    )
+    school_year = models.ForeignKey(
+        SchoolYear,
+        on_delete=models.CASCADE,
+        related_name='attendance_records',
+        verbose_name="School Year"
+    )
+    
+    # Period Information
+    quarter = models.CharField(
+        max_length=2,
+        choices=[
+            ('Q1', 'Quarter 1'),
+            ('Q2', 'Quarter 2'),
+            ('Q3', 'Quarter 3'),
+            ('Q4', 'Quarter 4'),
+        ],
+        verbose_name="Quarter"
+    )
+    month = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(12)],
+        verbose_name="Month (1-12)"
+    )
+    year = models.IntegerField(
+        verbose_name="Year"
+    )
+    
+    # School Details (stored for SF2 form)
+    school_name = models.CharField(
+        max_length=200,
+        default="Cagayan de Oro National High School",
+        verbose_name="School Name"
+    )
+    school_id = models.CharField(
+        max_length=20,
+        default="304144",
+        verbose_name="School ID"
+    )
+    grade_level = models.CharField(
+        max_length=20,
+        default="Grade 7",
+        verbose_name="Grade Level"
+    )
+    
+    # Summary Data (computed from individual student attendance)
+    total_days = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Total School Days in Month",
+        help_text="Number of school days (Mon-Fri) in this month"
+    )
+    
+    # Monthly Summary Fields
+    # Enrollment
+    enrollment_male = models.PositiveIntegerField(default=0, verbose_name="Male Enrollment")
+    enrollment_female = models.PositiveIntegerField(default=0, verbose_name="Female Enrollment")
+    
+    # Late Enrollees (user input)
+    late_enrollees_male = models.PositiveIntegerField(default=0, verbose_name="Late Enrollees - Male")
+    late_enrollees_female = models.PositiveIntegerField(default=0, verbose_name="Late Enrollees - Female")
+    
+    # Registered Learners (computed)
+    registered_male = models.PositiveIntegerField(default=0, verbose_name="Registered - Male")
+    registered_female = models.PositiveIntegerField(default=0, verbose_name="Registered - Female")
+    
+    # Average Daily Attendance (computed)
+    avg_attendance_male = models.DecimalField(max_digits=5, decimal_places=2, default=0, verbose_name="Avg Attendance - Male")
+    avg_attendance_female = models.DecimalField(max_digits=5, decimal_places=2, default=0, verbose_name="Avg Attendance - Female")
+    
+    # Percentage of Attendance (computed)
+    attendance_percentage_male = models.DecimalField(max_digits=5, decimal_places=2, default=0, verbose_name="Attendance % - Male")
+    attendance_percentage_female = models.DecimalField(max_digits=5, decimal_places=2, default=0, verbose_name="Attendance % - Female")
+    
+    # Dropped/Transferred counts (computed from remarks)
+    dropped_male = models.PositiveIntegerField(default=0, verbose_name="Dropped - Male")
+    dropped_female = models.PositiveIntegerField(default=0, verbose_name="Dropped - Female")
+    transferred_out_male = models.PositiveIntegerField(default=0, verbose_name="Transferred Out - Male")
+    transferred_out_female = models.PositiveIntegerField(default=0, verbose_name="Transferred Out - Female")
+    transferred_in_male = models.PositiveIntegerField(default=0, verbose_name="Transferred In - Male")
+    transferred_in_female = models.PositiveIntegerField(default=0, verbose_name="Transferred In - Female")
+    
+    # Signature Fields
+    adviser_name = models.CharField(
+        max_length=150,
+        blank=True,
+        verbose_name="Adviser Name"
+    )
+    principal_name = models.CharField(
+        max_length=150,
+        blank=True,
+        verbose_name="Principal/School Head Name"
+    )
+    
+    # Status
+    is_finalized = models.BooleanField(
+        default=False,
+        verbose_name="Is Finalized",
+        help_text="Mark as finalized to prevent further edits"
+    )
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Attendance Record"
+        verbose_name_plural = "Attendance Records"
+        ordering = ['-year', '-month', 'section']
+        unique_together = ['section', 'school_year', 'quarter', 'month', 'year']
+        indexes = [
+            models.Index(fields=['section', 'school_year', 'quarter']),
+            models.Index(fields=['teacher', 'year', 'month']),
+        ]
+    
+    def __str__(self):
+        month_name = self.get_month_name()
+        return f"{self.section.name} - {month_name} {self.year} ({self.quarter})"
+    
+    def get_month_name(self):
+        """Get month name from month number"""
+        months = ['', 'January', 'February', 'March', 'April', 'May', 'June',
+                  'July', 'August', 'September', 'October', 'November', 'December']
+        return months[self.month] if 1 <= self.month <= 12 else ''
+    
+    def calculate_school_days(self):
+        """
+        Calculate number of school days (Mon-Fri) in the month.
+        Uses the quarter date ranges from SchoolYear model.
+        """
+        from datetime import date, timedelta
+        
+        # Get start and end dates for this month within the quarter
+        start_date = date(self.year, self.month, 1)
+        
+        # Get last day of month
+        if self.month == 12:
+            end_date = date(self.year + 1, 1, 1) - timedelta(days=1)
+        else:
+            end_date = date(self.year, self.month + 1, 1) - timedelta(days=1)
+        
+        # Count weekdays (Mon-Fri)
+        school_days = 0
+        current_date = start_date
+        while current_date <= end_date:
+            # 0=Monday, 6=Sunday
+            if current_date.weekday() < 5:  # Monday to Friday
+                school_days += 1
+            current_date += timedelta(days=1)
+        
+        self.total_days = school_days
+        return school_days
+    
+    def update_summary_statistics(self):
+        """
+        Recalculate all summary statistics from student attendance entries.
+        Should be called whenever student attendance is updated.
+        """
+        students = self.student_attendance.all()
+        
+        # Count by gender
+        male_students = students.filter(student__gender='Male')
+        female_students = students.filter(student__gender='Female')
+        
+        self.enrollment_male = male_students.count()
+        self.enrollment_female = female_students.count()
+        
+        # Registered = Enrollment + Late Enrollees
+        self.registered_male = self.enrollment_male + self.late_enrollees_male
+        self.registered_female = self.enrollment_female + self.late_enrollees_female
+        
+        # Calculate average daily attendance (sum of present days / total students)
+        total_present_male = sum(s.get_present_days() for s in male_students)
+        total_present_female = sum(s.get_present_days() for s in female_students)
+        
+        if self.total_days > 0:
+            self.avg_attendance_male = round(total_present_male / self.total_days, 2) if self.total_days else 0
+            self.avg_attendance_female = round(total_present_female / self.total_days, 2) if self.total_days else 0
+        
+        # Calculate attendance percentage
+        # Formula: (Total Daily Attendance / (No. of days × Enrolment)) × 100
+        if self.total_days > 0 and self.enrollment_male > 0:
+            self.attendance_percentage_male = round(
+                (total_present_male / (self.total_days * self.enrollment_male)) * 100, 2
+            )
+        else:
+            self.attendance_percentage_male = 0
+            
+        if self.total_days > 0 and self.enrollment_female > 0:
+            self.attendance_percentage_female = round(
+                (total_present_female / (self.total_days * self.enrollment_female)) * 100, 2
+            )
+        else:
+            self.attendance_percentage_female = 0
+        
+        # Count dropped/transferred from remarks
+        self.dropped_male = male_students.filter(remarks__icontains='drop').count()
+        self.dropped_female = female_students.filter(remarks__icontains='drop').count()
+        
+        self.transferred_out_male = male_students.filter(remarks__icontains='transfer out').count()
+        self.transferred_out_female = female_students.filter(remarks__icontains='transfer out').count()
+        
+        self.transferred_in_male = male_students.filter(remarks__icontains='transfer in').count()
+        self.transferred_in_female = female_students.filter(remarks__icontains='transfer in').count()
+    
+    def get_at_risk_students(self):
+        """
+        Get students who are at risk of dropout (5+ absences).
+        Returns queryset of StudentAttendance with warning flags.
+        """
+        return self.student_attendance.filter(
+            total_absences__gte=5,
+            is_dropout=False
+        ).select_related('student')
+    
+    def get_dropout_students(self):
+        """Get students marked as potential dropouts (7+ absences)"""
+        return self.student_attendance.filter(
+            total_absences__gte=7
+        ).select_related('student')
+
+
+class StudentAttendance(models.Model):
+    """
+    Individual student's attendance for a specific month.
+    Stores daily attendance codes and computes totals.
+    """
+    
+    # Relations
+    attendance_record = models.ForeignKey(
+        AttendanceRecord,
+        on_delete=models.CASCADE,
+        related_name='student_attendance',
+        verbose_name="Attendance Record"
+    )
+    student = models.ForeignKey(
+        Student,
+        on_delete=models.CASCADE,
+        related_name='monthly_attendance',
+        verbose_name="Student"
+    )
+    
+    # Daily Attendance (stored as JSON array for flexibility)
+    # Format: ["", "X", "", "T", "E", ...] for each school day
+    # "" = Present, "X" or "E" = Absent, "T" = Tardy
+    daily_attendance = models.JSONField(
+        default=list,
+        verbose_name="Daily Attendance Codes",
+        help_text="Array of attendance codes for each school day"
+    )
+    
+    # Computed Totals
+    total_absences = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Total Absences"
+    )
+    total_tardies = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Total Tardies"
+    )
+    total_present = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Total Present Days"
+    )
+    
+    # Remarks (for dropped/transferred students)
+    remarks = models.TextField(
+        blank=True,
+        verbose_name="Remarks",
+        help_text="Note reasons for absences, dropout, transfer, etc."
+    )
+    
+    # Warning Flags
+    is_at_risk = models.BooleanField(
+        default=False,
+        verbose_name="At Risk of Dropout",
+        help_text="Student has 5-6 absences"
+    )
+    is_dropout = models.BooleanField(
+        default=False,
+        verbose_name="Subject to Dropout",
+        help_text="Student has 7+ absences"
+    )
+    has_valid_excuse = models.BooleanField(
+        default=False,
+        verbose_name="Has Valid Excuse",
+        help_text="Teacher marked absences as excused"
+    )
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Student Attendance"
+        verbose_name_plural = "Student Attendance Records"
+        ordering = ['student__last_name', 'student__first_name']
+        unique_together = ['attendance_record', 'student']
+        indexes = [
+            models.Index(fields=['attendance_record', 'student']),
+            models.Index(fields=['total_absences']),
+            models.Index(fields=['is_at_risk']),
+            models.Index(fields=['is_dropout']),
+        ]
+    
+    def __str__(self):
+        return f"{self.student.last_name}, {self.student.first_name} - {self.attendance_record}"
+    
+    def calculate_totals(self):
+        """
+        Calculate totals from daily_attendance array.
+        Updates total_absences, total_tardies, total_present.
+        """
+        if not self.daily_attendance:
+            self.daily_attendance = []
+        
+        self.total_absences = 0
+        self.total_tardies = 0
+        self.total_present = 0
+        
+        for code in self.daily_attendance:
+            code_upper = str(code).strip().upper()
+            if code_upper in ['X', 'E']:
+                self.total_absences += 1
+            elif code_upper == 'T':
+                self.total_tardies += 1
+                self.total_present += 1  # Tardy counts as present but late
+            elif code_upper == '':
+                self.total_present += 1
+        
+        # Update warning flags
+        self.is_at_risk = (5 <= self.total_absences < 7) and not self.has_valid_excuse
+        self.is_dropout = (self.total_absences >= 7) and not self.has_valid_excuse
+    
+    def save(self, *args, **kwargs):
+        """Auto-calculate totals before saving"""
+        self.calculate_totals()
+        super().save(*args, **kwargs)
+        
+        # Update parent record statistics
+        self.attendance_record.update_summary_statistics()
+        self.attendance_record.save()
+    
+    def get_present_days(self):
+        """Get total present days (including tardy)"""
+        return self.total_present
+    
+    def get_attendance_percentage(self):
+        """Calculate attendance percentage for this student"""
+        total_days = self.attendance_record.total_days
+        if total_days == 0:
+            return 0
+        return round((self.total_present / total_days) * 100, 2)
+    
+    def get_warning_message(self):
+        """Get appropriate warning message based on absence count"""
+        if self.has_valid_excuse:
+            return "Valid excuse provided"
+        elif self.is_dropout:
+            return f"⚠️ DROPOUT RISK: {self.total_absences} absences (7+ threshold)"
+        elif self.is_at_risk:
+            remaining = 7 - self.total_absences
+            return f"⚠️ WARNING: {self.total_absences} absences ({remaining} more until dropout threshold)"
+        return ""
+    
+    def get_status_class(self):
+        """Get CSS class for status badge"""
+        if self.is_dropout:
+            return "bg-red-100 text-red-800 border-red-300"
+        elif self.is_at_risk:
+            return "bg-yellow-100 text-yellow-800 border-yellow-300"
+        elif self.total_absences > 0:
+            return "bg-blue-100 text-blue-800 border-blue-300"
+        return "bg-green-100 text-green-800 border-green-300"
+
+
+class AttendanceHistory(models.Model):
+    """
+    History/audit log for attendance record changes.
+    Tracks when attendance was saved, who modified it, and key metrics.
+    """
+    
+    attendance_record = models.ForeignKey(
+        AttendanceRecord,
+        on_delete=models.CASCADE,
+        related_name='history_logs',
+        verbose_name="Attendance Record"
+    )
+    
+    # Action Info
+    action = models.CharField(
+        max_length=50,
+        choices=[
+            ('created', 'Created'),
+            ('updated', 'Updated'),
+            ('finalized', 'Finalized'),
+            ('exported', 'Exported to Excel'),
+        ],
+        verbose_name="Action"
+    )
+    
+    # Snapshot of key metrics at time of save
+    snapshot_data = models.JSONField(
+        default=dict,
+        verbose_name="Data Snapshot",
+        help_text="JSON snapshot of key metrics"
+    )
+    
+    # Who and When
+    modified_by = models.ForeignKey(
+        Teacher,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='attendance_history',
+        verbose_name="Modified By"
+    )
+    timestamp = models.DateTimeField(
+        default=timezone.now,
+        verbose_name="Timestamp"
+    )
+    
+    # Notes
+    notes = models.TextField(
+        blank=True,
+        verbose_name="Notes"
+    )
+    
+    class Meta:
+        verbose_name = "Attendance History"
+        verbose_name_plural = "Attendance Histories"
+        ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['attendance_record', '-timestamp']),
+        ]
+    
+    def __str__(self):
+        return f"{self.action} - {self.attendance_record} ({self.timestamp.strftime('%Y-%m-%d %H:%M')})"
+    
+    def get_formatted_date(self):
+        """Get formatted date for display"""
+        return self.timestamp.strftime('%B %d, %Y')
+    
+    def get_formatted_time(self):
+        """Get formatted time for display"""
+        return self.timestamp.strftime('%I:%M %p')

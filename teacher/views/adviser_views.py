@@ -16,7 +16,7 @@ def adviser_classrecord(request):
 
 @login_required
 def adviser_intervention(request):
-    return render(request, 'teacher/adviser/Intervention.html')
+    return render(request, 'teacher/adviser/subject_Intervention.html')
 
 # @login_required
 # def adviser_masterlist(request):
@@ -37,6 +37,16 @@ def adviser_reports(request):
 @login_required
 def adviser_subview(request):
     return render(request, 'teacher/adviser/Subject_Teacher_View.html')
+
+@login_required
+def adviser_adviser_intervention(request):
+    return render(request, 'teacher/adviser/adviser_intervention.html')
+
+
+@login_required
+def adviser_viewclass(request):
+    return render(request, 'teacher/adviser/View_Class.html')
+
 
 # @login_required
 # def adviser_learnerprofile(request):

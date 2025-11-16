@@ -317,7 +317,9 @@
   </style>
 </head>
 <body>
-  <div id="sidebar-root"></div>
+  <div id="sidebar-root">
+    {% include 'teacher/adviser/sidebar.html' %}
+  </div>
 
   <main>
     <div class="container">
@@ -1125,7 +1127,7 @@
     sortTable('az');
 
     // --- NEW SCRIPT: LOAD SIDEBAR ---
-    (function loadSidebar() {
+    {% comment %} (function loadSidebar() {
       const sidebarRoot = document.getElementById('sidebar-root');
       if (!sidebarRoot) return;
 
@@ -1167,7 +1169,7 @@
           </div>`;
           console.error('Error loading sidebar:', error);
         });
-    })();
+    })(); {% endcomment %}
     // --- END LOAD SIDEBAR SCRIPT ---
 
   </script>
