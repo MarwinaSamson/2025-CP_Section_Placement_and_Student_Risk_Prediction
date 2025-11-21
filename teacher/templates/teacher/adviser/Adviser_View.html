@@ -1,0 +1,795 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Adviser Dashboard — ZNHS WEST</title>
+  {% load static %}
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+  <style>
+    body { font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, Arial; background:#f4f6f8; color:#111827; }
+    main { margin-left: 240px; padding: 28px; transition: margin-left 180ms ease; }
+    @media (max-width:860px) { main { margin-left: 72px; padding:18px } }
+
+    .container { max-width: 1100px; margin: 0 auto; }
+    .alert-close { cursor: pointer; }
+
+    /* Modal transitions */
+    .modal-backdrop { transition: opacity 0.18s ease; }
+
+    /* Tab styles */
+    .tab-button {
+      padding: 8px 16px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #334155;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .tab-button:hover {
+      background-color: #f1f5f9;
+    }
+    .tab-button.active {
+      color: #dc2626;
+      border-bottom-color: #dc2626;
+    }
+    .tab-content {
+      display: none;
+      padding-top: 1.5rem;
+    }
+    .tab-content.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="sidebar-root">
+    {% include 'teacher/adviser/sidebar.html' %}
+  </div>
+
+  <main>
+    <div class="container">
+      {% if not has_advisory_class %}
+        <!-- No Advisory Class Message -->
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+          <i class="fa-solid fa-triangle-exclamation text-yellow-600 text-4xl mb-3"></i>
+          <h2 class="text-xl font-bold text-gray-800 mb-2">No Advisory Class Assigned</h2>
+          <p class="text-gray-600">{{ error_message|default:"You do not have an assigned advisory class. Please contact the administrator." }}</p>
+        </div>
+      {% else %}
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+          <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Class Advisory</h1>
+            <p id="greeting-date" class="text-gray-600 mt-1">Good afternoon, {{ teacher.last_name }}</p>
+          </div>
+
+          <div class="flex items-center gap-6">
+            <div class="flex items-center gap-3">
+              <label for="quarter" class="text-sm font-bold text-gray-700 whitespace-nowrap">Quarter</label>
+              <select id="quarter" class="w-36 rounded-lg border border-gray-300 bg-white py-2 px-3 text-gray-700 shadow-sm
+                                          focus:border-rose-600 focus:ring focus:ring-rose-100 transition-all cursor-pointer font-medium">
+                {% for q in quarters %}
+                  <option value="{{ q }}" {% if q == current_quarter %}selected{% endif %}>Quarter {{ q|slice:"1:" }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div class="text-right leading-tight">
+                <p class="text-sm font-semibold text-gray-800">{{ teacher_full_name }}</p>
+                <p class="text-xs text-gray-500">{{ teacher_position }}</p>
+              </div>
+              <div class="w-10 h-10 rounded-full overflow-hidden border-2 border-rose-600 shadow-sm">
+                {% if teacher_photo %}
+                  <img src="{{ teacher_photo }}" alt="Profile"
+                    onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'bg-rose-600 text-white w-full h-full flex items-center justify-center font-semibold\'>{{ teacher_initials }}</div>'">
+                {% else %}
+                  <div class="bg-rose-600 text-white w-full h-full flex items-center justify-center font-semibold">{{ teacher_initials }}</div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Program / Section -->
+        <div class="bg-white border border-gray-200 rounded-lg p-4 mb-4 flex items-center justify-between">
+          <div class="text-sm text-gray-700 space-y-1">
+            <div><span class="text-gray-600">Program:</span> <span class="text-rose-600 font-semibold">{{ program }}</span></div>
+            <div><span class="text-gray-600">Section:</span> <span class="text-rose-600 font-semibold">{{ section_name }}</span></div>
+          </div>
+          <div class="text-right text-sm text-gray-500">
+            <div>Today</div>
+            <div id="today-compact" class="mt-1 text-xs text-gray-400"></div>
+          </div>
+        </div>
+
+        <!-- Warning -->
+        {% if probation_count > 0 %}
+        <div id="warning" class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 flex items-center justify-between">
+          <div class="flex items-center gap-3 text-sm text-yellow-800">
+            <span class="w-8 h-8 rounded-full bg-yellow-100 grid place-items-center text-yellow-700"><i class="fa-solid fa-triangle-exclamation"></i></span>
+            <div>
+              <div class="font-semibold">Warning: <span class="font-normal">The following requires immediate attention.</span></div>
+              <div class="text-sm text-yellow-800/80">• {{ probation_count }} student{{ probation_count|pluralize:" is,s are" }} under probation</div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <button id="dismiss-warning" class="text-yellow-800/80 hover:text-yellow-900 alert-close" title="Dismiss">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Stats -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div class="bg-blue-100 border border-blue-200 rounded-xl p-5 text-center">
+            <div class="text-blue-700 font-semibold mb-2">Total Learners</div>
+            <h3 class="text-3xl font-bold text-gray-800">{{ total_students }}</h3>
+            <p class="mt-2 text-sm text-gray-700">
+              <span class="text-blue-600 font-semibold">{{ male_count }} Male</span> 
+              <span class="text-pink-600 font-semibold ml-3">{{ female_count }} Female</span>
+            </p>
+          </div>
+
+          <div class="bg-rose-100 border border-rose-200 rounded-xl p-5 text-center">
+            <div class="text-rose-700 font-semibold mb-2">Students at Risk</div>
+            <h3 class="text-3xl font-bold text-gray-800">{{ probation_count }}</h3>
+            <p class="mt-2 text-sm text-gray-700">On Probation</p>
+          </div>
+
+          <div class="bg-green-100 border border-green-200 rounded-xl p-5 text-center">
+            <div class="text-green-700 font-semibold mb-2">Transfer-in</div>
+            <h3 class="text-3xl font-bold text-gray-800">{{ transfer_in_count }}</h3>
+            <p class="mt-2 text-sm text-gray-700">Students</p>
+          </div>
+
+          <div class="bg-yellow-100 border border-yellow-200 rounded-xl p-5 text-center">
+            <div class="text-yellow-700 font-semibold mb-2">Repeaters</div>
+            <h3 class="text-3xl font-bold text-gray-800">{{ repeaters_count }}</h3>
+            <p class="mt-2 text-sm text-gray-700">Students</p>
+          </div>
+        </div>
+
+        <!-- Student Intervention List Section -->
+        <section id="student-list" class="mt-8">
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="p-4 border-b border-gray-200">
+              <h3 id="student-list-title" class="text-lg font-semibold text-gray-800">Student Intervention List ({{ total_students }})</h3>
+              <p class="text-sm text-gray-600 mt-1">Manage and monitor intervention plans for your advisory class students.</p>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LRN</th>
+                    <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Name</th>
+                    <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sex</th>
+                    <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Grade</th>
+                    <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Absences</th>
+                    <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Missing Work</th>
+                    <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Risk Level</th>
+                    <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Intervention</th>
+                    <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="student-table-body" class="divide-y divide-gray-200">
+                  <tr>
+                    <td colspan="9" class="px-5 py-10 text-center text-gray-500">Loading student data...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+      {% endif %}
+    </div>
+  </main>
+
+  <!-- Intervention Details Modal -->
+  <div id="details-modal-backdrop" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-40 flex items-center justify-center p-4 opacity-0 pointer-events-none modal-backdrop">
+    <div id="details-modal" class="bg-slate-50 w-full max-w-4xl rounded-lg shadow-2xl max-h-[90vh] flex flex-col overflow-hidden transform scale-95 transition-all">
+      <div class="flex items-start justify-between p-5 border-b border-slate-200 bg-white">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">Student Intervention Plan</h2>
+          <p class="text-sm text-slate-600">Detailed intervention strategy and progress monitoring</p>
+          <div class="mt-4">
+            <h3 id="modal-student-name" class="text-lg font-semibold text-slate-800">Student Name</h3>
+            <p id="modal-student-meta" class="text-sm text-slate-500">LRN: 123456789101 • Female • Age 16</p>
+          </div>
+        </div>
+        <button id="btn-close-modal" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark fa-2x"></i></button>
+      </div>
+
+      <div class="p-6 overflow-y-auto">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-white border border-slate-200 rounded-lg p-4">
+            <div class="text-sm font-medium text-slate-500">Current Grade</div>
+            <div id="modal-grade" class="text-4xl font-bold text-slate-800">-</div>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-lg p-4">
+            <div class="text-sm font-medium text-slate-500">Absences</div>
+            <div id="modal-absences" class="text-4xl font-bold text-slate-800">-</div>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-lg p-4">
+            <div class="text-sm font-medium text-slate-500">Missing Work</div>
+            <div id="modal-missing-work" class="text-4xl font-bold text-slate-800">-</div>
+          </div>
+        </div>
+
+        <div class="mt-6 border-b border-slate-300">
+          <nav id="modal-tab-nav" class="flex -mb-px">
+            <button class="tab-button active" data-tab="risk">Risk Assessment</button>
+            <button class="tab-button" data-tab="strategies">Intervention Strategies</button>
+            <button class="tab-button" data-tab="active">Active Interventions</button>
+            <button class="tab-button" data-tab="action">Action Plan</button>
+          </nav>
+        </div>
+
+        <div id="modal-tab-content" class="bg-white border border-t-0 border-slate-200 rounded-b-lg p-6">
+          <div id="tab-content-risk" class="tab-content active">
+            <!-- Risk assessment content will be rendered here -->
+          </div>
+
+          <div id="tab-content-strategies" class="tab-content">
+            <!-- Intervention strategies content will be rendered here -->
+          </div>
+
+          <div id="tab-content-active" class="tab-content">
+            <div id="active-interventions-list" class="space-y-4">
+              <!-- Active interventions will be rendered here -->
+            </div>
+            
+            <div class="mt-6 border-t border-slate-200 pt-6">
+              <h4 class="text-lg font-semibold text-slate-800 mb-4"><i class="fa-solid fa-plus-circle mr-2 text-rose-600"></i>Add New Intervention</h4>
+              <div class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label for="input-inter-tier" class="block text-sm font-medium text-slate-700 mb-1">Intervention Tier *</label>
+                    <select id="input-inter-tier" class="w-full rounded-lg border border-slate-300 bg-white py-2 px-3 text-slate-700 shadow-sm focus:border-rose-600 focus:ring-1">
+                      <option value="Tier 3">Tier 3: Intensive Support</option>
+                      <option value="Tier 2">Tier 2: Targeted Support</option>
+                      <option value="Tier 1">Tier 1: Universal Support</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for="input-inter-name" class="block text-sm font-medium text-slate-700 mb-1">Strategy Name *</label>
+                    <input id="input-inter-name" type="text" placeholder="e.g., One-on-one tutoring sessions" class="w-full rounded-lg border border-slate-300 p-2 focus:border-rose-600 focus:ring-1" />
+                  </div>
+                </div>
+                
+                <div>
+                  <label for="input-inter-desc" class="block text-sm font-medium text-slate-700 mb-1">Description *</label>
+                  <textarea id="input-inter-desc" rows="3" class="w-full rounded-lg border border-slate-300 p-2 focus:border-rose-600 focus:ring-1" placeholder="Describe the intervention strategy in detail"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label for="input-inter-start" class="block text-sm font-medium text-slate-700 mb-1">Start Date *</label>
+                    <input id="input-inter-start" type="date" class="w-full rounded-lg border border-slate-300 p-2 text-slate-700 focus:border-rose-600 focus:ring-1" />
+                  </div>
+                  <div>
+                    <label for="input-inter-target" class="block text-sm font-medium text-slate-700 mb-1">Target Date</label>
+                    <input id="input-inter-target" type="date" class="w-full rounded-lg border border-slate-300 p-2 text-slate-700 focus:border-rose-600 focus:ring-1" />
+                  </div>
+                  <div>
+                    <label for="input-inter-status" class="block text-sm font-medium text-slate-700 mb-1">Status *</label>
+                    <select id="input-inter-status" class="w-full rounded-lg border border-slate-300 bg-white py-2 px-3 text-slate-700 shadow-sm focus:border-rose-600 focus:ring-1">
+                      <option value="Planned">Planned</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Completed">Completed</option>
+                      <option value="On Hold">On Hold</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label for="input-inter-progress" class="block text-sm font-medium text-slate-700 mb-1">Progress Update</label>
+                  <textarea id="input-inter-progress" rows="3" class="w-full rounded-lg border border-slate-300 p-2 focus:border-rose-600 focus:ring-1" placeholder="Document student progress and observations"></textarea>
+                </div>
+                <div>
+                  <label for="input-inter-notes" class="block text-sm font-medium text-slate-700 mb-1">Teacher Notes</label>
+                  <textarea id="input-inter-notes" rows="3" class="w-full rounded-lg border border-slate-300 p-2 focus:border-rose-600 focus:ring-1" placeholder="Additional notes, observations, or recommendations"></textarea>
+                </div>
+
+                <div>
+                  <button id="btn-save-new-intervention" class="w-full md:w-auto inline-flex items-center justify-center gap-2 px-6 py-2 bg-rose-600 text-white font-semibold rounded-lg hover:bg-rose-700 transition shadow-sm">
+                    <i class="fa-solid fa-save"></i> Save Intervention
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="tab-content-action" class="tab-content">
+            <!-- Action plan content will be rendered here -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- MOCK DATABASE (Sample Data) ---
+    const mockStudentData = [
+      { lrn: "123456789101", name: "Cruz, Maria Santos", sex: "F", currentGrade: 68, absences: 12, missingWork: 8 },
+      { lrn: "123456789102", name: "Reyes, Juan Pedro", sex: "M", currentGrade: 72, absences: 15, missingWork: 10 },
+      { lrn: "123456789103", name: "Santos, Ana Marie", sex: "F", currentGrade: 76, absences: 8, missingWork: 6 },
+      { lrn: "123456789104", name: "Garcia, Miguel Angel", sex: "M", currentGrade: 74, absences: 9, missingWork: 7 },
+      { lrn: "123456789105", name: "Flores, Isabella Rose", sex: "F", currentGrade: 78, absences: 7, missingWork: 5 },
+      { lrn: "123456789106", name: "Torres, Carlos Jr.", sex: "M", currentGrade: 77, absences: 6, missingWork: 8 },
+      { lrn: "123456789107", name: "Mendoza, Sofia Grace", sex: "F", currentGrade: 81, absences: 4, missingWork: 3 },
+      { lrn: "123456789108", name: "Lim, David Chen", sex: "M", currentGrade: 92, absences: 1, missingWork: 0 }
+    ];
+
+    // --- Utilities ---
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'","&#039;");
+    }
+
+    function getGradeClass(grade) {
+      if (grade < 75) return "text-red-600 font-bold";
+      if (grade >= 75 && grade <= 79) return "text-yellow-600 font-bold";
+      return "text-gray-800";
+    }
+
+    function getRiskBadge(level) {
+      if (level === "Critical") {
+        return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i> Critical</span>`;
+      }
+      if (level === "At Risk") {
+        return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"><i class="fa-solid fa-exclamation-circle mr-1.5"></i> At Risk</span>`;
+      }
+      return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"><i class="fa-solid fa-check-circle mr-1.5"></i> On Track</span>`;
+    }
+
+    function getInterventionBadge(level) {
+      if (level === "Tier 3: Intensive") {
+        return `<span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Tier 3: Intensive</span>`;
+      }
+      if (level === "Tier 2: Targeted") {
+        return `<span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Tier 2: Targeted</span>`;
+      }
+      return `<span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">No Intervention</span>`;
+    }
+
+    function getStudentStatus(student) {
+      const currentGrade = student.currentGrade;
+      const absences = student.absences;
+      const missingWork = student.missingWork;
+      let riskLevel = "On Track";
+      let intervention = "None";
+      let interventionKey = "None";
+
+      if (currentGrade < 75 || absences > 10 || missingWork > 8) {
+        riskLevel = "Critical";
+        intervention = "Tier 3: Intensive";
+        interventionKey = "Tier 3";
+      } else if ((currentGrade >= 75 && currentGrade <= 79) || absences > 5 || missingWork > 5) {
+        riskLevel = "At Risk";
+        intervention = "Tier 2: Targeted";
+        interventionKey = "Tier 2";
+      }
+
+      return { ...student, riskLevel, intervention, interventionKey, activeInterventions: [] };
+    }
+
+    // --- State ---
+    let currentStudentData = [];
+    let activeModalLRN = null;
+
+    // --- Rendering Table ---
+    function renderTable() {
+      const tbody = document.getElementById("student-table-body");
+
+      tbody.innerHTML = currentStudentData.map(s => `
+        <tr class="hover:bg-gray-50 transition ${s.riskLevel === 'Critical' ? 'bg-red-50' : s.riskLevel === 'At Risk' ? 'bg-yellow-50' : ''}">
+          <td class="px-5 py-4 whitespace-nowrap text-sm text-gray-600">${s.lrn}</td>
+          <td class="px-5 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${s.name}</td>
+          <td class="px-5 py-4 whitespace-nowrap text-sm text-gray-600">${s.sex}</td>
+          <td class="px-5 py-4 whitespace-nowrap text-sm ${getGradeClass(s.currentGrade)}">${s.currentGrade}</td>
+          <td class="px-5 py-4 whitespace-nowrap text-sm ${s.absences > 5 ? 'text-red-600 font-medium' : 'text-gray-600'}">${s.absences}</td>
+          <td class="px-5 py-4 whitespace-nowrap text-sm ${s.missingWork > 5 ? 'text-red-600 font-medium' : 'text-gray-600'}">${s.missingWork}</td>
+          <td class="px-5 py-4 whitespace-nowrap">${getRiskBadge(s.riskLevel)}</td>
+          <td class="px-5 py-4 whitespace-nowrap">${getInterventionBadge(s.intervention)}</td>
+          <td class="px-5 py-4 whitespace-nowrap text-sm">
+            <button class="btn-details text-rose-700 hover:text-rose-900 font-medium" data-lrn="${s.lrn}">
+              <i class="fa-solid fa-file-lines mr-1.5"></i> Details
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // --- Modal Rendering Functions ---
+    function renderRiskAssessment(student, element) {
+      let riskFactorsHtml = '';
+      if (student.currentGrade < 75) {
+        riskFactorsHtml += `<li class="text-slate-700"><span class="font-semibold text-red-700">Failing Grade:</span> Current grade of ${student.currentGrade} is below the passing threshold of 75.</li>`;
+      }
+      if (student.absences > 10) {
+        riskFactorsHtml += `<li class="text-slate-700"><span class="font-semibold text-red-700">Excessive Absences:</span> ${student.absences} absences impact learning continuity and engagement.</li>`;
+      } else if (student.absences > 5) {
+        riskFactorsHtml += `<li class="text-slate-700"><span class="font-semibold text-yellow-700">High Absences:</span> ${student.absences} absences may impact engagement.</li>`;
+      }
+      if (student.missingWork > 8) {
+        riskFactorsHtml += `<li class="text-slate-700"><span class="font-semibold text-red-700">Assignment Completion Issues:</span> ${student.missingWork} missing assignments suggest significant engagement challenges.</li>`;
+      } else if (student.missingWork > 5) {
+        riskFactorsHtml += `<li class="text-slate-700"><span class="font-semibold text-yellow-700">Assignment Completion Issues:</span> ${student.missingWork} missing assignments suggest time management challenges.</li>`;
+      }
+
+      if (!riskFactorsHtml) {
+        riskFactorsHtml = '<li class="text-slate-700">No significant risk factors identified. Student is on track.</li>';
+      }
+
+      let tierText = '', tierDesc = '';
+      if (student.interventionKey === "Tier 3") {
+        tierText = 'Tier 3: Intensive Support';
+        tierDesc = 'Intensive, individualized intervention for students significantly below benchmark.';
+      } else if (student.interventionKey === "Tier 2") {
+        tierText = 'Tier 2: Targeted Support';
+        tierDesc = 'Targeted small-group intervention for students somewhat below benchmark.';
+      } else {
+        tierText = 'Tier 1: Universal Support';
+        tierDesc = 'Student is on track. Continue with universal classroom instruction.';
+      }
+
+      element.innerHTML = `
+        <div class="bg-slate-50 border border-slate-200 rounded-lg p-5">
+          <h4 class="text-lg font-semibold text-slate-800 mb-3"><i class="fa-solid fa-circle-exclamation text-red-600 mr-2"></i>Risk Factors Identified</h4>
+          <ul class="list-disc list-inside space-y-2">
+            ${riskFactorsHtml}
+          </ul>
+        </div>
+        <div class="bg-slate-50 border border-slate-200 rounded-lg p-5 mt-4">
+          <h4 class="text-lg font-semibold text-slate-800 mb-2">${tierText}</h4>
+          <p class="text-slate-600">${tierDesc}</p>
+        </div>
+      `;
+    }
+
+    function renderRecommendedStrategies(tier, element) {
+      let strategies = [];
+      if (tier === "Tier 3") {
+        strategies = [
+          "One-on-one instruction",
+          "Highly specialized intervention programs",
+          "Daily progress monitoring",
+          "Individualized Education Plan (IEP) consideration",
+          "Counseling and mentoring support",
+          "Extended learning time",
+          "Frequent parent-teacher conferences",
+          "Possible referral to special services"
+        ];
+      } else if (tier === "Tier 2") {
+        strategies = [
+          "Small-group instruction",
+          "Targeted skill-based workshops",
+          "Weekly progress check-ins",
+          "Behavioral contracts or goal-setting",
+          "Peer tutoring",
+          "After-school academic support"
+        ];
+      } else {
+        strategies = [
+          "Continue differentiated universal instruction",
+          "Monitor for any emerging concerns",
+          "Encourage participation in enrichment activities"
+        ];
+      }
+
+      element.innerHTML = `
+        <h3 class="text-lg font-semibold text-slate-800 mb-4"><i class="fa-solid fa-lightbulb mr-2 text-yellow-500"></i>Recommended Strategies (Based on ${tier})</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
+          ${strategies.map(s => `
+            <div class="flex items-start">
+              <i class="fa-solid fa-check text-rose-600 mr-3 mt-1"></i>
+              <span class="text-slate-700">${s}</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderActiveInterventions(interventions, element) {
+      if (!interventions || interventions.length === 0) {
+        element.innerHTML = '<p class="text-slate-500 italic text-center p-4 bg-slate-50 rounded-lg">No active interventions have been saved for this student yet. Use the form below to add one.</p>';
+        return;
+      }
+      
+      element.innerHTML = interventions.map((item, index) => `
+        <div class="bg-white border border-slate-200 rounded-lg overflow-hidden">
+          <div class="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+            <div>
+              <h5 class="font-semibold text-slate-800">${escapeHtml(item.name)}</h5>
+              <p class="text-sm text-slate-600">${escapeHtml(item.tier)} • Status: <span class="font-medium">${escapeHtml(item.status)}</span></p>
+            </div>
+            <div class="text-sm text-slate-500">
+              <div><strong>Start:</strong> ${item.startDate}</div>
+              <div><strong>Target:</strong> ${item.targetDate || 'N/A'}</div>
+            </div>
+          </div>
+          <div class="p-4 space-y-3">
+            <div>
+              <label class="text-xs font-semibold text-slate-500 uppercase">Description</label>
+              <p class="text-sm text-slate-700 whitespace-pre-wrap">${escapeHtml(item.description)}</p>
+            </div>
+            ${item.progress ? `
+            <div>
+              <label class="text-xs font-semibold text-slate-500 uppercase">Progress Update</label>
+              <p class="text-sm text-slate-700 whitespace-pre-wrap">${escapeHtml(item.progress)}</p>
+            </div>` : ''}
+            ${item.notes ? `
+            <div>
+              <label class="text-xs font-semibold text-slate-500 uppercase">Teacher Notes</label>
+              <p class="text-sm text-slate-700 whitespace-pre-wrap">${escapeHtml(item.notes)}</p>
+            </div>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderActionPlan(tier, element) {
+      let immediate = [], shortTerm = [], longTerm = [];
+
+      if (tier === "Tier 3") {
+        immediate = [
+          "Schedule parent-teacher conference",
+          "Conduct student interview to identify barriers",
+          "Establish baseline performance metrics",
+          "Create individualized learning schedule"
+        ];
+        shortTerm = [
+          "Improve grade to at least 75 (passing)",
+          "Reduce absences to maximum 2 per month",
+          "Submit all assignments on time",
+          "Weekly progress check-ins"
+        ];
+        longTerm = [
+          "Achieve grade of 80 or higher",
+          "Demonstrate mastery of key learning competencies",
+          "Develop self-directed learning habits",
+          "Transition to lower intervention tier if possible"
+        ];
+      } else if (tier === "Tier 2") {
+        immediate = [
+          "Schedule 1-on-1 check-in with student",
+          "Inform parents of 'At Risk' status and plan",
+          "Implement small-group review sessions"
+        ];
+        shortTerm = [
+          "Improve grade to 80",
+          "Reduce absences to 1-2 per month",
+          "Complete 90% of assignments on time"
+        ];
+        longTerm = [
+          "Achieve grade of 85 or higher",
+          "Maintain excellent attendance",
+          "Transition to Tier 1"
+        ];
+      } else {
+        immediate = ["Continue standard classroom monitoring"];
+        shortTerm = ["Maintain grade above 85"];
+        longTerm = ["Achieve 'With Honors' status", "Participate in enrichment activities"];
+      }
+
+      element.innerHTML = `
+        <h3 class="text-lg font-semibold text-slate-800 mb-4"><i class="fa-solid fa-list-check mr-2 text-green-600"></i>Intervention Action Plan</h3>
+        <div class="space-y-6">
+          <div>
+            <h4 class="font-semibold text-slate-700">Immediate Actions (Week 1-2)</h4>
+            <ul class="list-disc list-inside mt-2 space-y-1 text-slate-600">
+              ${immediate.map(s => `<li>${s}</li>`).join('')}
+            </ul>
+          </div>
+          <div>
+            <h4 class="font-semibold text-slate-700">Short-term Goals (Weeks 3-6)</h4>
+            <ul class="list-disc list-inside mt-2 space-y-1 text-slate-600">
+              ${shortTerm.map(s => `<li>${s}</li>`).join('')}
+            </ul>
+          </div>
+          <div>
+            <h4 class="font-semibold text-slate-700">Long-term Goals (Quarter End)</h4>
+            <ul class="list-disc list-inside mt-2 space-y-1 text-slate-600">
+              ${longTerm.map(s => `<li>${s}</li>`).join('')}
+            </ul>
+          </div>
+          <div class="bg-slate-50 p-4 rounded-lg border">
+            <h4 class="font-semibold text-slate-700">Progress Monitoring</h4>
+            <p class="text-slate-600 mt-1">Daily check-ins and weekly formal assessments will be used to monitor progress against these goals.</p>
+          </div>
+        </div>
+      `;
+    }
+
+    // --- Save New Intervention ---
+    function saveNewIntervention() {
+      if (!activeModalLRN) return;
+      const student = currentStudentData.find(s => s.lrn === activeModalLRN);
+      if (!student) return;
+
+      const tier = document.getElementById("input-inter-tier").value;
+      const name = document.getElementById("input-inter-name").value.trim();
+      const description = document.getElementById("input-inter-desc").value.trim();
+      const startDate = document.getElementById("input-inter-start").value;
+      const targetDate = document.getElementById("input-inter-target").value;
+      const status = document.getElementById("input-inter-status").value;
+      const progress = document.getElementById("input-inter-progress").value.trim();
+      const notes = document.getElementById("input-inter-notes").value.trim();
+
+      if (!name || !description || !startDate || !status) {
+        alert("Please fill in all required fields (*): Strategy Name, Description, Start Date, and Status.");
+        return;
+      }
+
+      const newIntervention = {
+        tier, name, description, startDate, targetDate, status, progress, notes,
+        id: Date.now()
+      };
+      
+      if (!student.activeInterventions) {
+        student.activeInterventions = [];
+      }
+      
+      student.activeInterventions.push(newIntervention);
+
+      // Clear form
+      document.getElementById("input-inter-name").value = '';
+      document.getElementById("input-inter-desc").value = '';
+      document.getElementById("input-inter-start").value = '';
+      document.getElementById("input-inter-target").value = '';
+      document.getElementById("input-inter-progress").value = '';
+      document.getElementById("input-inter-notes").value = '';
+      document.getElementById("input-inter-status").value = 'Planned';
+      
+      // Re-render
+      const listElement = document.getElementById("active-interventions-list");
+      renderActiveInterventions(student.activeInterventions, listElement);
+
+      // Show success message
+      alert("Intervention saved successfully!");
+    }
+
+    // --- Modal Show/Hide ---
+    function showModal(lrn) {
+      const student = currentStudentData.find(s => s.lrn === lrn);
+      if (!student) return;
+
+      activeModalLRN = lrn;
+      
+      // Set Header
+      document.getElementById("modal-student-name").innerText = student.name;
+      document.getElementById("modal-student-meta").innerText = `LRN: ${student.lrn} • ${student.sex === 'F' ? 'Female' : 'Male'}`;
+
+      // Set Vitals
+      const gradeEl = document.getElementById("modal-grade");
+      gradeEl.innerText = student.currentGrade;
+      gradeEl.className = `text-4xl font-bold ${getGradeClass(student.currentGrade)}`;
+
+      const absenceEl = document.getElementById("modal-absences");
+      absenceEl.innerText = student.absences;
+      absenceEl.className = `text-4xl font-bold ${student.absences > 5 ? 'text-red-600' : 'text-slate-800'}`;
+
+      const missingEl = document.getElementById("modal-missing-work");
+      missingEl.innerText = student.missingWork;
+      missingEl.className = `text-4xl font-bold ${student.missingWork > 5 ? 'text-red-600' : 'text-slate-800'}`;
+      
+      // Render tabs
+      renderRiskAssessment(student, document.getElementById("tab-content-risk"));
+      renderRecommendedStrategies(student.interventionKey, document.getElementById("tab-content-strategies"));
+      renderActiveInterventions(student.activeInterventions, document.getElementById("active-interventions-list"));
+      renderActionPlan(student.interventionKey, document.getElementById("tab-content-action"));
+
+      // Pre-fill form
+      document.getElementById("input-inter-tier").value = student.interventionKey;
+      document.getElementById("input-inter-name").value = '';
+      document.getElementById("input-inter-desc").value = '';
+      document.getElementById("input-inter-start").value = new Date().toISOString().split('T')[0];
+      document.getElementById("input-inter-target").value = '';
+      document.getElementById("input-inter-progress").value = '';
+      document.getElementById("input-inter-notes").value = '';
+      document.getElementById("input-inter-status").value = 'Planned';
+
+      // Reset to first tab
+      switchTab('risk');
+
+      // Show modal
+      const modalBackdrop = document.getElementById("details-modal-backdrop");
+      const modal = document.getElementById("details-modal");
+      modalBackdrop.classList.remove("opacity-0", "pointer-events-none");
+      modal.classList.remove("scale-95");
+    }
+
+    function closeModal() {
+      activeModalLRN = null;
+      const modalBackdrop = document.getElementById("details-modal-backdrop");
+      const modal = document.getElementById("details-modal");
+      modalBackdrop.classList.add("opacity-0", "pointer-events-none");
+      modal.classList.add("scale-95");
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll('#modal-tab-nav .tab-button').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabName);
+      });
+      document.querySelectorAll('#modal-tab-content .tab-content').forEach(content => {
+        content.classList.toggle('active', content.id === `tab-content-${tabName}`);
+      });
+    }
+
+    // --- Load Student Data ---
+    function loadStudentData() {
+      currentStudentData = mockStudentData.map(getStudentStatus);
+      document.getElementById("student-list-title").innerText = `Student Intervention List (${currentStudentData.length})`;
+      renderTable();
+    }
+
+    /********** Dates & helpers **********/
+    (function showDates(){
+      const dateEl = document.getElementById('greeting-date');
+      const compact = document.getElementById('today-compact');
+      const now = new Date();
+      if (dateEl) {
+        const hour = now.getHours();
+        let greeting = 'Good morning';
+        if (hour >= 12 && hour < 18) greeting = 'Good afternoon';
+        else if (hour >= 18) greeting = 'Good evening';
+        dateEl.textContent = greeting + ', {{ teacher.last_name }}';
+      }
+      if (compact) compact.textContent = now.toLocaleDateString('en-US');
+    })();
+
+    // Dismiss warning
+    document.addEventListener('click', function(e){
+      if (e.target.closest('#dismiss-warning')) {
+        const el = document.getElementById('warning'); 
+        if (el) el.style.display = 'none';
+      }
+    });
+
+    // --- Initialize ---
+    document.addEventListener('DOMContentLoaded', () => {
+      loadStudentData();
+
+      // Details button click
+      document.getElementById("student-table-body").addEventListener("click", (e) => {
+        const detailsButton = e.target.closest(".btn-details");
+        if (detailsButton) {
+          showModal(detailsButton.dataset.lrn);
+        }
+      });
+
+      // Modal close
+      document.getElementById("btn-close-modal").addEventListener("click", closeModal);
+      document.getElementById("details-modal-backdrop").addEventListener("click", (e) => { 
+        if (e.target === document.getElementById("details-modal-backdrop")) closeModal(); 
+      });
+
+      // Tab switching
+      document.getElementById("modal-tab-nav").addEventListener("click", (e) => {
+        const tabButton = e.target.closest(".tab-button");
+        if (tabButton && !tabButton.classList.contains('active')) {
+          switchTab(tabButton.dataset.tab);
+        }
+      });
+      
+      // Save intervention
+      document.getElementById("btn-save-new-intervention").addEventListener("click", saveNewIntervention);
+    });
+  </script>
+</body>
+</html>

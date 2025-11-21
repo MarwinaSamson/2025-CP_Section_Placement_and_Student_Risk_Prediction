@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ZNHS WEST - Teacher Dashboard</title>
+  {% load static %}
+
+
+  <!-- Tailwind (optional, for styling dashboard content) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Inter font for nice UI -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body { font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, Arial; background:#f4f6f8; color:#111827; }
+    /* space for the left sidebar - keep in sync with --sidebar-w in sidebar.html */
+    main {
+      margin-left: 240px;
+      padding: 26px;
+      transition: margin-left 180ms ease;
+    }
+    @media (max-width:860px) {
+      main { margin-left: 72px; padding:18px; }
+    }
+
+    /* container width like screenshot */
+    .container { max-width: 1100px; margin: 0 auto; }
+  </style>
+</head>
+<body>
+  <!-- placeholder where sidebar.html will be inserted -->
+  <div id="sidebar-root">
+    {% include 'teacher/adviser/sidebar.html' %}
+  </div>
+
+  <!-- MAIN DASHBOARD CONTENT (left area) -->
+  <main>
+    <div class="container">
+      <!-- Header -->
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-800">Teacher Dashboard</h1>
+         <p id="greeting-date" class="text-gray-600"></p>
+
+        </div>
+
+       <div class="flex items-center gap-20">
+          <!-- School Year -->
+          <div class="flex items-center gap-3">
+            <label for="school-year" class="text-sm font-bold text-gray-700 whitespace-nowrap">School Year</label>
+            <select id="school-year" class="w-44 rounded-lg border border-gray-300 bg-white py-2 px-3 text-gray-700 shadow-sm
+                                        focus:border-red-600 focus:ring focus:ring-red-100 transition-all cursor-pointer font-medium">
+              <option selected>2025-2026</option>
+              <option>2024-2025</option>
+              <option>2023-2024</option>
+            </select>
+          </div>
+
+
+                <!-- Teacher Info -->
+        <div class="flex items-center gap-3">
+            <!-- Name and Role -->
+            <div class="text-right leading-tight">
+                <p class="text-sm font-semibold text-gray-800">{{ teacher_full_name }}</p>
+                <p class="text-xs text-gray-500">{{ teacher_position }} - {% if teacher.is_adviser %}Adviser{% else %}Subject Teacher{% endif %}</p>
+            </div>
+
+            <!-- Profile Image -->
+            <div class="w-10 h-10 rounded-full overflow-hidden border-2 border-red-700 shadow-sm flex items-center justify-center">
+                {% if teacher_photo %}
+                    <img 
+                        src="{{ teacher_photo }}" 
+                        alt="Profile" 
+                        class="w-full h-full object-cover"
+                        onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'bg-red-700 text-white w-full h-full flex items-center justify-center font-semibold\'>{{ teacher_initials }}</div>'"
+                    >
+                {% else %}
+                    <div class="bg-red-700 text-white">{{ teacher_initials }}</div>
+                {% endif %}
+            </div>
+        </div>
+      </div>
+          </div>
+        </div>
+      </div>
+
+     <!-- Welcome Card -->
+<div class="bg-gradient-to-r from-rose-100 to-rose-200 border border-rose-200 rounded-xl p-5 mb-6 
+            hover:shadow-md hover:scale-[1.01] transition-transform duration-200 ease-in-out">
+  <h2 class="text-lg font-semibold text-gray-800 mb-2">Welcome to Your Teacher Dashboard</h2>
+  <p class="text-gray-700 text-sm leading-relaxed">
+    Access your adviser and subject teacher tools from the sidebar. Monitor student progress, manage classes, 
+    and track academic performance all in one place.
+  </p>
+</div>
+
+<!-- Stats Grid (cards) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+  <div class="bg-purple-100 border border-purple-200 rounded-xl p-5 text-center 
+          hover:shadow-md hover:scale-[1.02] transition-transform duration-200 ease-in-out">
+    <div class="text-purple-700 font-semibold mb-2">Advisory Class</div>
+    <h3 class="text-lg font-bold text-gray-800">{{ advisory_section_name }}</h3>
+    <p class="text-sm text-gray-700">{{ advisory_students_count }} Student{% if advisory_students_count != 1 %}s{% endif %}</p>
+</div>
+
+  <div class="bg-blue-100 border border-blue-200 rounded-xl p-5 text-center 
+          hover:shadow-md hover:scale-[1.02] transition-transform duration-200 ease-in-out">
+    <div class="text-blue-700 font-semibold mb-2">Sections Handled</div>
+    <h3 class="text-lg font-bold text-gray-800">{{ sections_handled }}</h3>
+    <p class="text-sm text-gray-700">Total</p>
+  </div>
+
+  <div class="bg-green-100 border border-green-200 rounded-xl p-5 text-center 
+          hover:shadow-md hover:scale-[1.02] transition-transform duration-200 ease-in-out">
+    <div class="text-green-700 font-semibold mb-2">Subjects</div>
+    <h3 class="text-lg font-bold text-gray-800">{{ subjects_handled }}</h3>
+    <p class="text-sm text-gray-700">Handled</p>
+  </div>
+
+  <div class="bg-indigo-100 border border-indigo-200 rounded-xl p-5 text-center 
+          hover:shadow-md hover:scale-[1.02] transition-transform duration-200 ease-in-out">
+    <div class="text-indigo-700 font-semibold mb-2">Total Students</div>
+    <h3 class="text-lg font-bold text-gray-800">{{ total_students }}</h3> 
+    <p class="text-sm text-gray-700">All Classes</p>
+</div>
+
+  <div class="bg-rose-100 border border-rose-200 rounded-xl p-5 text-center 
+              hover:shadow-md hover:scale-[1.02] transition-transform duration-200 ease-in-out">
+    <div class="text-rose-700 font-semibold mb-2">At Risk</div>
+    <h3 class="text-lg font-bold text-gray-800">11</h3>
+    <p class="text-sm text-gray-700">Students</p>
+  </div>
+</div>
+
+
+
+      <!-- Adviser + Subject Buttons -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <!-- Advisory Class Card -->
+  <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+    <h3 class="font-semibold text-gray-800 mb-1">{{ advisory_section_name }}</h3>
+    <p class="text-sm text-gray-600 mb-4">Your advisory class with {{ advisory_students_count }} Students. 1 student requires attention.</p>
+    <a href="{% url 'teacher:adviser-view' %}"
+       class="inline-block bg-red-700 hover:bg-red-800 text-white font-medium py-2 px-4 rounded-lg transition">
+      View Adviser Dashboard
+    </a>
+  </div>
+  
+  <!-- Subject Classes Card -->
+  <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+    <h3 class="font-semibold text-gray-800 mb-1">Subject Classes</h3>
+    <p class="text-sm text-gray-600 mb-4">Manage your {{ sections_handled }} sections across {{ subjects_handled }} subjects. Monitor {{ total_students }} students total.</p>
+    <a href="{% url 'teacher:adviser-subview' %}"
+       class="inline-block bg-red-700 hover:bg-red-800 text-white font-medium py-2 px-4 rounded-lg transition">
+      View Subject Dashboard
+    </a>
+  </div>
+</div>
+
+    </div>
+  </main>
+
+  <!-- Loader script: loads sidebar.html and executes internal scripts -->
+  <script>
+     // 🗓️ Display today's date in a friendly format
+  const dateEl = document.getElementById('greeting-date');
+  const today = new Date();
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  dateEl.textContent = today.toLocaleDateString('en-US', options);
+
+
+
+    async function loadSidebar() {
+      try {
+        const res = await fetch('sidebar.html');
+        if (!res.ok) throw new Error('Failed to load sidebar.html - status ' + res.status);
+        const html = await res.text();
+        const root = document.getElementById('sidebar-root');
+
+        // Insert the HTML
+        root.innerHTML = html;
+
+        // Execute any script tags from the fetched content
+        // (We move them to the document so they run in page context)
+        const inlineScripts = Array.from(root.querySelectorAll('script'));
+        inlineScripts.forEach(oldScript => {
+          const newScript = document.createElement('script');
+          // copy attributes (e.g., type)
+          for (const attr of oldScript.attributes) {
+            newScript.setAttribute(attr.name, attr.value);
+          }
+          if (oldScript.src) {
+            // external script - load via src
+            newScript.src = oldScript.src;
+            newScript.async = false; // preserve order
+            document.body.appendChild(newScript);
+          } else {
+            // inline script - copy text content
+            newScript.textContent = oldScript.textContent;
+            document.body.appendChild(newScript);
+          }
+          // remove the old script tag (avoid duplication)
+          oldScript.remove();
+        });
+
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // run loader
+    loadSidebar();
+  </script>
+</body>
+</html>

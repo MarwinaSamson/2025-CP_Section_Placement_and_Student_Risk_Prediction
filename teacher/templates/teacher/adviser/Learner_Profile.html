@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Learner Profile — ZNHS WEST</title>
+  {% load static %}
+  <!-- Tailwind + FontAwesome -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+  <style>
+    :root {
+      --sidebar-w: 240px;
+      --accent: #a23131;
+      --accent-dark: #872626;
+      --muted: #6b7280;
+      --card-bg: #ffffff;
+      --radius: 10px;
+      --shadow: 0 6px 18px rgba(16,24,40,0.06);
+    }
+
+    * { box-sizing: border-box }
+    body {
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      background: #f4f6f8;
+      color: #0f172a;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Sidebar placeholder */
+    #sidebar-root { position: fixed; left: 0; top: 0; z-index: 60; }
+
+    main {
+      margin-left: var(--sidebar-w);
+      padding: 28px;
+      transition: margin-left 180ms ease;
+    }
+    @media (max-width:860px) { main { margin-left: 72px; padding: 18px } }
+
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    /* Page Header */
+    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+    .page-title { font-size:1.5rem; font-weight:700; }
+    .greeting { color:var(--muted); font-size:0.95rem; }
+
+    /* Cards */
+    .card { background:var(--card-bg); border-radius:var(--radius); box-shadow:var(--shadow); border:1px solid rgba(15,23,42,0.04); overflow:hidden; }
+    .section-header {
+      background: linear-gradient(90deg, rgba(162,49,49,0.06), rgba(255,255,255,0));
+      padding:14px 18px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f3e8e8;
+    }
+    .section-title { font-weight:700; color:var(--accent); }
+    .section-body { padding:20px; }
+
+    /* Student Layout */
+    .student-layout { display:flex; gap:28px; flex-wrap:wrap; }
+    .photo-box, .parent-photo {
+      width:180px; height:220px; border-radius:12px; background:#fff; border:1px solid #eee; padding:10px; text-align:center; overflow:hidden;
+    }
+    .photo-box img, .parent-photo img { width:100%; height:100%; object-fit:cover; border-radius:8px; display:block; }
+
+    .details-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:14px 24px; width:100%; }
+    @media (max-width:900px) { .details-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width:640px) { .details-grid { grid-template-columns: 1fr; } }
+
+    .detail-item label { display:block; font-weight:700; color:#111827; margin-bottom:6px; font-size:0.92rem }
+    .detail-item span { color:var(--muted); font-size:0.92rem }
+
+    .hidden { display:none !important }
+    .muted { color: var(--muted) }
+
+    .initial-avatar {
+      width:100%;
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:white;
+      font-weight:800;
+      font-size:48px;
+      background: linear-gradient(180deg,#c0392b 0%, #a22a2a 100%);
+      border-radius:8px;
+    }
+  </style>
+</head>
+<body>
+  <!-- sidebar -->
+  <div id="sidebar-root">
+    {% include 'teacher/adviser/sidebar.html' %}
+  </div>
+
+  <main>
+    <div class="container">
+      <header class="header">
+        <div>
+          <div class="page-title">Learner Profile</div>
+          <div id="greeting" class="greeting"></div>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="text-right">
+            <div class="font-bold">{{ teacher.full_name }}</div>
+            <div class="text-sm text-gray-500">
+              {% if teacher.is_adviser %}Adviser{% elif teacher.is_subject_teacher %}Subject Teacher{% else %}Teacher{% endif %}
+            </div>
+          </div>
+          <div class="w-11 h-11 rounded-full overflow-hidden border-2 border-white">
+            {% if teacher.profile_photo %}
+              <img src="{{ teacher.profile_photo.url }}" alt="{{ teacher.full_name }}" class="w-full h-full object-cover">
+            {% else %}
+              <div class="bg-red-700 text-white flex items-center justify-center w-full h-full font-bold">
+                {{ teacher.first_name.0 }}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </header>
+
+      <!-- Back Button -->
+      <div class="mb-4">
+        <button onclick="history.back()" 
+                class="flex items-center gap-2 text-red-700 font-semibold hover:text-red-900 transition">
+          <i class="fa-solid fa-arrow-left"></i>
+          Back to Masterlist
+        </button>
+      </div>
+
+     <!-- Student Data -->
+      <section class="card">
+        <div class="section-header">
+          <div class="section-title">Student Data</div>
+        </div>
+
+        <div class="section-body" id="student-view">
+          <div class="student-layout">
+            <!-- Student Photo -->
+            <div class="photo-box">
+              {% if student.photo_url %}
+                <img src="{{ student.photo_url }}" alt="{{ student.full_name }}">
+              {% else %}
+                <div class="initial-avatar">
+                  {{ student.first_name.0 }}{{ student.last_name.0 }}
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- Student Info -->
+            <div class="flex-1 min-w-[260px] space-y-6">
+              <!-- Personal Information -->
+              <fieldset class="border p-4 rounded-lg bg-white">
+                <legend class="font-bold text-red-700">Personal Information</legend>
+                <div class="details-grid">
+                  <div class="detail-item">
+                    <label>LRN Number</label>
+                    <span>{{ student.lrn }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Last Name</label>
+                    <span>{{ student.last_name }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>First Name</label>
+                    <span>{{ student.first_name }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Middle Name</label>
+                    <span>{{ student.middle_name }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Gender</label>
+                    <span>{{ student.gender }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Age</label>
+                    <span>{{ student.age }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Date of Birth</label>
+                    <span>{{ student.date_of_birth }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Place of Birth</label>
+                    <span>{{ student.place_of_birth }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Current Address</label>
+                    <span>{{ student.address }}</span>
+                  </div>
+                </div>
+              </fieldset>
+
+              <!-- School Background -->
+              <fieldset class="border p-4 rounded-lg bg-white">
+                <legend class="font-bold text-red-700">School Background</legend>
+                <div class="details-grid">
+                  <div class="detail-item">
+                    <label>Last School Attended</label>
+                    <span>{{ student.last_school }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Previous Grade & Section</label>
+                    <span>{{ student.prev_grade_section }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>School Year Last Attended</label>
+                    <span>{{ student.last_school_year }}</span>
+                  </div>
+                </div>
+              </fieldset>
+
+              <!-- Enrollment Details -->
+              <fieldset class="border p-4 rounded-lg bg-white">
+                <legend class="font-bold text-red-700">Enrollment Details</legend>
+                <div class="details-grid">
+                  <div class="detail-item">
+                    <label>Date Enrolled</label>
+                    <span>{{ student.date_enrolled }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Current Program</label>
+                    <span>{{ student.current_program }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Current Section</label>
+                    <span>{{ student.current_section }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Current Grade Level</label>
+                    <span>{{ student.current_grade }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Enrollment Status</label>
+                    <span>{{ student.enrollment_status }}</span>
+                  </div>
+                </div>
+              </fieldset>
+
+              <!-- Special Needs (if applicable) -->
+              {% if student.is_sped or student.is_working_student %}
+              <fieldset class="border p-4 rounded-lg bg-white">
+                <legend class="font-bold text-red-700">Additional Information</legend>
+                <div class="details-grid">
+                  {% if student.is_sped %}
+                  <div class="detail-item">
+                    <label>Special Education Needs</label>
+                    <span>{{ student.sped_details }}</span>
+                  </div>
+                  {% endif %}
+                  {% if student.is_working_student %}
+                  <div class="detail-item">
+                    <label>Working Student Details</label>
+                    <span>{{ student.working_details }}</span>
+                  </div>
+                  {% endif %}
+                </div>
+              </fieldset>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Parents / Guardian -->
+      <section class="card mt-6" id="parents-section">
+        <div class="section-header">
+          <div class="section-title">Parents & Guardian</div>
+        </div>
+
+        <div id="parents-view" class="section-body">
+          <div class="flex flex-wrap gap-6 items-start">
+            <div class="parent-photo">
+              {% if family.parent_photo_url %}
+                <img src="{{ family.parent_photo_url }}" alt="Parent photo">
+              {% else %}
+                <div class="initial-avatar">
+                  P
+                </div>
+              {% endif %}
+            </div>
+            <div class="flex-1 min-w-[240px] space-y-6">
+              <!-- Father -->
+              <fieldset class="border p-4 rounded-lg bg-white">
+                <legend class="font-bold text-red-700">Father's Details</legend>
+                <div class="grid md:grid-cols-3 gap-3">
+                  <div class="detail-item"><label>Last Name</label><span>{{ family.father_last_name }}</span></div>
+                  <div class="detail-item"><label>First Name</label><span>{{ family.father_first_name }}</span></div>
+                  <div class="detail-item"><label>Middle Name</label><span>{{ family.father_middle_name }}</span></div>
+                  <div class="detail-item"><label>Date of Birth</label><span>{{ family.father_dob }}</span></div>
+                  <div class="detail-item"><label>Age</label><span>{{ family.father_age }}</span></div>
+                  <div class="detail-item"><label>Occupation</label><span>{{ family.father_occupation }}</span></div>
+                  <div class="detail-item"><label>Contact</label><span>{{ family.father_contact }}</span></div>
+                  <div class="detail-item"><label>Email</label><span>{{ family.father_email }}</span></div>
+                </div>
+              </fieldset>
+
+              <!-- Mother -->
+              <fieldset class="border p-4 rounded-lg bg-white">
+                <legend class="font-bold text-red-700">Mother's Details</legend>
+                <div class="grid md:grid-cols-3 gap-3">
+                  <div class="detail-item"><label>Last Name</label><span>{{ family.mother_last_name }}</span></div>
+                  <div class="detail-item"><label>First Name</label><span>{{ family.mother_first_name }}</span></div>
+                  <div class="detail-item"><label>Middle Name</label><span>{{ family.mother_middle_name }}</span></div>
+                  <div class="detail-item"><label>Date of Birth</label><span>{{ family.mother_dob }}</span></div>
+                  <div class="detail-item"><label>Age</label><span>{{ family.mother_age }}</span></div>
+                  <div class="detail-item"><label>Occupation</label><span>{{ family.mother_occupation }}</span></div>
+                  <div class="detail-item"><label>Contact</label><span>{{ family.mother_contact }}</span></div>
+                  <div class="detail-item"><label>Email</label><span>{{ family.mother_email }}</span></div>
+                </div>
+              </fieldset>
+
+              <!-- Other Details -->
+              <fieldset class="border p-4 rounded-lg bg-white">
+                <legend class="font-bold text-red-700">Other Details</legend>
+                <div class="grid md:grid-cols-4 gap-3">
+                  <div class="detail-item"><label>Current Address</label><span>{{ student.address }}</span></div>
+                  <div class="detail-item"><label>Religion</label><span>{{ student.religion }}</span></div>
+                  <div class="detail-item"><label>Dialect</label><span>{{ student.dialect }}</span></div>
+                  <div class="detail-item"><label>Ethnicity</label><span>{{ student.ethnicity }}</span></div>
+                </div>
+              </fieldset>
+
+              <!-- Guardian -->
+              <fieldset class="border p-4 rounded-lg bg-white">
+                <legend class="font-bold text-red-700">Guardian's Details</legend>
+                <div class="grid md:grid-cols-3 gap-3">
+                  <div class="detail-item"><label>Last Name</label><span>{{ family.guardian_last_name }}</span></div>
+                  <div class="detail-item"><label>First Name</label><span>{{ family.guardian_first_name }}</span></div>
+                  <div class="detail-item"><label>Middle Name</label><span>{{ family.guardian_middle_name }}</span></div>
+                  <div class="detail-item"><label>Relationship</label><span>{{ family.guardian_relationship }}</span></div>
+                  <div class="detail-item"><label>Contact</label><span>{{ family.guardian_contact }}</span></div>
+                  <div class="detail-item"><label>Address</label><span>{{ family.guardian_address }}</span></div>
+                </div>
+              </fieldset>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Academic Information (if available) -->
+      {% if academic %}
+      <section class="card mt-6">
+        <div class="section-header">
+          <div class="section-title">Grade 6 Academic Record</div>
+        </div>
+        <div class="section-body">
+          <div class="grid md:grid-cols-4 gap-4">
+            <div class="detail-item">
+              <label>Mathematics</label>
+              <span class="font-semibold">{{ academic.mathematics }}</span>
+            </div>
+            <div class="detail-item">
+              <label>English</label>
+              <span class="font-semibold">{{ academic.english }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Science</label>
+              <span class="font-semibold">{{ academic.science }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Filipino</label>
+              <span class="font-semibold">{{ academic.filipino }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Araling Panlipunan</label>
+              <span class="font-semibold">{{ academic.araling_panlipunan }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Edukasyon sa Pagpapakatao</label>
+              <span class="font-semibold">{{ academic.edukasyon_pagpapakatao }}</span>
+            </div>
+            <div class="detail-item">
+              <label>MAPEH</label>
+              <span class="font-semibold">{{ academic.mapeh }}</span>
+            </div>
+            <div class="detail-item">
+              <label>TLE</label>
+              <span class="font-semibold">{{ academic.edukasyon_pangkabuhayan }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Overall Average</label>
+              <span class="font-bold text-red-700 text-lg">{{ academic.overall_average }}</span>
+            </div>
+            <div class="detail-item">
+              <label>DOST Exam Result</label>
+              <span>{{ academic.dost_exam_result }}</span>
+            </div>
+          </div>
+        </div>
+      </section>
+      {% endif %}
+
+    </div>
+  </main>
+
+  <script>
+    // Greeting
+    (function(){
+      const g = document.getElementById('greeting');
+      const d = new Date();
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      g.textContent = d.toLocaleDateString('en-US', options);
+    })();
+  </script>
+</body>
+</html>

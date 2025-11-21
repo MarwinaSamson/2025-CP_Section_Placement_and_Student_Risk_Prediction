@@ -1,0 +1,1132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Akatsuki Masterlist — ZNHS WEST</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+
+  <style>
+    /* --- Page layout & base --- */
+    :root {
+      --sidebar-w: 240px;
+      --muted: #6b7280;
+      --accent: #a23131;
+    }
+    * { box-sizing: border-box; }
+    html,body { height: 100%; }
+    body {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: #f3f6f8;
+      color: #111827;
+      -webkit-font-smoothing:antialiased;
+    }
+    /* Sidebar placeholder (injected) */
+    #sidebar-root { position: fixed; left: 0; top: 0; z-index: 50; }
+
+    main {
+      margin-left: var(--sidebar-w);
+      padding: 28px;
+      transition: margin-left 180ms ease;
+    }
+    @media (max-width:860px) {
+      /* Adjust for a potentially collapsed sidebar, if sidebar JS handles it */
+      main { margin-left: 0; padding: 18px; }
+      /* If sidebar has a collapsed state, you might use:
+      main { margin-left: 72px; padding: 18px; } 
+      */
+    }
+
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    /* Header */
+    header.page-header { display:flex; justify-content:space-between; gap:16px; align-items:center; margin-bottom:18px; }
+    header.page-header h1 { font-size:1.6rem; font-weight:700; color:#111827; }
+    .greeting { color:var(--muted); font-size:0.95rem; margin-top:4px; }
+
+    /* Info card (program / stats) */
+    .info-card {
+      display:flex; justify-content:space-between; gap:16px; align-items:center;
+      background: #ffffff; border:1px solid #e6e9ee; border-radius:10px; padding:14px;
+      box-shadow: 0 2px 6px rgba(16,24,40,0.03);
+    }
+    .info-left p { margin: 2px 0; color: #374151; font-size:0.95rem; }
+    .info-left .muted { color: var(--muted); font-size:0.9rem; }
+
+    /* Search */
+    .search-wrap { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    .search {
+      position:relative;
+      width: 260px;
+      max-width: 100%;
+    }
+    .search input {
+      width:100%;
+      padding:10px 12px 10px 38px;
+      border-radius:999px;
+      border:1px solid #e6e6e6;
+      background:#fbfbfb;
+      font-size:0.95rem;
+      transition: box-shadow .15s ease, border-color .15s ease;
+    }
+    .search input:focus { outline:none; border-color: var(--accent); box-shadow: 0 0 0 6px rgba(162,49,49,0.06); background:#fff; }
+    .search .icon { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#9ca3af; }
+
+    /* Buttons */
+    .actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .btn {
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 12px; border-radius:8px; font-size:0.92rem; font-weight:600; cursor:pointer;
+      border:1px solid transparent; transition: transform .12s ease, box-shadow .12s ease;
+    }
+    .btn.primary { background:var(--accent); color:#fff; }
+    .btn.ghost { background:#fff; color:#374151; border-color:#e6e6e6; }
+    .btn.ghost.alt { background:#fff; border-color:#e6e6e6; color:#6b7280; }
+    .btn:hover { transform:translateY(-2px); box-shadow: 0 6px 18px rgba(16,24,40,0.06); }
+
+    /* Table area */
+    .card {
+      background:#fff; border:1px solid #e6e9ee; border-radius:10px; padding:8px; box-shadow: 0 2px 6px rgba(16,24,40,0.03);
+      overflow: hidden;
+    }
+    .table-wrap { overflow:auto; max-height:640px; }
+    table { width:100%; border-collapse:collapse; min-width:900px; }
+    th, td { padding:12px 14px; text-align:left; vertical-align: middle; font-size:0.95rem; color:#374151; border-bottom:1px solid #f1f5f9; }
+    thead th { background: linear-gradient(180deg,#fff 0%, #fbfbfb 100%); color:#374151; font-weight:700; position:sticky; top:0; z-index:10; }
+    tbody tr:hover { background:#fbfbff; }
+    .status { display:inline-block; padding:6px 10px; border-radius:999px; font-size:0.86rem; font-weight:600; }
+    .status.probation { background: #fff1f2; color:#b91c1c; border:1px solid #ffe4e6; }
+
+    /* Avatar small */
+    .avatar-sm { width:44px; height:44px; border-radius:999px; overflow:hidden; border:2px solid #f3f4f6; display:inline-block; }
+    .avatar-sm img { width:100%; height:100%; object-fit:cover; display:block; }
+
+    /* highlight rows with probation */
+    tr.highlight { background: #fff6f6; }
+
+    /* Student details empty state box */
+    .details-empty {
+      margin-top:12px;
+      background:#fbfbfd; border:1px dashed #eef2f4; padding:20px; border-radius:8px; color:#6b7280; text-align:center;
+    }
+
+    /* Modal (grades) - redesigned UI */
+    .modal-backdrop {
+      position:fixed; inset:0; background:rgba(15,23,42,0.55); display:none; align-items:center; justify-content:center; z-index:60;
+      transition: opacity .18s ease;
+    }
+    .modal-backdrop.show { display:flex; opacity:1; }
+    .modal {
+      width:880px; max-width:96%; background:#fff; border-radius:12px; box-shadow: 0 18px 60px rgba(2,6,23,0.45); overflow:hidden;
+      max-height:92vh; display:flex; flex-direction:column; transform: translateY(16px); transition: transform .18s ease, opacity .18s ease;
+    }
+    .modal:focus { outline:none; }
+
+    /* top branding band inside modal for visual consistency with header */
+    .modal-brand {
+      background: linear-gradient(90deg, #a22a2a 0%, #b53a3a 100%);
+      color: #fff;
+      padding:10px 16px;
+      display:flex;
+      align-items:center;
+      gap:14px;
+    }
+    .modal-brand h3 { margin:0; font-size:1rem; font-weight:700; letter-spacing:0.2px; }
+
+    .modal-header {
+      padding:16px; display:flex; gap:16px; align-items:center; justify-content:space-between;
+      background: #fff;
+    }
+    .modal-profile {
+      display:flex; gap:12px; align-items:center;
+    }
+    .modal-profile .photo {
+      width:92px; height:92px; border-radius:12px; overflow:hidden; border:1px solid #eef2f4; flex-shrink:0;
+      background: #f8fafc; display:flex; align-items:center; justify-content:center;
+    }
+    .modal-profile .photo img { width:100%; height:100%; object-fit:cover; display:block; }
+    .modal-profile .meta { min-width:0; }
+    .modal-profile .meta .name { font-weight:800; font-size:1.12rem; color:#111827; }
+    .modal-profile .meta .sub { color:var(--muted); font-size:0.92rem; margin-top:6px; }
+
+    .modal-actions { display:flex; gap:8px; align-items:center; }
+
+    .modal-body {
+      padding:16px;
+      overflow:auto;
+      background: linear-gradient(180deg,#ffffff 0%, #fbfbfb 100%);
+    }
+    
+    /* --- NEW CSS FOR GRADES BREAKDOWN --- */
+    .grades-breakdown {
+        display: grid;
+        /* Create 3 columns, but let them wrap on small screens */
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
+    }
+    .grades-card {
+        background: #fff;
+        border: 1px solid #eef2f4;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(16,24,40,0.02);
+    }
+    .grades-card-header {
+        padding: 10px 14px;
+        background: #fafafa;
+        border-bottom: 1px solid #eef2f4;
+    }
+    .grades-card-header h4 {
+        margin:0;
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: #374151;
+    }
+    .grades-card-body {
+        padding: 14px;
+    }
+    .grades-card-body ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .grades-card-body li {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.92rem;
+        color: #374151;
+        padding: 4px 0;
+    }
+    .grades-card-body li .score {
+        font-weight: 600;
+        color: #111827;
+    }
+     .grades-card-body li .title {
+        color: var(--muted);
+        margin-right: 8px;
+    }
+    /* Special styling for the summary card */
+    .grades-summary-card {
+        background: #fffaf0; /* Light orange */
+        border: 1px solid #fde3cf;
+    }
+
+    /* --- MODIFIED CSS --- */
+    @media (min-width: 860px) {
+        .grades-breakdown {
+           /* Change to 3 cols for scores */
+           grid-template-columns: 1fr 1fr 1fr;
+        }
+         .grades-summary-card {
+            grid-column: 1 / -1; /* Span full width */
+            background: #fff7ed;
+            margin-top: 16px; /* Add space above summary */
+         }
+    }
+    /* --- END MODIFIED CSS --- */
+    
+     .grades-summary-card .grades-card-header {
+        background: #fff0de;
+        border-bottom: 1px solid #fde3cf;
+     }
+     .grades-summary-card h4 {
+         color: #7a2a2a;
+     }
+    .grades-summary-card .final-grade {
+        font-size: 2.8rem;
+        font-weight: 800;
+        color: #a23131;
+        text-align: center;
+        margin: 12px 0;
+    }
+    .grades-summary-card .summary-item {
+        display: flex;
+        justify-content: space-between;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #6c2d2d;
+        padding: 10px 0;
+        border-bottom: 1px solid #fde3cf;
+    }
+    .grades-summary-card .summary-item:last-child {
+        border-bottom: none;
+    }
+    .grades-summary-card .summary-item .grade-value {
+        font-weight: 700;
+    }
+
+    /* --- END NEW CSS --- */
+
+
+    .modal-footer {
+      padding:12px 16px;
+      display:flex; justify-content:space-between; align-items:center; gap:12px;
+      border-top:1px solid #eef2f4;
+      background:#fff;
+    }
+
+    /* small initial avatar if photo missing */
+    .initial-avatar {
+      width:100%;
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:white;
+      font-weight:800;
+      font-size:28px;
+      background: linear-gradient(180deg,#c0392b 0%, #a22a2a 100%);
+    }
+
+    /* print styles for the modal body (used by print button) */
+    @media print {
+      body * { visibility: hidden; }
+      #grades-modal, #grades-modal * { visibility: visible; }
+      #grades-modal { position: absolute; left: 0; top: 0; width: 100%; transform: none !important; box-shadow:none !important; }
+      .modal-footer, .modal-header .modal-actions { display:none !important; }
+    }
+
+    /* Responsive */
+    @media (max-width:900px) {
+      .search { width:180px; }
+      main { padding:16px; }
+      .info-card { flex-direction:column; align-items:flex-start; gap:10px; }
+      .modal { width: 96%; }
+      .modal-profile .photo { width:72px; height:72px; }
+      .modal-profile .meta .name { font-size:1rem; }
+    }
+    
+    @media (max-width:860px) {
+        main { margin-left: 0; } /* Make main content take full width */
+        #sidebar-root { 
+            /* You might need to add logic to hide/show sidebar on mobile */
+            /* For now, we'll assume it's hidden by default on mobile */
+            /* or that its own CSS handles it. */
+            display: none; 
+        }
+        /* A simple hamburger menu button would be needed here */
+    }
+
+  </style>
+</head>
+<body>
+  <div id="sidebar-root">
+     {% include 'teacher/subjectteacher/Subjectteacher_sidebar.html' %}
+  </div>
+
+  <main>
+    <div class="container">
+      <header class="page-header">
+        <div>
+          <h1>AKATSUKI MASTERLIST</h1>
+          <div id="greeting" class="greeting">Good afternoon, Salatan</div>
+        </div>
+
+        <div class="flex items-center gap-20">
+          <div class="flex items-center gap-3">
+            <label for="quarter-select" class="text-sm font-bold text-gray-700 whitespace-nowrap">Quarter</label>
+            <select id="quarter-select" class="w-44 rounded-lg border border-gray-300 bg-white py-2 px-3 text-gray-700 shadow-sm
+                          focus:border-red-600 focus:ring focus:ring-red-100 transition-all cursor-pointer font-medium">
+              <option value="1" selected>Quarter 1</option>
+              <option value="2">Quarter 2</option>
+              <option value="3">Quarter 3</option>
+              <option value="4">Quarter 4</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div class="text-right">
+              <div class="font-semibold" id="adviser-name">Salatan, Juliana Mae E.</div>
+              <div class="text-sm text-gray-500" id="adviser-position">Adviser</div>
+            </div>
+            <div class="avatar-sm" id="adviser-avatar">
+              <img src="logo/miming.jfif" alt="Adviser profile" id="adviser-img"
+                   onerror='this.style.display="none"; document.getElementById("adviser-avatar").innerHTML="<div class=&quot;w-full h-full bg-red-600 flex items-center justify-center text-white font-bold&quot;>S</div>"'>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section class="info-card mb-6">
+        <div class="info-left">
+          <p><strong>Program:</strong> <span class="text-rose-600 font-semibold" id="program-label">STE (Science Technology Engineering)</span></p>
+          <p class="muted"><strong>Total Students:</strong> 60</p>
+          <p class="muted">Male: <strong>30</strong> • Female: <strong>30</strong></p>
+        </div>
+
+        <div class="search-wrap">
+          <div class="search" title="Search students">
+            <span class="icon"><i class="fa fa-search"></i></span>
+            <input id="search" type="search" placeholder="Search students by name or LRN..." aria-label="Search students">
+          </div>
+
+          <div class="actions">
+            <button class="btn primary" id="btn-export-pdf"><i class="fa-solid fa-file-pdf"></i> Export PDF</button>
+
+            <div class="flex items-center gap-2">
+              <select id="sort-select" class="rounded-lg border border-gray-300 bg-white py-2 px-3 text-gray-700 shadow-sm cursor-pointer">
+                <option value="az">Sort: A → Z</option>
+                <option value="za">Sort: Z → A</option>
+              </select>
+              <select id="sex-filter" class="rounded-lg border border-gray-300 bg-white py-2 px-3 text-gray-700 shadow-sm cursor-pointer">
+                <option value="all">All</option>
+                <option value="M">Male only</option>
+                <option value="F">Female only</option>
+              </select>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+  <div class="table-wrap">
+    <table id="masterlist" role="table" aria-label="Masterlist table">
+      <thead>
+        <tr>
+          <th class="font-medium text-left">LRN Number</th>
+          <th class="font-medium text-left">Full Name</th>
+          <th class="font-medium text-left">Sex</th>
+          <th class="font-medium text-left">Age</th>
+          <th class="font-medium text-left">Status</th>
+          <th class="font-medium text-left">Record</th>
+          </tr>
+      </thead>
+      <tbody>
+        <tr data-quarter="1" data-program="STE">
+          <td>12345678910</td>
+          <td>Konan</td>
+          <td>F</td>
+          <td>20</td>
+          <td></td>
+          <td>
+            <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
+          </td>
+          </tr>
+        <tr data-quarter="1" data-program="Regular">
+          <td>12345678911</td>
+          <td>Hidan</td>
+          <td>M</td>
+          <td>23</td>
+          <td></td>
+          <td>
+            <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
+          </td>
+          </tr>
+        <tr data-quarter="1" data-program="STE">
+          <td>12345678910</td>
+          <td>Sasori</td>
+          <td>M</td>
+          <td>20</td>
+          <td></td>
+          <td>
+            <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
+          </td>
+          </tr>
+        <tr data-quarter="1" data-program="STE">
+          <td>12345678910</td>
+          <td>Ino Yamanaka</td>
+          <td>F</td>
+          <td>20</td>
+          <td></td>
+          <td>
+            <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
+          </td>
+          </tr>
+        <tr data-quarter="1" data-program="STE">
+          <td>12345678910</td>
+          <td>Yamato</td>
+          <td>M</td>
+          <td>20</td>
+          <td></td>
+          <td>
+            <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
+          </td>
+          </tr>
+        <tr data-quarter="1" data-program="STE">
+          <td>12345678910</td>
+          <td>Yahiko</td>
+          <td>M</td>
+          <td>20</td>
+          <td></td>
+          <td>
+            <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
+          </td>
+          </tr>
+        <tr data-quarter="1" data-program="STE">
+          <td>12345678910</td>
+          <td>Orochimaru</td>
+          <td>M</td>
+          <td>20</td>
+          <td></td>
+          <td>
+            <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
+          </td>
+          </tr>
+        <tr data-quarter="1" data-program="STE">
+          <td>12345678910</td>
+          <td>Jiraiya</td>
+          <td>M</td>
+          <td>20</td>
+          <td></td>
+          <td>
+            <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
+          </td>
+          </tr>
+        <tr data-quarter="1" data-program="STE">
+          <td>12345678910</td>
+          <td>Tsunade</td>
+          <td>F</td>
+          <td>20</td>
+          <td></td>
+          <td>
+            <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
+          </td>
+          </tr>
+        <tr data-quarter="1" data-program="STE">
+          <td>12345678910</td>
+          <td>Killer Bee</td>
+          <td>M</td>
+          <td>20</td>
+          <td></td>
+          <td>
+            <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
+          </td>
+          </tr>
+        <tr data-quarter="1" data-program="STE">
+          <td>12345678910</td>
+          <td>Temari</td>
+          <td>F</td>
+          <td>20</td>
+          <td></td>
+          <td>
+            <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
+          </td>
+          </tr>
+        <tr data-quarter="1" data-program="STE">
+          <td>12345678910</td>
+          <td>Sai</td>
+          <td>F</td>
+          <td>20</td>
+          <td></td>
+          <td>
+            <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
+          </td>
+          </tr>
+        <tr data-quarter="1" data-program="STE">
+          <td>12345678910</td>
+          <td>Shino</td>
+          <td>M</td>
+          <td>20</td>
+          <td></td>
+          <td>
+            <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
+          </td>
+          </tr>
+        <tr data-quarter="1" data-program="STE">
+          <td>12345678910</td>
+          <td>Akamaru</td>
+          <td>M</td>
+          <td>20</td>
+          <td></td>
+          <td>
+            <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
+          </td>
+          </tr>
+        <tr data-quarter="1" data-program="STE">
+          <td>12345678910</td>
+          <td>Tenten</td>
+          <td>F</td>
+          <td>20</td>
+          <td></td>
+          <td>
+            <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
+          </td>
+          </tr>
+        <tr data-quarter="1" data-program="STE">
+          <td>12345678910</td>
+          <td>Hinata</td>
+          <td>F</td>
+          <td>20</td>
+          <td></td>
+          <td>
+            <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
+          </td>
+          </tr>
+        <tr data-quarter="1" data-program="STE">
+          <td>12345678910</td>
+          <td>Sakura</td>
+          <td>F</td>
+          <td>20</td>
+          <td></td>
+          <td>
+            <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
+          </td>
+          </tr>
+
+        <tr class="highlight" data-quarter="2" data-program="STE">
+          <td>12345678913</td>
+          <td>Uchiha, Itachi C.</td>
+          <td>M</td>
+          <td>21</td>
+          <td><span class="status probation">On Probation</span></td>
+          <td>
+            <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
+          </td>
+          </tr>
+         <tr data-quarter="1" data-program="STE">
+          <td>12345678910</td>
+          <td>Konan</td>
+          <td>F</td>
+          <td>20</td>
+          <td></td>
+          <td>
+            <button class="btn ghost btn-record"><i class="fa-solid fa-bars-progress"></i> View Grades</button>
+          </td>
+          </tr>
+        </tbody>
+    </table>
+  </div>
+
+  <div id="student-details" class="details-empty">
+    Click <strong>View Grades</strong> on any student row to see their record.
+  </div>
+</section>
+
+    </div>
+  </main>
+
+  <div id="grades-modal-backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal" role="document" id="grades-modal" tabindex="-1">
+      <div class="modal-brand">
+        <div>
+          <h3>Zamboanga National High School West</h3>
+          <div style="font-size:0.85rem;opacity:0.9">Class Record — Student Grades</div>
+        </div>
+      </div>
+
+      <div class="modal-header">
+        <div class="modal-profile">
+          <div class="photo" id="modal-photo-wrap">
+            <div class="initial-avatar">S</div>
+          </div>
+          <div class="meta">
+            <div id="modal-student-name" class="name">Student Name</div>
+            <div id="modal-student-meta" class="sub">LRN • Sex • Age • Program</div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button id="btn-print-modal" class="btn ghost alt" title="Print this record"><i class="fa-solid fa-print"></i></button>
+          <button id="btn-export-student-pdf" class="btn primary" title="Export student PDF"><i class="fa-solid fa-file-pdf"></i> Export</button>
+          <button id="btn-close-modal" class="btn ghost" aria-label="Close modal"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+
+      <div class="modal-body" id="modal-body">
+        <div class="grades-breakdown">
+            <div class="grades-card">
+                <div class="grades-card-header"><h4>Written Works</h4></div>
+                <div class="grades-card-body">Loading...</div>
+            </div>
+             <div class="grades-card">
+                <div class="grades-card-header"><h4>Performance Tasks</h4></div>
+                <div class="grades-card-body">Loading...</div>
+            </div>
+            <div class="grades-card">
+                <div class="grades-card-header"><h4>Quarterly Assessment</h4></div>
+                <div class="grades-card-body">Loading...</div>
+            </div>
+             <div class="grades-card grades-summary-card">
+                <div class="grades-card-header"><h4>Quarterly Grade</h4></div>
+                <div class="grades-card-body">Loading...</div>
+            </div>
+         </div>
+      </div>
+
+      <div class="modal-footer">
+        <div style="color:var(--muted);font-size:0.9rem">Note: This is a generated class record (demo data).</div>
+        <div style="display:flex;gap:8px">
+          <button id="btn-close-modal-bottom" class="btn ghost">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Logo paths for letterhead
+    const LOGO_PATHS = {
+      logo1: 'LOGO/1.png',
+      logo2: 'LOGO/2.png',
+      logo3: 'LOGO/3.jpg',
+      logo4: 'LOGO/4.png'
+    };
+
+    // Helper to load image as base64
+    function loadImageAsBase64(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = src;
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL('image/png'));
+        };
+        img.onerror = () => resolve(null); // Return null if fails
+      });
+    }
+
+    // Create letterhead header in PDF
+    async function addLetterheadHeader(doc, pageWidth) {
+      // Red background for header
+      doc.setFillColor(161, 15, 15);
+      doc.rect(0, 0, pageWidth, 100, "F");
+
+      // Load all logos
+      try {
+        const [logo1, logo2, logo3, logo4] = await Promise.all([
+          loadImageAsBase64(LOGO_PATHS.logo1),
+          loadImageAsBase64(LOGO_PATHS.logo2),
+          loadImageAsBase64(LOGO_PATHS.logo3),
+          loadImageAsBase64(LOGO_PATHS.logo4)
+        ]);
+
+        // Left side logos
+        if (logo1) doc.addImage(logo1, 'PNG', 40, 15, 55, 55);
+        if (logo2) doc.addImage(logo2, 'PNG', 105, 15, 55, 55);
+
+        // Right side logos (logo4 is wider)
+        if (logo3) doc.addImage(logo3, 'PNG', pageWidth - 165, 15, 55, 55);
+        if (logo4) doc.addImage(logo4, 'PNG', pageWidth - 100, 15, 85, 55);
+      } catch (e) {
+        console.warn("Some logos failed to load:", e);
+      }
+
+      // Header text (white on red)
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(9);
+      doc.text("Republic of the Philippines", pageWidth / 2, 20, { align: "center" });
+      doc.text("Department of Education", pageWidth / 2, 32, { align: "center" });
+      doc.text("REGION IX – ZAMBOANGA PENINSULA", pageWidth / 2, 44, { align: "center" });
+      doc.text("Schools Division Office of Zamboanga City", pageWidth / 2, 56, { align: "center" });
+      
+      doc.setFontSize(11);
+      doc.setFont(undefined, "bold");
+      doc.text("Zamboanga National High School West", pageWidth / 2, 72, { align: "center" });
+      
+      doc.setFontSize(9);
+      doc.setFont(undefined, "normal");
+      doc.text("R.T. Lim Boulevard, Zamboanga City, Philippines", pageWidth / 2, 84, { align: "center" });
+      doc.text("School ID: 303942", pageWidth / 2, 96, { align: "center" });
+
+      // Reset text color for body
+      doc.setTextColor(0, 0, 0);
+    }
+
+    // Add letterhead footer to PDF
+    function addLetterheadFooter(doc, pageWidth, pageHeight, pageNum) {
+      const footerHeight = 30;
+      doc.setFillColor(161, 15, 15);
+      doc.rect(0, pageHeight - footerHeight, pageWidth, footerHeight, "F");
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(8);
+      doc.text("Page " + pageNum, pageWidth - 40, pageHeight - 14, { align: "right" });
+      
+      // Reset text color
+      doc.setTextColor(0, 0, 0);
+    }
+
+    // show date
+    (function showDateAndGreeting(){
+      const g = document.getElementById('greeting');
+      const d = new Date();
+      const parts = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
+      if (g) g.textContent = d.toLocaleDateString('en-US', parts);
+    })();
+
+    // Utility: get active filters
+    function getFilters(){
+      const q = document.getElementById('quarter-select').value;
+      const sex = document.getElementById('sex-filter') ? document.getElementById('sex-filter').value : 'all';
+      const search = document.getElementById('search').value.trim().toLowerCase();
+      return { quarter: q, sex, search };
+    }
+
+    // Apply filters
+    function applyFilters(){
+      const { quarter, sex, search } = getFilters();
+      const rows = document.querySelectorAll('#masterlist tbody tr');
+      rows.forEach(row => {
+        const matchesQuarter = (row.getAttribute('data-quarter') === quarter);
+        const sexCell = row.children[2].innerText.trim();
+        const matchesSex = (sex === 'all' || sex === sexCell);
+        const text = row.innerText.toLowerCase();
+        const matchesSearch = search === '' || text.includes(search);
+        row.style.display = (matchesQuarter && matchesSex && matchesSearch) ? '' : 'none';
+      });
+    }
+
+    // initial wiring
+    document.getElementById('search').addEventListener('input', applyFilters);
+    document.getElementById('quarter-select').addEventListener('change', applyFilters);
+    const sexFilterEl = document.getElementById('sex-filter');
+    if (sexFilterEl) sexFilterEl.addEventListener('change', applyFilters);
+
+    // sorting A-Z / Z-A
+    function sortTable(order){
+      const tbody = document.querySelector('#masterlist tbody');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      rows.sort((a,b) => {
+        const an = a.children[1].innerText.trim(); // Full Name column
+        const bn = b.children[1].innerText.trim();
+        if (order === 'az') {
+          return an.localeCompare(bn);
+        } else {
+          return bn.localeCompare(an);
+        }
+      });
+      rows.forEach(row => tbody.appendChild(row));
+    }
+
+    document.getElementById('sort-select').addEventListener('change', (e) => {
+      sortTable(e.target.value);
+    });
+
+    // --- NEW: DUMMY GRADES DATA ---
+    const baseGood = {
+        writtenWorks: [
+            { title: "WW1: Essay", score: 18, total: 20 },
+            { title: "WW2: Quiz", score: 25, total: 30 },
+            { title: "WW3: Activity", score: 10, total: 10 }
+        ],
+        performanceTasks: [
+            { title: "PT1: Reporting", score: 45, total: 50 },
+            { title: "PT2: Project", score: 88, total: 100 }
+        ],
+        quarterlyAssessment: { score: 40, total: 50 },
+        writtenWorkGrade: 89.7,
+        performanceTaskGrade: 92.5,
+        quarterlyAssessmentGrade: 80.0,
+        initialGrade: 90,
+        quarterlyGrade: 92
+    };
+
+    const baseAvg = {
+        writtenWorks: [
+            { title: "WW1: Essay", score: 15, total: 20 },
+            { title: "WW2: Quiz", score: 20, total: 30 },
+            { title: "WW3: Activity", score: 8, total: 10 }
+        ],
+        performanceTasks: [
+            { title: "PT1: Reporting", score: 40, total: 50 },
+            { title: "PT2: Project", score: 70, total: 100 }
+        ],
+        quarterlyAssessment: { score: 35, total: 50 },
+        writtenWorkGrade: 75.0,
+        performanceTaskGrade: 78.0,
+        quarterlyAssessmentGrade: 70.0,
+        initialGrade: 76,
+        quarterlyGrade: 80
+    };
+
+    const studentGradesData = {
+        "Konan": { ...baseGood },
+        "Hidan": { ...baseAvg },
+        "Sasori": { ...baseAvg, quarterlyGrade: 82 },
+        "Ino Yamanaka": { ...baseGood, quarterlyGrade: 93 },
+        "Yamato": { ...baseAvg, quarterlyGrade: 79 },
+        "Yahiko": { ...baseAvg, quarterlyGrade: 81 },
+        "Orochimaru": { ...baseAvg, quarterlyGrade: 85 },
+        "Jiraiya": { ...baseGood, quarterlyGrade: 90 },
+        "Tsunade": { ...baseGood, quarterlyGrade: 94 },
+        "Killer Bee": { ...baseAvg, quarterlyGrade: 88 },
+        "Temari": { ...baseGood, quarterlyGrade: 91 },
+        "Sai": { ...baseGood, quarterlyGrade: 89 },
+        "Shino": { ...baseAvg, quarterlyGrade: 83 },
+        "Akamaru": { ...baseAvg, quarterlyGrade: 78 },
+        "Tenten": { ...baseGood, quarterlyGrade: 90 },
+        "Hinata": { ...baseGood, quarterlyGrade: 95 },
+        "Sakura": { ...baseGood, quarterlyGrade: 96 },
+        "Uchiha, Itachi C.": {
+            writtenWorks: [
+                { title: "WW1: Essay", score: 10, total: 20 },
+                { title: "WW2: Quiz", score: 15, total: 30 },
+                { title: "WW3: Activity", score: 5, total: 10 }
+            ],
+            performanceTasks: [
+                { title: "PT1: Reporting", score: 30, total: 50 },
+                { title: "PT2: Project", score: 60, total: 100 }
+            ],
+            quarterlyAssessment: { score: 25, total: 50 },
+            writtenWorkGrade: 50.0,
+            performanceTaskGrade: 60.0,
+            quarterlyAssessmentGrade: 50.0,
+            initialGrade: 55,
+            quarterlyGrade: 70 // "On Probation"
+        },
+        "default": {
+            writtenWorks: [{ title: "N/A", score: 0, total: 0 }],
+            performanceTasks: [{ title: "N/A", score: 0, total: 0 }],
+            quarterlyAssessment: { score: 0, total: 0 },
+            writtenWorkGrade: 0,
+            performanceTaskGrade: 0,
+            quarterlyAssessmentGrade: 0,
+            initialGrade: 0,
+            quarterlyGrade: 0
+        }
+    };
+
+    // --- NEW/MODIFIED: MODAL LOGIC ---
+
+    const modalBackdrop = document.getElementById('grades-modal-backdrop');
+    const modal = document.getElementById('grades-modal');
+    const modalBody = document.getElementById('modal-body');
+    const modalStudentName = document.getElementById('modal-student-name');
+    const modalStudentMeta = document.getElementById('modal-student-meta');
+    const modalPhotoWrap = document.getElementById('modal-photo-wrap');
+
+    // --- MODIFIED JAVASCRIPT ---
+    // Function to generate the HTML for the modal body
+    function generateModalBodyHTML(data) {
+        // Helper to create list items for scores
+        const createScoreList = (items) => items.map(item => `
+            <li>
+                <span class="title">${item.title}</span>
+                <span class="score">${item.score} / ${item.total}</span>
+            </li>
+        `).join('');
+
+        // Calculate totals for display
+        const wwTotalScore = data.writtenWorks.reduce((acc, item) => acc + item.score, 0);
+        const wwTotalMax = data.writtenWorks.reduce((acc, item) => acc + item.total, 0);
+        const ptTotalScore = data.performanceTasks.reduce((acc, item) => acc + item.score, 0);
+        const ptTotalMax = data.performanceTasks.reduce((acc, item) => acc + item.total, 0);
+
+        return `
+        <div class="grades-breakdown">
+            <div class="grades-card">
+                <div class="grades-card-header"><h4>Written Works (${data.writtenWorkGrade}%)</h4></div>
+                <div class="grades-card-body">
+                    <ul>${createScoreList(data.writtenWorks)}</ul>
+                    <hr style="margin: 12px 0; border-color: #eef2f4;">
+                    <ul>
+                        <li>
+                            <span class="title" style="font-weight: 700;">Total</span>
+                            <span class="score" style="font-weight: 700;">${wwTotalScore} / ${wwTotalMax}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="grades-card">
+                <div class="grades-card-header"><h4>Performance Tasks (${data.performanceTaskGrade}%)</h4></div>
+                <div class="grades-card-body">
+                    <ul>${createScoreList(data.performanceTasks)}</ul>
+                    <hr style="margin: 12px 0; border-color: #eef2f4;">
+                    <ul>
+                        <li>
+                            <span class="title" style="font-weight: 700;">Total</span>
+                            <span class="score" style="font-weight: 700;">${ptTotalScore} / ${ptTotalMax}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="grades-card">
+                <div class="grades-card-header"><h4>Quarterly Assessment (${data.quarterlyAssessmentGrade}%)</h4></div>
+                <div class="grades-card-body">
+                    <ul>
+                        <li>
+                            <span class="title">Exam Score</span>
+                            <span class="score">${data.quarterlyAssessment.score} / ${data.quarterlyAssessment.total}</span>
+                        </li>
+                    </ul>
+                    <hr style="margin: 12px 0; border-color: #eef2f4;">
+                    <ul>
+                        <li>
+                            <span class="title" style="font-weight: 700;">Total</span>
+                            <span class="score" style="font-weight: 700;">${data.quarterlyAssessment.score} / ${data.quarterlyAssessment.total}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="grades-card grades-summary-card">
+                <div class="grades-card-header"><h4>Quarterly Grade Summary</h4></div>
+                <div class="grades-card-body">
+                    <div class="final-grade">${data.quarterlyGrade}</div>
+                    <div class="summary-item">
+                        <span>Written Work (WW)</span>
+                        <span class="grade-value">${data.writtenWorkGrade}%</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Performance Task (PT)</span>
+                        <span class="grade-value">${data.performanceTaskGrade}%</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Quarterly Assessment (QA)</span>
+                        <span class="grade-value">${data.quarterlyAssessmentGrade}%</span>
+                    </div>
+                     <div class="summary-item" style="color: #a23131;">
+                        <span>Initial Grade</span>
+                        <span class="grade-value">${data.initialGrade}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+    }
+    // --- END MODIFIED JAVASCRIPT ---
+
+    // Function to open the modal
+    function openGradesModal(studentRow) {
+        const lrn = studentRow.children[0].innerText;
+        const name = studentRow.children[1].innerText;
+        const sex = studentRow.children[2].innerText;
+        const age = studentRow.children[3].innerText;
+        const program = studentRow.getAttribute('data-program'); // Get program from data attribute
+
+        // Find the grade data
+        const gradeData = studentGradesData[name] || studentGradesData["default"];
+
+        // 1. Populate Header
+        modalStudentName.textContent = name;
+        modalStudentMeta.textContent = `LRN: ${lrn} • ${sex} • ${age} y.o. • ${program}`;
+
+        // 2. Populate Photo (with initial-based fallback)
+        const initial = name.charAt(0).toUpperCase();
+        // Use a dummy photo path for demo.
+        const photoSrc = `Pictures/${name.split(' ')[0]}.jpg`; // e.g., Pictures/Konan.jpg
+        
+        modalPhotoWrap.innerHTML = `
+            <img src="${photoSrc}" id="modal-student-photo" alt="${name}'s photo" style="width:100%;height:100%;object-fit:cover;display:block"
+                 onerror='this.style.display="none"; this.parentElement.innerHTML="<div class=&quot;initial-avatar&quot;>${initial}</div>"'>
+        `;
+
+        // 3. Populate Body (NEW)
+        modalBody.innerHTML = generateModalBodyHTML(gradeData);
+
+        // 4. Show modal
+        modalBackdrop.classList.add('show');
+        modal.focus(); // For accessibility
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    }
+
+    // Function to close the modal
+    function closeGradesModal() {
+        modalBackdrop.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+
+    // --- Event Listeners ---
+
+    // Listen for clicks on ALL "View Grades" buttons
+    document.getElementById('masterlist').addEventListener('click', (e) => {
+        const btn = e.target.closest('.btn-record');
+        if (btn) {
+            const row = btn.closest('tr');
+            openGradesModal(row);
+        }
+    });
+
+    // Close button listeners
+    document.getElementById('btn-close-modal').addEventListener('click', closeGradesModal);
+    document.getElementById('btn-close-modal-bottom').addEventListener('click', closeGradesModal);
+    // Close on backdrop click
+    modalBackdrop.addEventListener('click', (e) => {
+        if (e.target === modalBackdrop) {
+            closeGradesModal();
+        }
+    });
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modalBackdrop.classList.contains('show')) {
+            closeGradesModal();
+        }
+    });
+
+    // --- PDF/Print Listeners (Completed) ---
+
+    // Modal Print
+    document.getElementById('btn-print-modal').addEventListener('click', () => {
+        window.print();
+    });
+
+    // Main Table PDF Export
+    document.getElementById('btn-export-pdf').addEventListener('click', async () => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({
+            orientation: 'landscape',
+            unit: 'pt',
+            format: 'legal'
+        });
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const { quarter, sex, search } = getFilters();
+        const program = document.getElementById('program-label').innerText;
+
+        // Add Letterhead
+        await addLetterheadHeader(doc, pageWidth);
+        const headerHeight = 110; // Space for letterhead
+
+        // Add Title
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'bold');
+        doc.text("STUDENT MASTERLIST", pageWidth / 2, headerHeight, { align: 'center' });
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        doc.text(`Program: ${program} | Quarter: ${quarter}`, pageWidth / 2, headerHeight + 15, { align: 'center' });
+
+        // Add table
+        doc.autoTable({
+            html: '#masterlist',
+            startY: headerHeight + 30,
+            theme: 'grid',
+            headStyles: { fillColor: [162, 49, 49] },
+            // Exclude the last column (Record)
+            columns: [0, 1, 2, 3, 4], // LRN, Name, Sex, Age, Status
+            // Filter rows based on current view
+            willDrawCell: (data) => {
+                if (data.section === 'body') {
+                    const row = data.row.raw;
+                    // Only draw row if it's not hidden by filters
+                    return row.style.display !== 'none';
+                }
+            },
+            didDrawPage: (data) => {
+                // Add footer
+                addLetterheadFooter(doc, pageWidth, pageHeight, data.pageNumber);
+            }
+        });
+
+        doc.save(`ZNHS-WEST-Masterlist-Q${quarter}.pdf`);
+    });
+    
+    // Student PDF Export (placeholder)
+    document.getElementById('btn-export-student-pdf').addEventListener('click', () => {
+        const studentName = document.getElementById('modal-student-name').innerText;
+        alert(`Logic to export PDF for ${studentName} goes here.`);
+        // Note: This would require re-drawing the modal content into a new jsPDF doc.
+    });
+
+
+    // Initial call to set table state
+    applyFilters();
+    sortTable('az');
+
+    
+  </script>
+</body>
+</html>

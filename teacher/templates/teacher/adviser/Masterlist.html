@@ -1,0 +1,904 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{{ full_section_name }} Masterlist — ZNHS WEST</title>
+  {% load static %}
+  <!-- Tailwind for quick modern UI -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <!-- jsPDF and autotable -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+
+  <style>
+    /* --- Page layout & base --- */
+    :root {
+      --sidebar-w: 240px;
+      --muted: #6b7280;
+      --accent: #a23131;
+    }
+    * { box-sizing: border-box; }
+    html,body { height: 100%; }
+    body {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: #f3f6f8;
+      color: #111827;
+      -webkit-font-smoothing:antialiased;
+    }
+    /* Sidebar placeholder (injected) */
+    #sidebar-root { position: fixed; left: 0; top: 0; z-index: 50; }
+
+    main {
+      margin-left: var(--sidebar-w);
+      padding: 28px;
+      transition: margin-left 180ms ease;
+    }
+    @media (max-width:860px) {
+      main { margin-left: 72px; padding: 18px; }
+    }
+
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    /* Header */
+    header.page-header { display:flex; justify-content:space-between; gap:16px; align-items:center; margin-bottom:18px; }
+    header.page-header h1 { font-size:1.6rem; font-weight:700; color:#111827; }
+    .greeting { color:var(--muted); font-size:0.95rem; margin-top:4px; }
+
+    /* Info card (program / stats) */
+    .info-card {
+      display:flex; justify-content:space-between; gap:16px; align-items:center;
+      background: #ffffff; border:1px solid #e6e9ee; border-radius:10px; padding:14px;
+      box-shadow: 0 2px 6px rgba(16,24,40,0.03);
+    }
+    .info-left p { margin: 2px 0; color: #374151; font-size:0.95rem; }
+    .info-left .muted { color: var(--muted); font-size:0.9rem; }
+
+    /* Search */
+    .search-wrap { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    .search {
+      position:relative;
+      width: 260px;
+      max-width: 100%;
+    }
+    .search input {
+      width:100%;
+      padding:10px 12px 10px 38px;
+      border-radius:999px;
+      border:1px solid #e6e6e6;
+      background:#fbfbfb;
+      font-size:0.95rem;
+      transition: box-shadow .15s ease, border-color .15s ease;
+    }
+    .search input:focus { outline:none; border-color: var(--accent); box-shadow: 0 0 0 6px rgba(162,49,49,0.06); background:#fff; }
+    .search .icon { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#9ca3af; }
+
+    /* Buttons */
+    .actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .btn {
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 12px; border-radius:8px; font-size:0.92rem; font-weight:600; cursor:pointer;
+      border:1px solid transparent; transition: transform .12s ease, box-shadow .12s ease;
+    }
+    .btn.primary { background:var(--accent); color:#fff; }
+    .btn.ghost { background:#fff; color:#374151; border-color:#e6e6e6; }
+    .btn.ghost.alt { background:#fff; border-color:#e6e6e6; color:#6b7280; }
+    .btn:hover { transform:translateY(-2px); box-shadow: 0 6px 18px rgba(16,24,40,0.06); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* Table area */
+    .card {
+      background:#fff; border:1px solid #e6e9ee; border-radius:10px; padding:8px; box-shadow: 0 2px 6px rgba(16,24,40,0.03);
+      overflow: hidden;
+    }
+    .table-wrap { overflow:auto; max-height:640px; }
+    table { width:100%; border-collapse:collapse; min-width:900px; }
+    th, td { padding:12px 14px; text-align:left; vertical-align: middle; font-size:0.95rem; color:#374151; border-bottom:1px solid #f1f5f9; }
+    thead th { background: linear-gradient(180deg,#fff 0%, #fbfbfb 100%); color:#374151; font-weight:700; position:sticky; top:0; z-index:10; }
+    tbody tr:hover { background:#fbfbff; }
+    .status { display:inline-block; padding:6px 10px; border-radius:999px; font-size:0.86rem; font-weight:600; }
+    .status.active { background: #f0fdf4; color:#16a34a; border:1px solid #bbf7d0; }
+    .status.probation { background: #fff1f2; color:#b91c1c; border:1px solid #ffe4e6; }
+    .status.dropped { background: #f3f4f6; color:#6b7280; border:1px solid #e5e7eb; }
+
+    /* Avatar small */
+    .avatar-sm { width:44px; height:44px; border-radius:999px; overflow:hidden; border:2px solid #f3f4f6; display:inline-block; }
+    .avatar-sm img { width:100%; height:100%; object-fit:cover; display:block; }
+
+    /* highlight rows with probation */
+    tr.highlight { background: #fff6f6; }
+
+    /* Loading state */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--muted);
+    }
+    .loading i { font-size: 2rem; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Modal (grades) - redesigned UI */
+    .modal-backdrop {
+      position:fixed; inset:0; background:rgba(15,23,42,0.55); display:none; align-items:center; justify-content:center; z-index:60;
+      transition: opacity .18s ease;
+    }
+    .modal-backdrop.show { display:flex; opacity:1; }
+    .modal {
+      width:880px; max-width:96%; background:#fff; border-radius:12px; box-shadow: 0 18px 60px rgba(2,6,23,0.45); overflow:hidden;
+      max-height:92vh; display:flex; flex-direction:column; transform: translateY(16px); transition: transform .18s ease, opacity .18s ease;
+    }
+    .modal:focus { outline:none; }
+
+    /* top branding band inside modal for visual consistency with header */
+    .modal-brand {
+      background: linear-gradient(90deg, #a22a2a 0%, #b53a3a 100%);
+      color: #fff;
+      padding:10px 16px;
+      display:flex;
+      align-items:center;
+      gap:14px;
+    }
+    .modal-brand h3 { margin:0; font-size:1rem; font-weight:700; letter-spacing:0.2px; }
+
+    .modal-header {
+      padding:16px; display:flex; gap:16px; align-items:center; justify-content:space-between;
+      background: #fff;
+    }
+    .modal-profile {
+      display:flex; gap:12px; align-items:center;
+    }
+    .modal-profile .photo {
+      width:92px; height:92px; border-radius:12px; overflow:hidden; border:1px solid #eef2f4; flex-shrink:0;
+      background: #f8fafc; display:flex; align-items:center; justify-content:center;
+    }
+    .modal-profile .photo img { width:100%; height:100%; object-fit:cover; display:block; }
+    .modal-profile .meta { min-width:0; }
+    .modal-profile .meta .name { font-weight:800; font-size:1.12rem; color:#111827; }
+    .modal-profile .meta .sub { color:var(--muted); font-size:0.92rem; margin-top:6px; }
+
+    .modal-actions { display:flex; gap:8px; align-items:center; }
+
+    .modal-body {
+      padding:16px;
+      overflow:auto;
+      background: linear-gradient(180deg,#ffffff 0%, #fbfbfb 100%);
+    }
+    .grades-table {
+      border:1px solid #eef2f4;
+      border-radius:8px;
+      overflow:hidden;
+      background:#fff;
+      width:100%;
+    }
+    .grades-table table { width:100%; border-collapse:collapse; }
+    .grades-table th, .grades-table td { padding:12px 14px; border-bottom:1px solid #f4f6f8; text-align:left; }
+    .grades-table thead th { background:#fafafa; font-weight:700; color:#374151; }
+    /* average row highlight */
+    .grades-table tfoot tr.avg td {
+      background: #fff7ed;
+      font-weight:800;
+      color: #7a2a2a;
+      border-top:2px solid #fde3cf;
+    }
+    .grades-summary { margin-top:12px; display:flex; gap:12px; align-items:center; justify-content:flex-end; color:var(--muted); font-weight:700; }
+
+    .modal-footer {
+      padding:12px 16px;
+      display:flex; justify-content:space-between; align-items:center; gap:12px;
+      border-top:1px solid #eef2f4;
+      background:#fff;
+    }
+
+    /* small initial avatar if photo missing */
+    .initial-avatar {
+      width:100%;
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:white;
+      font-weight:800;
+      font-size:28px;
+      background: linear-gradient(180deg,#c0392b 0%, #a22a2a 100%);
+    }
+
+    /* print styles for the modal body (used by print button) */
+    @media print {
+      body * { visibility: hidden; }
+      #grades-modal, #grades-modal * { visibility: visible; }
+      #grades-modal { position: absolute; left: 0; top: 0; width: 100%; transform: none !important; box-shadow:none !important; }
+      .modal-footer, .modal-header .modal-actions { display:none !important; }
+    }
+
+    /* Responsive */
+    @media (max-width:900px) {
+      .search { width:180px; }
+      main { padding:16px; }
+      .info-card { flex-direction:column; align-items:flex-start; gap:10px; }
+      .modal { width: 96%; }
+      .modal-profile .photo { width:72px; height:72px; }
+      .modal-profile .meta .name { font-size:1rem; }
+    }
+  </style>
+</head>
+<body>
+  {% csrf_token %}
+  <!-- Sidebar placeholder (will be fetched) -->
+  <div id="sidebar-root">
+    {% include 'teacher/adviser/sidebar.html' %}
+  </div>
+  
+  <main>
+    <div class="container">
+      <!-- Page header -->
+      <header class="page-header">
+        <div>
+          <h1>{{ full_section_name|upper }} MASTERLIST</h1>
+          <div id="greeting" class="greeting">{{ school_year }}</div>
+        </div>
+
+        <div class="flex items-center gap-20">
+          <!-- Quarter selector -->
+          <div class="flex items-center gap-3">
+            <label for="quarter-select" class="text-sm font-bold text-gray-700 whitespace-nowrap">Quarter</label>
+            <select id="quarter-select" class="w-44 rounded-lg border border-gray-300 bg-white py-2 px-3 text-gray-700 shadow-sm
+                                        focus:border-red-600 focus:ring focus:ring-red-100 transition-all cursor-pointer font-medium">
+              {% for q in quarters %}
+              <option value="{{ q }}" {% if q == current_quarter %}selected{% endif %}>Quarter {{ q|slice:"1:" }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- teacher info -->
+          <div class="flex items-center gap-3">
+            <div class="text-right">
+              <div class="font-semibold" id="adviser-name">{{ teacher_full_name }}</div>
+              <div class="text-sm text-gray-500" id="adviser-position">{{ teacher_position }}- {% if teacher.is_adviser %}Adviser{% else %}Subject Teacher{% endif %}</div>
+            </div>
+            <div class="avatar-sm" id="adviser-avatar">
+              {% if teacher_photo %}
+              <img src="{{ teacher_photo }}" alt="Adviser profile" id="adviser-img">
+              {% else %}
+              <div class="w-full h-full bg-red-600 flex items-center justify-center text-white font-bold">{{ teacher_initials }}</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Info + Search -->
+      <section class="info-card mb-6">
+        <div class="info-left">
+          <p><strong>Program:</strong> <span class="text-rose-600 font-semibold" id="program-label">{{ program }}</span></p>
+          <p class="muted"><strong>Total Students:</strong> <span id="total-students">{{ total_students }}</span></p>
+          <p class="muted">Male: <strong id="male-count">{{ male_count }}</strong> • Female: <strong id="female-count">{{ female_count }}</strong></p>
+        </div>
+
+        <div class="search-wrap">
+          <div class="search" title="Search students">
+            <span class="icon"><i class="fa fa-search"></i></span>
+            <input id="search" type="search" placeholder="Search students by name or LRN..." aria-label="Search students">
+          </div>
+
+          <div class="actions">
+            <button class="btn primary" id="btn-export-pdf"><i class="fa-solid fa-file-pdf"></i> Export PDF</button>
+
+            <!-- Sorting & filtering controls -->
+            <div class="flex items-center gap-2">
+              <select id="sort-select" class="rounded-lg border border-gray-300 bg-white py-2 px-3 text-gray-700 shadow-sm cursor-pointer">
+                <option value="az">Sort: A → Z</option>
+                <option value="za">Sort: Z → A</option>
+              </select>
+              <select id="sex-filter" class="rounded-lg border border-gray-300 bg-white py-2 px-3 text-gray-700 shadow-sm cursor-pointer">
+                <option value="all">All</option>
+                <option value="Male">Male only</option>
+                <option value="Female">Female only</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Table Card -->
+      <section class="card">
+        <div class="table-wrap">
+          <table id="masterlist" role="table" aria-label="Masterlist table">
+            <thead>
+              <tr>
+                <th class="font-medium text-left">LRN Number</th>
+                <th class="font-medium text-left">Full Name</th>
+                <th class="font-medium text-left">Sex</th>
+                <th class="font-medium text-left">Age</th>
+                <th class="font-medium text-left">Status</th>
+                <th class="font-medium text-left">Record</th>
+                <th class="font-medium text-left">Profile</th>
+              </tr>
+            </thead>
+            <tbody id="student-table-body">
+              <!-- Dynamic content loaded via JavaScript -->
+              {% if students %}
+                {% for student in students %}
+                <tr data-student-id="{{ student.id }}" 
+                    data-lrn="{{ student.lrn }}" 
+                    data-name="{{ student.full_name }}"
+                    data-gender="{{ student.gender }}"
+                    data-age="{{ student.age }}"
+                    data-status="{{ student.status }}"
+                    {% if student.is_probation %}class="highlight"{% endif %}>
+                  <td>{{ student.lrn }}</td>
+                  <td>{{ student.full_name }}</td>
+                  <td>{{ student.gender }}</td>
+                  <td>{{ student.age }}</td>
+                  <td>
+                    {% if student.status == 'Probation' %}
+                    <span class="status probation">{{ student.status }}</span>
+                    {% elif student.status == 'Dropped' or student.status == 'Transferred' %}
+                    <span class="status dropped">{{ student.status }}</span>
+                    {% else %}
+                    <span class="status active">{{ student.status }}</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <button class="btn ghost btn-record" data-student-id="{{ student.id }}">
+                      <i class="fa-solid fa-bars-progress"></i> View Grades
+                    </button>
+                  </td>
+                  <td>
+                    <a href="{% url 'teacher:adviser-studentprofile' %}?student_id={{ student.id }}" 
+                       class="btn ghost transition-colors hover:bg-rose-50 hover:text-rose-700">
+                      <i class="fa-solid fa-eye"></i> View
+                    </a>
+                  </td>
+                </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="7" class="text-center text-gray-500 py-8">
+                    <i class="fa-solid fa-inbox text-3xl mb-2"></i>
+                    <p>No students found in this section</p>
+                  </td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Grades modal -->
+  <div id="grades-modal-backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal" role="document" id="grades-modal" tabindex="-1">
+      <div class="modal-brand">
+        <div>
+          <h3>Zamboanga National High School West</h3>
+          <div style="font-size:0.85rem;opacity:0.9">Class Record — Student Grades</div>
+        </div>
+      </div>
+
+      <div class="modal-header">
+        <div class="modal-profile">
+          <div class="photo" id="modal-photo-wrap">
+            <!-- Dynamic photo loaded here -->
+          </div>
+          <div class="meta">
+            <div id="modal-student-name" class="name">Student Name</div>
+            <div id="modal-student-meta" class="sub">LRN • Sex • Age</div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button id="btn-print-modal" class="btn ghost alt" title="Print this record"><i class="fa-solid fa-print"></i></button>
+          <button id="btn-export-student-pdf" class="btn primary" title="Export student PDF"><i class="fa-solid fa-file-pdf"></i> Export</button>
+          <button id="btn-close-modal" class="btn ghost" aria-label="Close modal"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+
+      <div class="modal-body" id="modal-body">
+        <!-- Grades table injected here -->
+        <div class="grades-table" id="modal-grades-table" aria-live="polite"></div>
+        <div class="grades-summary" id="modal-summary" aria-hidden="false"></div>
+      </div>
+
+      <div class="modal-footer">
+        <div style="color:var(--muted);font-size:0.9rem">Generated from Class Records</div>
+        <div style="display:flex;gap:8px">
+          <button id="btn-close-modal-bottom" class="btn ghost">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    // Global data from Django
+    const SCHOOL_YEAR = "{{ school_year }}";
+    const PROGRAM_CODE = "{{ program_code }}";
+    const SECTION_NAME = "{{ section_name }}";
+    const FULL_SECTION_NAME = "{{ full_section_name }}";
+    const ADVISER_NAME = "{{ teacher_full_name }}";
+    const ADVISER_POSITION = "{{ teacher_position }}";
+    
+    // CSRF token for POST requests
+    function getCSRFToken() {
+      return document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+             document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1] || '';
+    }
+
+    // Utility: create initials avatar
+    function createInitialAvatar(name) {
+      const div = document.createElement('div');
+      div.className = 'initial-avatar';
+      const names = name.split(',')[0].trim().split(' ');
+      const initials = names.map(n => n[0]).join('').substring(0, 2).toUpperCase();
+      div.textContent = initials;
+      return div;
+    }
+
+    // Apply client-side filters
+    function applyFilters() {
+      const search = document.getElementById('search').value.trim().toLowerCase();
+      const sexFilter = document.getElementById('sex-filter').value;
+      const rows = document.querySelectorAll('#student-table-body tr[data-student-id]');
+      
+      let visibleCount = 0;
+      let maleCount = 0;
+      let femaleCount = 0;
+      
+      rows.forEach(row => {
+        const name = row.getAttribute('data-name')?.toLowerCase() || '';
+        const lrn = row.getAttribute('data-lrn')?.toLowerCase() || '';
+        const gender = row.getAttribute('data-gender') || '';
+        
+        const matchesSearch = search === '' || name.includes(search) || lrn.includes(search);
+        const matchesSex = sexFilter === 'all' || gender === sexFilter;
+        
+        if (matchesSearch && matchesSex) {
+          row.style.display = '';
+          visibleCount++;
+          if (gender === 'Male') maleCount++;
+          if (gender === 'Female') femaleCount++;
+        } else {
+          row.style.display = 'none';
+        }
+      });
+      
+      // Update counts
+      document.getElementById('total-students').textContent = visibleCount;
+      document.getElementById('male-count').textContent = maleCount;
+      document.getElementById('female-count').textContent = femaleCount;
+    }
+
+    // Sort table
+    function sortTable(order) {
+      const tbody = document.getElementById('student-table-body');
+      const rows = Array.from(tbody.querySelectorAll('tr[data-student-id]'));
+      
+      rows.sort((a, b) => {
+        const nameA = a.getAttribute('data-name')?.toLowerCase() || '';
+        const nameB = b.getAttribute('data-name')?.toLowerCase() || '';
+        
+        if (nameA < nameB) return order === 'az' ? -1 : 1;
+        if (nameA > nameB) return order === 'az' ? 1 : -1;
+        return 0;
+      });
+      
+      rows.forEach(row => tbody.appendChild(row));
+    }
+
+    // Event listeners for filters
+    document.getElementById('search').addEventListener('input', applyFilters);
+    document.getElementById('sex-filter').addEventListener('change', applyFilters);
+    document.getElementById('sort-select').addEventListener('change', (e) => sortTable(e.target.value));
+
+    // Modal handling
+    const modalBackdrop = document.getElementById('grades-modal-backdrop');
+    const modal = document.getElementById('grades-modal');
+    const btnCloseTop = document.getElementById('btn-close-modal');
+    const btnCloseBottom = document.getElementById('btn-close-modal-bottom');
+
+    function openModal() {
+      modalBackdrop.classList.add('show');
+      modalBackdrop.setAttribute('aria-hidden', 'false');
+      modal.style.transform = 'translateY(0)';
+      setTimeout(() => modal.focus(), 160);
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      modalBackdrop.classList.remove('show');
+      modalBackdrop.setAttribute('aria-hidden', 'true');
+      modal.style.transform = 'translateY(16px)';
+      document.body.style.overflow = '';
+    }
+
+    btnCloseTop.addEventListener('click', closeModal);
+    btnCloseBottom.addEventListener('click', closeModal);
+    modalBackdrop.addEventListener('click', (e) => {
+      if (e.target === modalBackdrop) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // Fetch and display student grades
+    async function showGradesModal(studentId) {
+      const row = document.querySelector(`tr[data-student-id="${studentId}"]`);
+      if (!row) return;
+      
+      const name = row.getAttribute('data-name');
+      const lrn = row.getAttribute('data-lrn');
+      const gender = row.getAttribute('data-gender');
+      const age = row.getAttribute('data-age');
+      
+      // Update modal header
+      document.getElementById('modal-student-name').textContent = name;
+      document.getElementById('modal-student-meta').textContent = `LRN: ${lrn} • Sex: ${gender} • Age: ${age}`;
+      
+      // Load student photo
+      const photoWrap = document.getElementById('modal-photo-wrap');
+      photoWrap.innerHTML = '<div class="loading"><i class="fa-solid fa-spinner"></i></div>';
+      
+      // Try to load photo (you'll need to add photo URL to student data)
+      const img = document.createElement('img');
+      img.style.width = '100%';
+      img.style.height = '100%';
+      img.style.objectFit = 'cover';
+      img.onerror = function() {
+        photoWrap.innerHTML = '';
+        photoWrap.appendChild(createInitialAvatar(name));
+      };
+      img.onload = function() {
+        photoWrap.innerHTML = '';
+        photoWrap.appendChild(img);
+      };
+      // Add photo URL here when available
+      img.src = '/media/student_photos/default.jpg'; // Update with actual path
+      
+      // Show loading in grades table
+      document.getElementById('modal-grades-table').innerHTML = '<div class="loading"><i class="fa-solid fa-spinner"></i> Loading grades...</div>';
+      
+      openModal();
+      
+      // Fetch grades from API
+      try {
+        const quarter = document.getElementById('quarter-select').value;
+        const response = await fetch(`{% url 'teacher:api-student-grades' 0 %}`.replace('0', studentId) + `?quarter=${quarter}&school_year=${SCHOOL_YEAR}`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch grades');
+        }
+        
+        const data = await response.json();
+        displayGrades(data);
+        
+      } catch (error) {
+        console.error('Error fetching grades:', error);
+        document.getElementById('modal-grades-table').innerHTML = `
+          <div class="text-center py-8 text-red-600">
+            <i class="fa-solid fa-exclamation-triangle text-3xl mb-2"></i>
+            <p>Failed to load grades. Please try again.</p>
+          </div>
+        `;
+      }
+    }
+
+    // Display grades in modal
+    function displayGrades(data) {
+      const gradesTable = document.getElementById('modal-grades-table');
+      const summary = document.getElementById('modal-summary');
+      
+      if (!data.grades || data.grades.length === 0) {
+        gradesTable.innerHTML = `
+          <div class="text-center py-8 text-gray-500">
+            <i class="fa-solid fa-inbox text-3xl mb-2"></i>
+            <p>No grades recorded for this quarter</p>
+          </div>
+        `;
+        summary.innerHTML = '';
+        return;
+      }
+      
+      // Build grades table
+      let rowsHtml = data.grades.map(g => `
+        <tr>
+          <td>${g.subject}</td>
+          <td style="font-weight:700">${g.grade || '—'}</td>
+        </tr>
+      `).join('');
+      
+      const tableHtml = `
+        <table aria-label="Grades table">
+          <thead>
+            <tr>
+              <th>Subject</th>
+              <th>Grade</th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+          <tfoot>
+            <tr class="avg">
+              <td>Average</td>
+              <td>${data.average}</td>
+            </tr>
+          </tfoot>
+        </table>
+      `;
+      
+      gradesTable.innerHTML = tableHtml;
+      
+      // Display summary
+      const remarks = data.average >= 75 ? 'Passing' : 'Needs Improvement';
+      const remarksColor = data.average >= 75 ? '#16a34a' : '#dc2626';
+      
+      summary.innerHTML = `
+        <div>Quarter: <span style="font-weight:700">${data.quarter}</span></div>
+        <div>Remarks: <span style="font-weight:700;color:${remarksColor}">${remarks}</span></div>
+      `;
+      
+      // Wire export button for this student
+      const btnExport = document.getElementById('btn-export-student-pdf');
+      btnExport.replaceWith(btnExport.cloneNode(true));
+      const newExportBtn = document.getElementById('btn-export-student-pdf');
+      newExportBtn.addEventListener('click', () => exportStudentPDF(data));
+      
+      // Wire print button
+      const btnPrint = document.getElementById('btn-print-modal');
+      btnPrint.replaceWith(btnPrint.cloneNode(true));
+      const newPrintBtn = document.getElementById('btn-print-modal');
+      newPrintBtn.addEventListener('click', () => window.print());
+    }
+
+    // Handle View Grades button clicks
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.btn-record');
+      if (btn) {
+        const studentId = btn.getAttribute('data-student-id');
+        if (studentId) {
+          showGradesModal(studentId);
+        }
+      }
+    });
+
+    // PDF Export Functions
+    const LOGO_PATHS = {
+      logo1: "{% static 'LOGO/1.png' %}",
+      logo2: "{% static 'LOGO/2.png' %}",
+      logo3: "{% static 'LOGO/3.jpg' %}",
+      logo4: "{% static 'LOGO/4.png' %}"
+    };
+
+    // Helper to load image as base64
+    function loadImageAsBase64(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = src;
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL('image/png'));
+        };
+        img.onerror = () => resolve(null);
+      });
+    }
+
+    // Create letterhead header in PDF
+    async function addLetterheadHeader(doc, pageWidth) {
+      doc.setFillColor(161, 15, 15);
+      doc.rect(0, 0, pageWidth, 100, "F");
+
+      try {
+        const [logo1, logo2, logo3, logo4] = await Promise.all([
+          loadImageAsBase64(LOGO_PATHS.logo1),
+          loadImageAsBase64(LOGO_PATHS.logo2),
+          loadImageAsBase64(LOGO_PATHS.logo3),
+          loadImageAsBase64(LOGO_PATHS.logo4)
+        ]);
+
+        if (logo1) doc.addImage(logo1, 'PNG', 40, 15, 55, 55);
+        if (logo2) doc.addImage(logo2, 'PNG', 105, 15, 55, 55);
+        if (logo3) doc.addImage(logo3, 'PNG', pageWidth - 165, 15, 55, 55);
+        if (logo4) doc.addImage(logo4, 'PNG', pageWidth - 100, 15, 85, 55);
+      } catch (e) {
+        console.warn("Some logos failed to load:", e);
+      }
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(9);
+      doc.text("Republic of the Philippines", pageWidth / 2, 20, { align: "center" });
+      doc.text("Department of Education", pageWidth / 2, 32, { align: "center" });
+      doc.text("REGION IX – ZAMBOANGA PENINSULA", pageWidth / 2, 44, { align: "center" });
+      doc.text("Schools Division Office of Zamboanga City", pageWidth / 2, 56, { align: "center" });
+      
+      doc.setFontSize(11);
+      doc.setFont(undefined, "bold");
+      doc.text("Zamboanga National High School West", pageWidth / 2, 72, { align: "center" });
+      
+      doc.setFontSize(9);
+      doc.setFont(undefined, "normal");
+      doc.text("R.T. Lim Boulevard, Zamboanga City, Philippines", pageWidth / 2, 84, { align: "center" });
+      doc.text("School ID: 303942", pageWidth / 2, 96, { align: "center" });
+
+      doc.setTextColor(0, 0, 0);
+    }
+
+    // Add letterhead footer to PDF
+    function addLetterheadFooter(doc, pageWidth, pageHeight, pageNum) {
+      const footerHeight = 30;
+      doc.setFillColor(161, 15, 15);
+      doc.rect(0, pageHeight - footerHeight, pageWidth, footerHeight, "F");
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(8);
+      doc.text("Page " + pageNum, pageWidth - 40, pageHeight - 14, { align: "right" });
+      
+      doc.setTextColor(0, 0, 0);
+    }
+
+    // Export Masterlist PDF
+    async function exportMasterlistPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+
+      // Add letterhead header
+      await addLetterheadHeader(doc, pageWidth);
+
+      // Add section info
+      doc.setFontSize(14);
+      doc.setFont(undefined, "bold");
+      doc.text(`${FULL_SECTION_NAME} MASTERLIST`, pageWidth / 2, 115, { align: "center" });
+      
+      doc.setFontSize(10);
+      doc.setFont(undefined, "normal");
+      doc.text(`School Year: ${SCHOOL_YEAR}`, pageWidth / 2, 130, { align: "center" });
+
+      // Get visible rows only
+      const rows = Array.from(document.querySelectorAll('#student-table-body tr[data-student-id]'))
+        .filter(row => row.style.display !== 'none')
+        .map(row => {
+          const cells = row.querySelectorAll('td');
+          return [
+            cells[0].innerText, // LRN
+            cells[1].innerText, // Name
+            cells[2].innerText, // Sex
+            cells[3].innerText, // Age
+            cells[4].innerText || 'Active' // Status
+          ];
+        });
+
+      doc.autoTable({
+        head: [['LRN', 'Full Name', 'Sex', 'Age', 'Status']],
+        body: rows,
+        startY: 145,
+        theme: 'striped',
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [240, 240, 240], textColor: [55, 65, 81] },
+        margin: { bottom: 80 },
+        didDrawPage: async function (data) {
+          const currentPage = doc.internal.getNumberOfPages();
+          
+          if (currentPage > 1) {
+            await addLetterheadHeader(doc, pageWidth);
+          }
+
+          addLetterheadFooter(doc, pageWidth, pageHeight, currentPage);
+
+          // Add signature section
+          const signatureY = pageHeight - 70;
+          doc.setTextColor(0, 0, 0);
+          doc.setFontSize(9);
+          doc.text('Prepared by:', 40, signatureY);
+          
+          doc.setLineWidth(1);
+          doc.line(40, signatureY + 30, 180, signatureY + 30);
+          
+          doc.setFontSize(10);
+          doc.setFont(undefined, "bold");
+          doc.text(ADVISER_NAME, 110, signatureY + 42, { align: 'center' });
+          doc.setFont(undefined, "normal");
+          doc.setFontSize(9);
+          doc.text(ADVISER_POSITION, 110, signatureY + 54, { align: 'center' });
+        }
+      });
+
+      doc.save(`${FULL_SECTION_NAME}_Masterlist_${SCHOOL_YEAR}.pdf`);
+    }
+
+    // Export individual student PDF
+    async function exportStudentPDF(data) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+
+      // Add letterhead header
+      await addLetterheadHeader(doc, pageWidth);
+
+      // Student header
+      doc.setFontSize(12);
+      doc.setFont(undefined, "bold");
+      doc.text(`${data.student.full_name} — Student Grades`, 40, 120);
+      doc.setFont(undefined, "normal");
+      doc.setFontSize(10);
+      doc.text(`LRN: ${data.student.lrn}`, 40, 136);
+      doc.text(`Sex: ${data.student.gender} | Age: ${data.student.age}`, 40, 150);
+      doc.text(`Quarter: ${data.quarter} | School Year: ${data.school_year}`, 40, 164);
+
+      // Build table body
+      const tableBody = data.grades.map(g => [g.subject, String(g.grade || '—')]);
+      tableBody.push(['Average', String(data.average)]);
+
+      doc.autoTable({
+        head: [['Subject', 'Grade']],
+        body: tableBody,
+        startY: 180,
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [240, 240, 240], textColor: [55, 65, 81] },
+        margin: { bottom: 80 },
+        didDrawCell: function (data) {
+          if (data.section === 'body' && data.row.index === tableBody.length - 1) {
+            const x = data.cell.x;
+            const y = data.cell.y;
+            const w = data.cell.width;
+            const h = data.cell.height;
+            doc.setFillColor(255, 247, 237);
+            doc.rect(x, y, w, h, 'F');
+            doc.setTextColor(122, 42, 42);
+          }
+        },
+        didDrawPage: function() {
+          const currentPage = doc.internal.getNumberOfPages();
+          addLetterheadFooter(doc, pageWidth, pageHeight, currentPage);
+
+          const signatureY = pageHeight - 70;
+          doc.setTextColor(0, 0, 0);
+          doc.setFontSize(9);
+          doc.text('Prepared by:', 40, signatureY);
+          
+          doc.setLineWidth(1);
+          doc.line(40, signatureY + 30, 180, signatureY + 30);
+          
+          doc.setFontSize(10);
+          doc.setFont(undefined, "bold");
+          doc.text(ADVISER_NAME, 110, signatureY + 42, { align: 'center' });
+          doc.setFont(undefined, "normal");
+          doc.setFontSize(9);
+          doc.text(ADVISER_POSITION, 110, signatureY + 54, { align: 'center' });
+        }
+      });
+
+      const safeName = data.student.full_name.replace(/\s+/g, '_').replace(/,/g, '');
+      doc.save(`${safeName}_Grades_${data.quarter}_${data.school_year}.pdf`);
+    }
+
+    // Wire export masterlist button
+    document.getElementById('btn-export-pdf').addEventListener('click', exportMasterlistPDF);
+
+    // Show current date/time
+    (function showGreeting() {
+      const g = document.getElementById('greeting');
+      const d = new Date();
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      const dateStr = d.toLocaleDateString('en-US', options);
+      
+      const hour = d.getHours();
+      let greeting = 'Good morning';
+      if (hour >= 12 && hour < 18) greeting = 'Good afternoon';
+      else if (hour >= 18) greeting = 'Good evening';
+      
+      g.textContent = `${greeting} • ${dateStr}`;
+    })();
+
+    // Initial filter application
+    applyFilters();
+  </script>
+</body>
+</html>

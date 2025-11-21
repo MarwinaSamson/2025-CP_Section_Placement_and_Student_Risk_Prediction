@@ -1,0 +1,1668 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Adviser Interventions — ZNHS WEST</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+  <style>
+    body { font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, Arial; background:#f4f6f8; color:#111827; }
+    main { margin-left: 240px; padding: 28px; transition: margin-left 180ms ease; }
+    @media (max-width:860px) { main { margin-left: 72px; padding:18px } }
+
+    .container { max-width: 1400px; margin: 0 auto; }
+
+    .badge-urgent { background:#dc2626; color:white; padding:4px 10px; border-radius:9999px; font-size:11px; font-weight:600; text-transform:uppercase; }
+    .badge-pending { background:#f59e0b; color:white; padding:4px 10px; border-radius:9999px; font-size:11px; font-weight:600; }
+    .badge-resolved { background:#10b981; color:white; padding:4px 10px; border-radius:9999px; font-size:11px; font-weight:600; }
+    .badge-ongoing { background:#3b82f6; color:white; padding:4px 10px; border-radius:9999px; font-size:11px; font-weight:600; }
+
+    .intervention-card { border: 1px solid #e5e7eb; border-radius: 10px; background: #fff; padding: 16px; transition: all 0.2s; }
+    .intervention-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .intervention-urgent { border-left: 4px solid #dc2626; }
+    .intervention-pending { border-left: 4px solid #f59e0b; }
+    .intervention-resolved { border-left: 4px solid #10b981; }
+    .intervention-ongoing { border-left: 4px solid #3b82f6; }
+
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 60; align-items: center; justify-content: center; }
+    .modal.active { display: flex; }
+    .modal-content { background: white; border-radius: 12px; max-width: 800px; width: 90%; max-height: 90vh; overflow-y: auto; }
+
+    .tab-button { padding: 12px 20px; border-bottom: 2px solid transparent; font-weight: 500; color: #6b7280; transition: all 0.2s; cursor: pointer; }
+    .tab-button.active { color: #9333ea; border-bottom-color: #9333ea; }
+    .tab-button:hover:not(.active) { color: #374151; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    #prediction-content { display: none; }
+    #prediction-content.expanded { display: grid; }
+  </style>
+</head>
+<body>
+  <main>
+    <div id="sidebar-root">
+    {% include 'teacher/adviser/sidebar.html' %}
+  </div>
+    <div class="container">
+      <!-- Header -->
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800">Adviser Interventions</h1>
+          <p class="text-gray-600 mt-1">Escalated cases requiring parent/guardian involvement</p>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-3">
+            <label for="quarter" class="text-sm font-bold text-gray-700">Quarter</label>
+            <select id="quarter" class="w-32 rounded-lg border border-gray-300 bg-white py-2 px-3 text-gray-700 shadow-sm focus:border-rose-600 focus:ring focus:ring-rose-100 transition-all cursor-pointer font-medium">
+              <option value="Q1" selected>Quarter 1</option>
+              <option value="Q2">Quarter 2</option>
+              <option value="Q3">Quarter 3</option>
+              <option value="Q4">Quarter 4</option>
+            </select>
+          </div>
+
+          <button id="createNewBtn" class="inline-flex items-center gap-2 px-4 py-2 bg-rose-600 text-white rounded-lg font-medium hover:bg-rose-700 transition-colors shadow-sm">
+            <i class="fa-solid fa-plus"></i> New Intervention
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        <div class="bg-white border border-gray-200 rounded-xl p-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-sm text-gray-600 mb-1">Total Cases</div>
+              <h3 id="stat-total" class="text-3xl font-bold text-gray-800">0</h3>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-gray-100 grid place-items-center">
+              <i class="fa-solid fa-folder-open text-gray-600 text-xl"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-red-50 border border-red-200 rounded-xl p-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-sm text-red-700 mb-1 font-medium">Urgent</div>
+              <h3 id="stat-urgent" class="text-3xl font-bold text-gray-800">0</h3>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-red-100 grid place-items-center">
+              <i class="fa-solid fa-triangle-exclamation text-red-600 text-xl"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-sm text-blue-700 mb-1 font-medium">Ongoing</div>
+              <h3 id="stat-ongoing" class="text-3xl font-bold text-gray-800">0</h3>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-blue-100 grid place-items-center">
+              <i class="fa-solid fa-clock text-blue-600 text-xl"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-green-50 border border-green-200 rounded-xl p-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-sm text-green-700 mb-1 font-medium">Resolved</div>
+              <h3 id="stat-resolved" class="text-3xl font-bold text-gray-800">0</h3>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-green-100 grid place-items-center">
+              <i class="fa-solid fa-circle-check text-green-600 text-xl"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Prediction Card -->
+        <div class="bg-purple-100 border border-purple-200 rounded-xl p-5 text-center">
+          <div class="flex items-center justify-center gap-2 mb-2">
+            <i class="fa-solid fa-brain text-purple-700"></i>
+            <div class="text-purple-700 font-semibold">AI Prediction</div>
+          </div>
+          <h3 class="text-3xl font-bold text-gray-800">5</h3>
+          <p class="mt-2 text-sm text-gray-700">At Risk of Failing</p>
+          <button id="viewPredictionsBtn" class="mt-3 text-xs px-3 py-1 bg-purple-600 text-white rounded-full hover:bg-purple-700">
+            View Predictions
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter Tabs -->
+      <div class="bg-white border border-gray-200 rounded-lg p-2 mb-6 flex gap-2 overflow-x-auto">
+        <button class="filter-tab active px-4 py-2 rounded-md text-sm font-medium transition-colors" data-filter="all">
+          All Cases
+        </button>
+        <button class="filter-tab px-4 py-2 rounded-md text-sm font-medium transition-colors" data-filter="urgent">
+          <i class="fa-solid fa-triangle-exclamation text-red-600"></i> Urgent
+        </button>
+        <button class="filter-tab px-4 py-2 rounded-md text-sm font-medium transition-colors" data-filter="ongoing">
+          <i class="fa-solid fa-clock text-blue-600"></i> Ongoing
+        </button>
+        <button class="filter-tab px-4 py-2 rounded-md text-sm font-medium transition-colors" data-filter="pending">
+          <i class="fa-solid fa-hourglass-half text-amber-600"></i> Pending
+        </button>
+        <button class="filter-tab px-4 py-2 rounded-md text-sm font-medium transition-colors" data-filter="resolved">
+          <i class="fa-solid fa-circle-check text-green-600"></i> Resolved
+        </button>
+      </div>
+
+      <!-- Interventions List -->
+      <div id="interventionsList" class="space-y-4">
+        <!-- Cards will be rendered here -->
+      </div>
+
+      <!-- AI Prediction Panel -->
+      <section class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border-2 border-purple-200 p-6 mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center">
+              <i class="fa-solid fa-brain text-white"></i>
+            </div>
+            <div>
+              <h3 class="text-lg font-bold text-gray-800">AI-Powered Risk Prediction</h3>
+              <p class="text-sm text-gray-600">Based on Q1 & Q2 performance analysis</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full font-medium">
+              Last Updated: Nov 15, 2025
+            </span>
+            <button id="toggle-predictions" class="text-purple-600 hover:text-purple-800 transition-transform">
+              <i class="fa-solid fa-chevron-down"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Prediction Cards Grid -->
+        <div id="prediction-content" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          <!-- Year Progression Risk Card -->
+          <div class="bg-white rounded-lg border border-red-200 p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <h4 class="font-semibold text-red-700 flex items-center gap-2">
+                  <i class="fa-solid fa-triangle-exclamation"></i>
+                  Year Progression Risk
+                </h4>
+                <p class="text-xs text-gray-600 mt-1">Predicted to not meet grade level requirements</p>
+              </div>
+              <span class="text-2xl font-bold text-red-600">3</span>
+            </div>
+            <div class="space-y-2">
+              <div class="flex items-center justify-between text-sm p-2 bg-red-50 rounded cursor-pointer hover:bg-red-100" onclick="viewStudentPrediction('Cruz, Maria Santos')">
+                <span class="font-medium">Cruz, Maria Santos</span>
+                <span class="text-red-600 font-bold">72% risk</span>
+              </div>
+              <div class="flex items-center justify-between text-sm p-2 bg-red-50 rounded cursor-pointer hover:bg-red-100" onclick="viewStudentPrediction('Reyes, Juan Pedro')">
+                <span class="font-medium">Reyes, Juan Pedro</span>
+                <span class="text-red-600 font-bold">85% risk</span>
+              </div>
+              <div class="flex items-center justify-between text-sm p-2 bg-red-50 rounded cursor-pointer hover:bg-red-100" onclick="viewStudentPrediction('Santos, Ana Maria')">
+                <span class="font-medium">Santos, Ana Maria</span>
+                <span class="text-red-600 font-bold">78% risk</span>
+              </div>
+            </div>
+            <button id="viewAllPredictionsBtn" class="mt-3 w-full text-sm py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-50">
+              View All Predictions →
+            </button>
+          </div>
+
+          <!-- Program Retention Risk Card -->
+          <div class="bg-white rounded-lg border border-yellow-200 p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <h4 class="font-semibold text-yellow-700 flex items-center gap-2">
+                  <i class="fa-solid fa-graduation-cap"></i>
+                  Program Retention Risk (STE)
+                </h4>
+                <p class="text-xs text-gray-600 mt-1">May be moved to regular class</p>
+              </div>
+              <span class="text-2xl font-bold text-yellow-600">2</span>
+            </div>
+            <div class="space-y-2">
+              <div class="flex items-center justify-between text-sm p-2 bg-yellow-50 rounded cursor-pointer hover:bg-yellow-100" onclick="viewStudentPrediction('Garcia, Miguel Angel')">
+                <span class="font-medium">Garcia, Miguel Angel</span>
+                <span class="text-yellow-600 font-bold">68% risk</span>
+              </div>
+              <div class="flex items-center justify-between text-sm p-2 bg-yellow-50 rounded cursor-pointer hover:bg-yellow-100" onclick="viewStudentPrediction('Dela Cruz, Sofia')">
+                <span class="font-medium">Dela Cruz, Sofia</span>
+                <span class="text-yellow-600 font-bold">61% risk</span>
+              </div>
+            </div>
+            <button id="viewProgramPredictionsBtn" class="mt-3 w-full text-sm py-2 border border-yellow-300 text-yellow-700 rounded-lg hover:bg-yellow-50">
+              View Program Predictions →
+            </button>
+          </div>
+
+          <!-- Success Predictions Card -->
+          <div class="bg-white rounded-lg border border-green-200 p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <h4 class="font-semibold text-green-700 flex items-center gap-2">
+                  <i class="fa-solid fa-check-circle"></i>
+                  On Track for Success
+                </h4>
+                <p class="text-xs text-gray-600 mt-1">High probability of passing</p>
+              </div>
+              <span class="text-2xl font-bold text-green-600">27</span>
+            </div>
+            <p class="text-sm text-gray-600">These students show strong indicators for successful year completion.</p>
+            <button id="viewSuccessFactorsBtn" class="mt-3 w-full text-sm py-2 border border-green-300 text-green-700 rounded-lg hover:bg-green-50">
+              View Success Factors →
+            </button>
+          </div>
+
+          <!-- ML Model Info Card -->
+          <div class="bg-white rounded-lg border border-purple-200 p-4">
+            <div class="flex items-start gap-3">
+              <i class="fa-solid fa-circle-info text-purple-600 text-xl"></i>
+              <div class="flex-1">
+                <h4 class="font-semibold text-purple-700 mb-2">How AI Predictions Work</h4>
+                <ul class="text-xs text-gray-600 space-y-1">
+                  <li>• Analyzes Q1 & Q2 grades, attendance, behavior</li>
+                  <li>• Compares with historical student data</li>
+                  <li>• Updates every quarter with new data</li>
+                  <li>• 87% accuracy based on previous years</li>
+                </ul>
+                <div class="mt-3 text-xs text-purple-700 font-medium">
+                  Model Version: v2.1 | Confidence: High
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Empty State -->
+      <div id="emptyState" class="hidden bg-white border border-gray-200 rounded-lg p-12 text-center">
+        <i class="fa-solid fa-inbox text-gray-300 text-6xl mb-4"></i>
+        <h3 class="text-lg font-semibold text-gray-700 mb-2">No interventions yet</h3>
+        <p class="text-gray-500 mb-4">Create your first adviser intervention to get started</p>
+        <button id="emptyCreateBtn" class="inline-flex items-center gap-2 px-4 py-2 bg-rose-600 text-white rounded-lg font-medium hover:bg-rose-700">
+          <i class="fa-solid fa-plus"></i> Create Intervention
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Create/Edit Modal -->
+  <div id="interventionModal" class="modal">
+    <div class="modal-content">
+      <div class="p-6 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <h2 id="modalTitle" class="text-xl font-bold text-gray-800">New Adviser Intervention</h2>
+          <button id="closeModal" class="text-gray-500 hover:text-gray-700">
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <!-- Student Info -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Student Name *</label>
+          <input id="input-student" type="text" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-rose-600 focus:ring focus:ring-rose-100" placeholder="Last Name, First Name M.I.">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Subject(s) Concerned</label>
+            <input id="input-subjects" type="text" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="e.g., Math, English">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Status *</label>
+            <select id="input-status" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+              <option value="urgent">Urgent - Requires Immediate Action</option>
+              <option value="pending">Pending - Awaiting Response</option>
+              <option value="ongoing">Ongoing - In Progress</option>
+              <option value="resolved">Resolved - Case Closed</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Reason for Escalation -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Reason for Escalation *</label>
+          <textarea id="input-reason" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-rose-600 focus:ring focus:ring-rose-100" placeholder="Why was this escalated to adviser level? What subject teacher interventions were attempted?"></textarea>
+        </div>
+
+        <!-- Parent/Guardian Details -->
+        <div class="border-t pt-4">
+          <h3 class="text-sm font-semibold text-gray-700 mb-3">Parent/Guardian Information</h3>
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Parent/Guardian Name *</label>
+              <input id="input-parent-name" type="text" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="Full Name">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Contact Number *</label>
+              <input id="input-parent-contact" type="tel" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="09XX XXX XXXX">
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Contact Method</label>
+            <select id="input-contact-method" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+              <option value="in-person">In-Person Meeting</option>
+              <option value="phone">Phone Call</option>
+              <option value="message">Text/Messenger</option>
+              <option value="letter">Written Letter</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Meeting/Contact Details -->
+        <div class="border-t pt-4">
+          <h3 class="text-sm font-semibold text-gray-700 mb-3">Meeting/Contact Schedule</h3>
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Date Contacted</label>
+              <input id="input-date-contacted" type="date" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Meeting Date (if scheduled)</label>
+              <input id="input-meeting-date" type="date" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Plan -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Action Plan / Agreement *</label>
+          <textarea id="input-action-plan" rows="4" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-rose-600 focus:ring focus:ring-rose-100" placeholder="What agreements were made with the parent/guardian? What steps will be taken?"></textarea>
+        </div>
+
+        <!-- Follow-up Notes -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Additional Notes</label>
+          <textarea id="input-notes" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="Any additional observations or notes"></textarea>
+        </div>
+      </div>
+
+      <div class="p-6 border-t border-gray-200 flex justify-end gap-3">
+        <button id="cancelBtn" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50">
+          Cancel
+        </button>
+        <button id="saveBtn" class="px-4 py-2 bg-rose-600 text-white rounded-lg font-medium hover:bg-rose-700">
+          Save Intervention
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Details Modal with AI Tab -->
+  <div id="viewModal" class="modal">
+    <div class="modal-content">
+      <div class="p-6 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-bold text-gray-800">Intervention Details</h2>
+          <button id="closeViewModal" class="text-gray-500 hover:text-gray-700">
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="border-b border-gray-200 px-6 flex gap-1 overflow-x-auto">
+        <button class="tab-button active" data-tab="details">
+          <i class="fa-solid fa-circle-info mr-1"></i> Details
+        </button>
+        <button class="tab-button" data-tab="ai-insights">
+          <i class="fa-solid fa-brain mr-1"></i> AI Insights
+        </button>
+      </div>
+
+      <div id="viewModalContent" class="p-6">
+        <!-- Details Tab -->
+        <div id="tab-content-details" class="tab-content active">
+          <!-- Original content will be here -->
+        </div>
+
+        <!-- AI Insights Tab -->
+        <div id="tab-content-ai-insights" class="tab-content">
+          <div class="bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg p-6 border-2 border-purple-200">
+            
+            <!-- Prediction Summary -->
+            <div class="flex items-start gap-4 mb-6">
+              <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
+                <span class="text-2xl font-bold text-red-700">85%</span>
+              </div>
+              <div class="flex-1">
+                <h4 class="text-xl font-bold text-red-700 mb-1">High Risk of Not Passing</h4>
+                <p class="text-sm text-gray-600">Based on current Q1 & Q2 performance trends</p>
+                <div class="mt-2 flex items-center gap-2">
+                  <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">
+                    Model Confidence: 87%
+                  </span>
+                  <span class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                    Last Updated: Nov 15, 2025
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Contributing Factors -->
+            <div class="bg-white rounded-lg p-4 mb-4">
+              <h5 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-chart-line text-red-600"></i>
+                Key Risk Factors (Weighted)
+              </h5>
+              <div class="space-y-3">
+                <div>
+                  <div class="flex justify-between text-sm mb-1">
+                    <span class="text-gray-700">Grade Trend (Q1: 70, Q2: 68)</span>
+                    <span class="font-bold text-red-600">40% impact</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-red-600 h-2 rounded-full" style="width: 40%"></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-sm mb-1">
+                    <span class="text-gray-700">Attendance (12 absences)</span>
+                    <span class="font-bold text-yellow-600">25% impact</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-yellow-600 h-2 rounded-full" style="width: 25%"></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-sm mb-1">
+                    <span class="text-gray-700">Missing Work (8 assignments)</span>
+                    <span class="font-bold text-orange-600">20% impact</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-orange-600 h-2 rounded-full" style="width: 20%"></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-sm mb-1">
+                    <span class="text-gray-700">Behavioral Issues (3 incidents)</span>
+                    <span class="font-bold text-amber-600">15% impact</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-amber-600 h-2 rounded-full" style="width: 15%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Comparison with Similar Students -->
+            <div class="bg-white rounded-lg p-4 mb-4">
+              <h5 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-users text-blue-600"></i>
+                Comparison with Similar Student Profiles
+              </h5>
+              <p class="text-sm text-gray-600 mb-3">
+                Based on 127 students with similar Q1-Q2 performance from previous years:
+              </p>
+              <div class="grid grid-cols-3 gap-3">
+                <div class="text-center p-3 bg-red-50 rounded-lg">
+                  <div class="text-2xl font-bold text-red-700">73%</div>
+                  <div class="text-xs text-gray-600 mt-1">Failed Year</div>
+                </div>
+                <div class="text-center p-3 bg-yellow-50 rounded-lg">
+                  <div class="text-2xl font-bold text-yellow-700">18%</div>
+                  <div class="text-xs text-gray-600 mt-1">Barely Passed</div>
+                </div>
+                <div class="text-center p-3 bg-green-50 rounded-lg">
+                  <div class="text-2xl font-bold text-green-700">9%</div>
+                  <div class="text-xs text-gray-600 mt-1">Passed Well</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- AI Recommended Actions -->
+            <div class="bg-purple-50 rounded-lg p-4 border border-purple-200 mb-4">
+              <h5 class="font-semibold text-purple-800 mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-lightbulb text-purple-600"></i>
+                AI-Recommended Immediate Actions
+              </h5>
+              <ul class="space-y-2 text-sm text-gray-700">
+                <li class="flex items-start gap-2">
+                  <i class="fa-solid fa-check text-purple-600 mt-1"></i>
+                  <span><strong>Priority 1:</strong> Schedule parent conference within 1 week</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <i class="fa-solid fa-check text-purple-600 mt-1"></i>
+                  <span><strong>Priority 2:</strong> Implement daily tutoring (3x per week minimum)</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <i class="fa-solid fa-check text-purple-600 mt-1"></i>
+                  <span><strong>Priority 3:</strong> Create makeup plan for missing assignments</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <i class="fa-solid fa-check text-purple-600 mt-1"></i>
+                  <span><strong>Success Factor:</strong> If grade improves to 75+ by Q3, success probability increases to 68%</span>
+                </li>
+              </ul>
+            </div>
+
+            <!-- Program-Specific Prediction -->
+            <div class="bg-white rounded-lg p-4 border-2 border-yellow-300">
+              <h5 class="font-semibold text-yellow-800 mb-2 flex items-center gap-2">
+                <i class="fa-solid fa-graduation-cap text-yellow-600"></i>
+                STE Program Retention Prediction
+              </h5>
+              <div class="flex items-center gap-4">
+                <div class="text-center">
+                  <div class="text-3xl font-bold text-yellow-700">68%</div>
+                  <div class="text-xs text-gray-600">Move to Regular</div>
+                </div>
+                <div class="flex-1 text-sm text-gray-700">
+                  <p>Based on STE program requirements (minimum 80 average), student has high probability of being transferred to regular class if current trend continues.</p>
+                  <div class="mt-2 p-2 bg-yellow-50 rounded text-xs">
+                    <strong>To stay in STE:</strong> Must achieve 80+ average in Q3 and Q4
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="p-6 border-t border-gray-200 flex justify-end gap-3">
+        <button id="closeViewBtn" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- All Predictions Modal -->
+  <div id="allPredictionsModal" class="modal">
+    <div class="modal-content" style="max-width: 1000px;">
+      <div class="p-6 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-xl font-bold text-gray-800">All Year Progression Risk Predictions</h2>
+            <p class="text-sm text-gray-600 mt-1">Students at risk of not passing this school year</p>
+          </div>
+          <button id="closeAllPredictionsModal" class="text-gray-500 hover:text-gray-700">
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="p-6">
+        <!-- Filter by risk level -->
+        <div class="flex gap-2 mb-4 flex-wrap">
+          <button class="risk-filter-btn active px-4 py-2 rounded-lg text-sm font-medium bg-gray-800 text-white" data-risk="all">
+            All (15)
+          </button>
+          <button class="risk-filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-red-100 text-red-700" data-risk="high">
+            High Risk 85-100% (8)
+          </button>
+          <button class="risk-filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-orange-100 text-orange-700" data-risk="medium">
+            Medium Risk 70-84% (5)
+          </button>
+          <button class="risk-filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-yellow-100 text-yellow-700" data-risk="low">
+            Low Risk 60-69% (2)
+          </button>
+        </div>
+
+        <!-- Students Table -->
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Student Name</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Risk Level</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Q1 Avg</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Q2 Avg</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Trend</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Key Issues</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200" id="allPredictionsTable">
+              <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <div class="font-medium text-gray-800">Reyes, Juan Pedro</div>
+                  <div class="text-xs text-gray-500">Grade 10 - STE</div>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <div class="flex items-center gap-2">
+                    <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                      <span class="text-xs font-bold text-red-700">85%</span>
+                    </div>
+                    <span class="text-xs font-semibold text-red-700">High Risk</span>
+                  </div>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">70</td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">68</td>
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <span class="inline-flex items-center text-xs font-medium text-red-600">
+                    <i class="fa-solid fa-arrow-down mr-1"></i> Declining
+                  </span>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="text-xs text-gray-600">
+                    <div>• 12 absences</div>
+                    <div>• 8 missing assignments</div>
+                  </div>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <button class="text-sm text-purple-600 hover:text-purple-800 font-medium" onclick="viewStudentPrediction('Reyes, Juan Pedro')">
+                    View Details →
+                  </button>
+                </td>
+              </tr>
+              <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <div class="font-medium text-gray-800">Santos, Ana Maria</div>
+                  <div class="text-xs text-gray-500">Grade 10 - Regular</div>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <div class="flex items-center gap-2">
+                    <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                      <span class="text-xs font-bold text-red-700">78%</span>
+                    </div>
+                    <span class="text-xs font-semibold text-orange-700">Medium-High</span>
+                  </div>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">73</td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">72</td>
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <span class="inline-flex items-center text-xs font-medium text-orange-600">
+                    <i class="fa-solid fa-arrow-down mr-1"></i> Slight Decline
+                  </span>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="text-xs text-gray-600">
+                    <div>• Poor Math performance</div>
+                    <div>• 5 behavior incidents</div>
+                  </div>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <button class="text-sm text-purple-600 hover:text-purple-800 font-medium" onclick="viewStudentPrediction('Santos, Ana Maria')">
+                    View Details →
+                  </button>
+                </td>
+              </tr>
+              <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <div class="font-medium text-gray-800">Cruz, Maria Santos</div>
+                  <div class="text-xs text-gray-500">Grade 10 - Regular</div>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <div class="flex items-center gap-2">
+                    <div class="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center">
+                      <span class="text-xs font-bold text-orange-700">72%</span>
+                    </div>
+                    <span class="text-xs font-semibold text-orange-700">Medium Risk</span>
+                  </div>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">75</td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700">74</td>
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <span class="inline-flex items-center text-xs font-medium text-gray-600">
+                    <i class="fa-solid fa-minus mr-1"></i> Stable
+                  </span>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="text-xs text-gray-600">
+                    <div>• Inconsistent grades</div>
+                    <div>• 7 absences</div>
+                  </div>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <button class="text-sm text-purple-600 hover:text-purple-800 font-medium" onclick="viewStudentPrediction('Cruz, Maria Santos')">
+                    View Details →
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Bulk Actions -->
+        <div class="mt-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
+          <h4 class="font-semibold text-purple-800 mb-3">Recommended Bulk Actions</h4>
+          <div class="flex gap-3 flex-wrap">
+            <button class="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700">
+              <i class="fa-solid fa-users mr-2"></i> Schedule Parent Meetings (All)
+            </button>
+            <button class="px-4 py-2 bg-white border border-purple-300 text-purple-700 rounded-lg text-sm font-medium hover:bg-purple-50">
+              <i class="fa-solid fa-file-export mr-2"></i> Export Report
+            </button>
+            <button class="px-4 py-2 bg-white border border-purple-300 text-purple-700 rounded-lg text-sm font-medium hover:bg-purple-50">
+              <i class="fa-solid fa-bell mr-2"></i> Send Alerts
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Program Predictions Modal -->
+  <div id="programPredictionsModal" class="modal">
+    <div class="modal-content" style="max-width: 900px;">
+      <div class="p-6 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-xl font-bold text-gray-800">STE Program Retention Predictions</h2>
+            <p class="text-sm text-gray-600 mt-1">Students at risk of losing special program status</p>
+          </div>
+          <button id="closeProgramPredictionsModal" class="text-gray-500 hover:text-gray-700">
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="p-6">
+        <!-- Program Requirements Alert -->
+        <div class="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-lg">
+          <div class="flex">
+            <i class="fa-solid fa-circle-info text-yellow-700 text-xl mr-3"></i>
+            <div>
+              <h4 class="font-semibold text-yellow-800 mb-1">STE Program Requirements</h4>
+              <p class="text-sm text-yellow-700">Students must maintain an 80+ average across all subjects to remain in the STE program. Below are students predicted to fall below this threshold.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Students at Risk -->
+        <div class="space-y-4">
+          <div class="bg-white border border-yellow-200 rounded-lg p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex-1">
+                <div class="flex items-center gap-3 mb-2">
+                  <h3 class="text-lg font-semibold text-gray-800">Garcia, Miguel Angel</h3>
+                  <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold">
+                    68% Risk
+                  </span>
+                </div>
+                <div class="grid grid-cols-3 gap-4 text-sm mb-3">
+                  <div>
+                    <span class="text-gray-600">Current Avg:</span>
+                    <span class="font-bold text-gray-800 ml-1">78.5</span>
+                  </div>
+                  <div>
+                    <span class="text-gray-600">Required:</span>
+                    <span class="font-bold text-yellow-700 ml-1">80+</span>
+                  </div>
+                  <div>
+                    <span class="text-gray-600">Gap:</span>
+                    <span class="font-bold text-red-600 ml-1">-1.5 points</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-gray-50 rounded-lg p-3 mb-3">
+              <h5 class="text-sm font-semibold text-gray-700 mb-2">Subject Performance Breakdown</h5>
+              <div class="space-y-2">
+                <div class="flex items-center justify-between text-sm">
+                  <span class="text-gray-600">Mathematics</span>
+                  <span class="font-medium text-red-600">72 (Below requirement)</span>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                  <span class="text-gray-600">Science</span>
+                  <span class="font-medium text-orange-600">78 (Below requirement)</span>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                  <span class="text-gray-600">English</span>
+                  <span class="font-medium text-green-600">85 (Passing)</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-purple-50 rounded-lg p-3 border border-purple-200">
+              <h5 class="text-sm font-semibold text-purple-800 mb-2">
+                <i class="fa-solid fa-lightbulb mr-1"></i> Retention Strategy
+              </h5>
+              <ul class="text-sm text-gray-700 space-y-1">
+                <li>• Requires +7 points in Math and +2 in Science by end of Q3</li>
+                <li>• Recommend intensive tutoring in Math (priority subject)</li>
+                <li>• Consider peer mentoring from high-performing STE students</li>
+                <li>• Parent conference needed to discuss program expectations</li>
+              </ul>
+            </div>
+
+            <div class="mt-3 flex gap-2">
+              <button class="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700">
+                Create Intervention Plan
+              </button>
+              <button class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50" onclick="viewStudentPrediction('Garcia, Miguel Angel')">
+                View Full Analysis
+              </button>
+            </div>
+          </div>
+
+          <div class="bg-white border border-yellow-200 rounded-lg p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex-1">
+                <div class="flex items-center gap-3 mb-2">
+                  <h3 class="text-lg font-semibold text-gray-800">Dela Cruz, Sofia</h3>
+                  <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold">
+                    61% Risk
+                  </span>
+                </div>
+                <div class="grid grid-cols-3 gap-4 text-sm mb-3">
+                  <div>
+                    <span class="text-gray-600">Current Avg:</span>
+                    <span class="font-bold text-gray-800 ml-1">79.2</span>
+                  </div>
+                  <div>
+                    <span class="text-gray-600">Required:</span>
+                    <span class="font-bold text-yellow-700 ml-1">80+</span>
+                  </div>
+                  <div>
+                    <span class="text-gray-600">Gap:</span>
+                    <span class="font-bold text-red-600 ml-1">-0.8 points</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-gray-50 rounded-lg p-3 mb-3">
+              <h5 class="text-sm font-semibold text-gray-700 mb-2">Subject Performance Breakdown</h5>
+              <div class="space-y-2">
+                <div class="flex items-center justify-between text-sm">
+                  <span class="text-gray-600">Science</span>
+                  <span class="font-medium text-red-600">76 (Below requirement)</span>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                  <span class="text-gray-600">Filipino</span>
+                  <span class="font-medium text-orange-600">78 (Below requirement)</span>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                  <span class="text-gray-600">Mathematics</span>
+                  <span class="font-medium text-green-600">83 (Passing)</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-purple-50 rounded-lg p-3 border border-purple-200">
+              <h5 class="text-sm font-semibold text-purple-800 mb-2">
+                <i class="fa-solid fa-lightbulb mr-1"></i> Retention Strategy
+              </h5>
+              <ul class="text-sm text-gray-700 space-y-1">
+                <li>• Minimal improvement needed (+1 point average)</li>
+                <li>• Focus on Science and Filipino performance</li>
+                <li>• High chance of retention with targeted support</li>
+                <li>• Monitor closely next quarter</li>
+              </ul>
+            </div>
+
+            <div class="mt-3 flex gap-2">
+              <button class="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700">
+                Create Intervention Plan
+              </button>
+              <button class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50" onclick="viewStudentPrediction('Dela Cruz, Sofia')">
+                View Full Analysis
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="mt-6 grid grid-cols-3 gap-4">
+          <div class="bg-red-50 rounded-lg p-4 text-center border border-red-200">
+            <div class="text-2xl font-bold text-red-700">2</div>
+            <div class="text-sm text-gray-600 mt-1">High Risk Students</div>
+          </div>
+          <div class="bg-yellow-50 rounded-lg p-4 text-center border border-yellow-200">
+            <div class="text-2xl font-bold text-yellow-700">1.5</div>
+            <div class="text-sm text-gray-600 mt-1">Avg Points Below Req.</div>
+          </div>
+          <div class="bg-green-50 rounded-lg p-4 text-center border border-green-200">
+            <div class="text-2xl font-bold text-green-700">28</div>
+            <div class="text-sm text-gray-600 mt-1">Students Meeting Req.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Factors Modal -->
+  <div id="successFactorsModal" class="modal">
+    <div class="modal-content" style="max-width: 900px;">
+      <div class="p-6 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-xl font-bold text-gray-800">Success Factors Analysis</h2>
+            <p class="text-sm text-gray-600 mt-1">Students on track for successful year completion</p>
+          </div>
+          <button id="closeSuccessFactorsModal" class="text-gray-500 hover:text-gray-700">
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="p-6">
+        <!-- Success Overview -->
+        <div class="mb-6 p-4 bg-green-50 border-l-4 border-green-400 rounded-lg">
+          <div class="flex">
+            <i class="fa-solid fa-check-circle text-green-700 text-xl mr-3"></i>
+            <div>
+              <h4 class="font-semibold text-green-800 mb-1">27 Students on Track for Success</h4>
+              <p class="text-sm text-green-700">These students show strong indicators based on Q1 & Q2 performance, demonstrating high probability (85%+) of passing this school year.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Key Success Factors -->
+        <div class="mb-6">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Common Success Factors</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-white border border-green-200 rounded-lg p-4">
+              <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                  <i class="fa-solid fa-chart-line text-green-600"></i>
+                </div>
+                <h4 class="font-semibold text-gray-800">Consistent Academic Performance</h4>
+              </div>
+              <ul class="text-sm text-gray-700 space-y-1 ml-13">
+                <li>• Average grade: 85-95 range</li>
+                <li>• Stable or improving trend from Q1 to Q2</li>
+                <li>• Strong performance across all subjects</li>
+              </ul>
+            </div>
+
+            <div class="bg-white border border-green-200 rounded-lg p-4">
+              <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                  <i class="fa-solid fa-calendar-check text-green-600"></i>
+                </div>
+                <h4 class="font-semibold text-gray-800">Excellent Attendance</h4>
+              </div>
+              <ul class="text-sm text-gray-700 space-y-1 ml-13">
+                <li>• 0-3 absences total</li>
+                <li>• Consistent daily participation</li>
+                <li>• No extended illness periods</li>
+              </ul>
+            </div>
+
+            <div class="bg-white border border-green-200 rounded-lg p-4">
+              <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                  <i class="fa-solid fa-clipboard-check text-green-600"></i>
+                </div>
+                <h4 class="font-semibold text-gray-800">Complete Work Submission</h4>
+              </div>
+              <ul class="text-sm text-gray-700 space-y-1 ml-13">
+                <li>• 95-100% assignment completion</li>
+                <li>• On-time submissions</li>
+                <li>• Quality work with effort</li>
+              </ul>
+            </div>
+
+            <div class="bg-white border border-green-200 rounded-lg p-4">
+              <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                  <i class="fa-solid fa-heart text-green-600"></i>
+                </div>
+                <h4 class="font-semibold text-gray-800">Positive Behavior</h4>
+              </div>
+              <ul class="text-sm text-gray-700 space-y-1 ml-13">
+                <li>• No behavioral incidents</li>
+                <li>• Engaged in class activities</li>
+                <li>• Good peer relationships</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Performers -->
+        <div class="mb-6">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Top Performing Students (Sample)</h3>
+          <div class="space-y-3">
+            <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="font-semibold text-gray-800">Fernandez, Isabella Marie</h4>
+                  <div class="text-sm text-gray-600 mt-1">Grade 10 - STE</div>
+                </div>
+                <div class="text-right">
+                  <div class="text-2xl font-bold text-green-600">97%</div>
+                  <div class="text-xs text-gray-600">Success Probability</div>
+                </div>
+              </div>
+              <div class="mt-3 grid grid-cols-4 gap-2 text-center text-sm">
+                <div>
+                  <div class="font-bold text-gray-800">92.5</div>
+                  <div class="text-xs text-gray-600">Avg Grade</div>
+                </div>
+                <div>
+                  <div class="font-bold text-gray-800">0</div>
+                  <div class="text-xs text-gray-600">Absences</div>
+                </div>
+                <div>
+                  <div class="font-bold text-gray-800">100%</div>
+                  <div class="text-xs text-gray-600">Completion</div>
+                </div>
+                <div>
+                  <div class="font-bold text-green-600">
+                    <i class="fa-solid fa-arrow-up"></i> +3.2
+                  </div>
+                  <div class="text-xs text-gray-600">Improvement</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="font-semibold text-gray-800">Tan, Carlos Miguel</h4>
+                  <div class="text-sm text-gray-600 mt-1">Grade 10 - Regular</div>
+                </div>
+                <div class="text-right">
+                  <div class="text-2xl font-bold text-green-600">94%</div>
+                  <div class="text-xs text-gray-600">Success Probability</div>
+                </div>
+              </div>
+              <div class="mt-3 grid grid-cols-4 gap-2 text-center text-sm">
+                <div>
+                  <div class="font-bold text-gray-800">89.8</div>
+                  <div class="text-xs text-gray-600">Avg Grade</div>
+                </div>
+                <div>
+                  <div class="font-bold text-gray-800">1</div>
+                  <div class="text-xs text-gray-600">Absences</div>
+                </div>
+                <div>
+                  <div class="font-bold text-gray-800">98%</div>
+                  <div class="text-xs text-gray-600">Completion</div>
+                </div>
+                <div>
+                  <div class="font-bold text-green-600">
+                    <i class="fa-solid fa-arrow-up"></i> +1.8
+                  </div>
+                  <div class="text-xs text-gray-600">Improvement</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="font-semibold text-gray-800">Lim, Sophia Grace</h4>
+                  <div class="text-sm text-gray-600 mt-1">Grade 10 - STE</div>
+                </div>
+                <div class="text-right">
+                  <div class="text-2xl font-bold text-green-600">91%</div>
+                  <div class="text-xs text-gray-600">Success Probability</div>
+                </div>
+              </div>
+              <div class="mt-3 grid grid-cols-4 gap-2 text-center text-sm">
+                <div>
+                  <div class="font-bold text-gray-800">87.3</div>
+                  <div class="text-xs text-gray-600">Avg Grade</div>
+                </div>
+                <div>
+                  <div class="font-bold text-gray-800">2</div>
+                  <div class="text-xs text-gray-600">Absences</div>
+                </div>
+                <div>
+                  <div class="font-bold text-gray-800">96%</div>
+                  <div class="text-xs text-gray-600">Completion</div>
+                </div>
+                <div>
+                  <div class="font-bold text-gray-600">
+                    <i class="fa-solid fa-minus"></i> 0.0
+                  </div>
+                  <div class="text-xs text-gray-600">Stable</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button class="mt-4 w-full py-2 border border-green-300 text-green-700 rounded-lg text-sm font-medium hover:bg-green-50">
+            View All 27 Successful Students →
+          </button>
+        </div>
+
+        <!-- Insights & Best Practices -->
+        <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+          <h4 class="font-semibold text-purple-800 mb-3">
+            <i class="fa-solid fa-star mr-2"></i>Key Insights for Maintaining Success
+          </h4>
+          <div class="space-y-2 text-sm text-gray-700">
+            <div class="flex items-start gap-2">
+              <i class="fa-solid fa-check text-purple-600 mt-1"></i>
+              <span>Students with consistent grades (±3 points variance) have 95% success rate</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <i class="fa-solid fa-check text-purple-600 mt-1"></i>
+              <span>Perfect attendance correlates with 8-point higher average grades</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <i class="fa-solid fa-check text-purple-600 mt-1"></i>
+              <span>Students completing 95%+ assignments rarely fall below passing</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <i class="fa-solid fa-check text-purple-600 mt-1"></i>
+              <span>Early intervention (Q1-Q2) for struggling students increases success by 40%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="mt-6 flex gap-3 flex-wrap">
+          <button class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700">
+            <i class="fa-solid fa-trophy mr-2"></i> Send Recognition Certificates
+          </button>
+          <button class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50">
+            <i class="fa-solid fa-file-export mr-2"></i> Export Success Report
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed right-4 bottom-6 hidden z-50"></div>
+
+  <script>
+    const STORAGE_KEY = 'adviser_interventions_v1';
+    let currentFilter = 'all';
+    let editingId = null;
+
+    function escapeHtml(str) {
+      if (!str && str !== 0) return '';
+      return String(str).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+    }
+
+    function loadInterventions() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch(e) {
+        return [];
+      }
+    }
+
+    function saveInterventions(list) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    }
+
+    function showToast(msg, isError = false) {
+      const t = document.getElementById('toast');
+      t.innerHTML = `<div class="px-4 py-3 rounded-lg shadow-lg ${isError ? 'bg-red-600 text-white' : 'bg-gray-800 text-white'} font-medium">${escapeHtml(msg)}</div>`;
+      t.classList.remove('hidden');
+      setTimeout(() => { 
+        t.classList.add('hidden'); 
+        t.innerHTML = ''; 
+      }, 3000);
+    }
+
+    function getStatusClass(status) {
+      const map = {
+        urgent: 'intervention-urgent',
+        pending: 'intervention-pending',
+        ongoing: 'intervention-ongoing',
+        resolved: 'intervention-resolved'
+      };
+      return map[status] || '';
+    }
+
+    function getStatusBadge(status) {
+      const map = {
+        urgent: '<span class="badge-urgent">Urgent</span>',
+        pending: '<span class="badge-pending">Pending</span>',
+        ongoing: '<span class="badge-ongoing">Ongoing</span>',
+        resolved: '<span class="badge-resolved">Resolved</span>'
+      };
+      return map[status] || '';
+    }
+
+    function renderInterventions() {
+      const container = document.getElementById('interventionsList');
+      const emptyState = document.getElementById('emptyState');
+      const quarter = document.getElementById('quarter').value;
+      
+      let list = loadInterventions().filter(i => i.quarter === quarter);
+      
+      if (currentFilter !== 'all') {
+        list = list.filter(i => i.status === currentFilter);
+      }
+
+      if (list.length === 0) {
+        container.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        updateStats();
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      
+      container.innerHTML = list.map(item => `
+        <div class="intervention-card ${getStatusClass(item.status)}">
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-2">
+                <h3 class="text-lg font-semibold text-gray-800">${escapeHtml(item.student)}</h3>
+                ${getStatusBadge(item.status)}
+              </div>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600 mb-3">
+                <div><i class="fa-solid fa-book text-gray-400"></i> Subjects: <span class="font-medium">${escapeHtml(item.subjects || 'Not specified')}</span></div>
+                <div><i class="fa-solid fa-user text-gray-400"></i> Parent: <span class="font-medium">${escapeHtml(item.parentName)}</span></div>
+                <div><i class="fa-solid fa-phone text-gray-400"></i> Contact: <span class="font-medium">${escapeHtml(item.parentContact)}</span></div>
+                <div><i class="fa-solid fa-calendar text-gray-400"></i> Contacted: <span class="font-medium">${escapeHtml(item.dateContacted || 'Not yet')}</span></div>
+              </div>
+
+              <div class="text-sm text-gray-700 mb-3">
+                <strong>Reason:</strong> ${escapeHtml(item.reason).substring(0, 120)}${item.reason.length > 120 ? '...' : ''}
+              </div>
+
+              <!-- AI Risk Indicators -->
+              <div class="flex items-center gap-3 mt-3 pt-3 border-t border-gray-100">
+                <div class="flex items-center gap-2">
+                  <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                    <span class="text-xs font-bold text-red-700">85%</span>
+                  </div>
+                  <div class="text-xs">
+                    <div class="font-semibold text-red-700">High Risk</div>
+                    <div class="text-gray-500">Fail prediction</div>
+                  </div>
+                </div>
+                <div class="h-8 w-px bg-gray-200"></div>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                  <i class="fa-solid fa-arrow-down mr-1"></i> 68% to Regular
+                </span>
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <button class="view-btn inline-flex items-center gap-2 px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50" data-id="${item.id}">
+                <i class="fa-solid fa-eye text-rose-600"></i> View
+              </button>
+              <button class="edit-btn inline-flex items-center gap-2 px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50" data-id="${item.id}">
+                <i class="fa-solid fa-pen text-blue-600"></i> Edit
+              </button>
+              <button class="delete-btn inline-flex items-center gap-2 px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-red-50 text-red-600" data-id="${item.id}">
+                <i class="fa-solid fa-trash"></i> Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      attachCardHandlers();
+      updateStats();
+    }
+
+    function attachCardHandlers() {
+      document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.onclick = () => viewIntervention(btn.dataset.id);
+      });
+
+      document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.onclick = () => editIntervention(btn.dataset.id);
+      });
+
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.onclick = () => deleteIntervention(btn.dataset.id);
+      });
+    }
+
+    function updateStats() {
+      const quarter = document.getElementById('quarter').value;
+      const list = loadInterventions().filter(i => i.quarter === quarter);
+      
+      document.getElementById('stat-total').textContent = list.length;
+      document.getElementById('stat-urgent').textContent = list.filter(i => i.status === 'urgent').length;
+      document.getElementById('stat-ongoing').textContent = list.filter(i => i.status === 'ongoing').length;
+      document.getElementById('stat-resolved').textContent = list.filter(i => i.status === 'resolved').length;
+    }
+
+    function openModal(isEdit = false) {
+      const modal = document.getElementById('interventionModal');
+      const title = document.getElementById('modalTitle');
+      
+      title.textContent = isEdit ? 'Edit Adviser Intervention' : 'New Adviser Intervention';
+      modal.classList.add('active');
+      
+      if (!isEdit) {
+        clearForm();
+        document.getElementById('input-date-contacted').value = new Date().toISOString().split('T')[0];
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('interventionModal').classList.remove('active');
+      editingId = null;
+      clearForm();
+    }
+
+    function clearForm() {
+      document.getElementById('input-student').value = '';
+      document.getElementById('input-subjects').value = '';
+      document.getElementById('input-status').value = 'urgent';
+      document.getElementById('input-reason').value = '';
+      document.getElementById('input-parent-name').value = '';
+      document.getElementById('input-parent-contact').value = '';
+      document.getElementById('input-contact-method').value = 'in-person';
+      document.getElementById('input-date-contacted').value = '';
+      document.getElementById('input-meeting-date').value = '';
+      document.getElementById('input-action-plan').value = '';
+      document.getElementById('input-notes').value = '';
+    }
+
+    function saveIntervention() {
+      const student = document.getElementById('input-student').value.trim();
+      const parentName = document.getElementById('input-parent-name').value.trim();
+      const parentContact = document.getElementById('input-parent-contact').value.trim();
+      const reason = document.getElementById('input-reason').value.trim();
+      const actionPlan = document.getElementById('input-action-plan').value.trim();
+
+      if (!student || !parentName || !parentContact || !reason || !actionPlan) {
+        showToast('Please fill in all required fields', true);
+        return;
+      }
+
+      const intervention = {
+        id: editingId || 'int_' + Date.now(),
+        student,
+        subjects: document.getElementById('input-subjects').value.trim(),
+        status: document.getElementById('input-status').value,
+        reason,
+        parentName,
+        parentContact,
+        contactMethod: document.getElementById('input-contact-method').value,
+        dateContacted: document.getElementById('input-date-contacted').value,
+        meetingDate: document.getElementById('input-meeting-date').value,
+        actionPlan,
+        notes: document.getElementById('input-notes').value.trim(),
+        quarter: document.getElementById('quarter').value,
+        createdAt: editingId ? null : new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      const list = loadInterventions();
+      
+      if (editingId) {
+        const index = list.findIndex(i => i.id === editingId);
+        if (index !== -1) {
+          intervention.createdAt = list[index].createdAt;
+          list[index] = intervention;
+        }
+        showToast('Intervention updated successfully');
+      } else {
+        list.unshift(intervention);
+        showToast('Intervention created successfully');
+      }
+
+      saveInterventions(list);
+      closeModal();
+      renderInterventions();
+    }
+
+    function editIntervention(id) {
+      const list = loadInterventions();
+      const item = list.find(i => i.id === id);
+      
+      if (!item) return;
+
+      editingId = id;
+      
+      document.getElementById('input-student').value = item.student;
+      document.getElementById('input-subjects').value = item.subjects || '';
+      document.getElementById('input-status').value = item.status;
+      document.getElementById('input-reason').value = item.reason;
+      document.getElementById('input-parent-name').value = item.parentName;
+      document.getElementById('input-parent-contact').value = item.parentContact;
+      document.getElementById('input-contact-method').value = item.contactMethod;
+      document.getElementById('input-date-contacted').value = item.dateContacted || '';
+      document.getElementById('input-meeting-date').value = item.meetingDate || '';
+      document.getElementById('input-action-plan').value = item.actionPlan;
+      document.getElementById('input-notes').value = item.notes || '';
+
+      openModal(true);
+    }
+
+    function deleteIntervention(id) {
+      if (!confirm('Are you sure you want to delete this intervention? This action cannot be undone.')) {
+        return;
+      }
+
+      let list = loadInterventions();
+      list = list.filter(i => i.id !== id);
+      saveInterventions(list);
+      renderInterventions();
+      showToast('Intervention deleted');
+    }
+
+    function viewIntervention(id) {
+      const list = loadInterventions();
+      const item = list.find(i => i.id === id);
+      
+      if (!item) return;
+
+      const detailsContent = `
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-gray-800">${escapeHtml(item.student)}</h3>
+            ${getStatusBadge(item.status)}
+          </div>
+
+          <div class="border-t pt-4">
+            <h4 class="text-sm font-semibold text-gray-700 mb-2">Basic Information</h4>
+            <div class="grid grid-cols-2 gap-3 text-sm">
+              <div><span class="text-gray-600">Subjects:</span> <span class="font-medium">${escapeHtml(item.subjects || 'Not specified')}</span></div>
+              <div><span class="text-gray-600">Quarter:</span> <span class="font-medium">${escapeHtml(item.quarter)}</span></div>
+            </div>
+          </div>
+
+          <div class="border-t pt-4">
+            <h4 class="text-sm font-semibold text-gray-700 mb-2">Parent/Guardian Details</h4>
+            <div class="grid grid-cols-2 gap-3 text-sm">
+              <div><span class="text-gray-600">Name:</span> <span class="font-medium">${escapeHtml(item.parentName)}</span></div>
+              <div><span class="text-gray-600">Contact:</span> <span class="font-medium">${escapeHtml(item.parentContact)}</span></div>
+              <div><span class="text-gray-600">Method:</span> <span class="font-medium">${escapeHtml(item.contactMethod)}</span></div>
+              <div><span class="text-gray-600">Date Contacted:</span> <span class="font-medium">${escapeHtml(item.dateContacted || 'Not yet')}</span></div>
+              <div><span class="text-gray-600">Meeting Date:</span> <span class="font-medium">${escapeHtml(item.meetingDate || 'Not scheduled')}</span></div>
+            </div>
+          </div>
+
+          <div class="border-t pt-4">
+            <h4 class="text-sm font-semibold text-gray-700 mb-2">Reason for Escalation</h4>
+            <p class="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg">${escapeHtml(item.reason)}</p>
+          </div>
+
+          <div class="border-t pt-4">
+            <h4 class="text-sm font-semibold text-gray-700 mb-2">Action Plan / Agreement</h4>
+            <p class="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg">${escapeHtml(item.actionPlan)}</p>
+          </div>
+
+          ${item.notes ? `
+          <div class="border-t pt-4">
+            <h4 class="text-sm font-semibold text-gray-700 mb-2">Additional Notes</h4>
+            <p class="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg">${escapeHtml(item.notes)}</p>
+          </div>
+          ` : ''}
+
+          <div class="border-t pt-4 text-xs text-gray-500">
+            <div>Created: ${new Date(item.createdAt).toLocaleString()}</div>
+            ${item.updatedAt ? `<div>Last Updated: ${new Date(item.updatedAt).toLocaleString()}</div>` : ''}
+          </div>
+        </div>
+      `;
+
+      document.getElementById('tab-content-details').innerHTML = detailsContent;
+      document.getElementById('viewModal').classList.add('active');
+      
+      // Reset to first tab
+      switchTab('details');
+    }
+
+    function switchTab(tabName) {
+      // Remove active from all tabs and content
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+
+      // Add active to selected tab and content
+      const tabButton = document.querySelector(`[data-tab="${tabName}"]`);
+      const tabContent = document.getElementById(`tab-content-${tabName}`);
+      
+      if (tabButton) tabButton.classList.add('active');
+      if (tabContent) tabContent.classList.add('active');
+    }
+
+    function viewStudentPrediction(studentName) {
+      showToast(`Viewing prediction for ${studentName}`);
+    }
+
+    // Event Listeners
+    document.getElementById('createNewBtn').onclick = () => openModal();
+    document.getElementById('emptyCreateBtn').onclick = () => openModal();
+    document.getElementById('closeModal').onclick = closeModal;
+    document.getElementById('cancelBtn').onclick = closeModal;
+    document.getElementById('saveBtn').onclick = saveIntervention;
+    
+    document.getElementById('closeViewModal').onclick = () => {
+      document.getElementById('viewModal').classList.remove('active');
+    };
+    document.getElementById('closeViewBtn').onclick = () => {
+      document.getElementById('viewModal').classList.remove('active');
+    };
+
+    // Tab switching in view modal
+    document.querySelectorAll('.tab-button').forEach(btn => {
+      btn.onclick = () => switchTab(btn.dataset.tab);
+    });
+
+    // Toggle predictions panel
+    document.getElementById('toggle-predictions').onclick = () => {
+      const content = document.getElementById('prediction-content');
+      const icon = document.querySelector('#toggle-predictions i');
+      
+      if (content.classList.contains('expanded')) {
+        content.classList.remove('expanded');
+        icon.classList.remove('fa-chevron-up');
+        icon.classList.add('fa-chevron-down');
+      } else {
+        content.classList.add('expanded');
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-up');
+      }
+    };
+
+    // View predictions button
+    document.getElementById('viewPredictionsBtn').onclick = () => {
+      const content = document.getElementById('prediction-content');
+      const icon = document.querySelector('#toggle-predictions i');
+      
+      if (!content.classList.contains('expanded')) {
+        content.classList.add('expanded');
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-up');
+      }
+      
+      document.querySelector('section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    // All Predictions Modal handlers
+    document.getElementById('viewAllPredictionsBtn').onclick = () => {
+      document.getElementById('allPredictionsModal').classList.add('active');
+    };
+
+    document.getElementById('closeAllPredictionsModal').onclick = () => {
+      document.getElementById('allPredictionsModal').classList.remove('active');
+    };
+
+    // Risk filter buttons
+    document.querySelectorAll('.risk-filter-btn').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.risk-filter-btn').forEach(b => {
+          b.classList.remove('active', 'bg-gray-800', 'text-white');
+        });
+        btn.classList.add('active', 'bg-gray-800', 'text-white');
+        showToast(`Filtering by: ${btn.textContent.trim()}`);
+      };
+    });
+
+    // Program Predictions Modal handlers
+    document.getElementById('viewProgramPredictionsBtn').onclick = () => {
+      document.getElementById('programPredictionsModal').classList.add('active');
+    };
+
+    document.getElementById('closeProgramPredictionsModal').onclick = () => {
+      document.getElementById('programPredictionsModal').classList.remove('active');
+    };
+
+    // Success Factors Modal handlers
+    document.getElementById('viewSuccessFactorsBtn').onclick = () => {
+      document.getElementById('successFactorsModal').classList.add('active');
+    };
+
+    document.getElementById('closeSuccessFactorsModal').onclick = () => {
+      document.getElementById('successFactorsModal').classList.remove('active');
+    };
+
+    // Close modals on outside click
+    document.getElementById('allPredictionsModal').onclick = (e) => {
+      if (e.target.id === 'allPredictionsModal') {
+        document.getElementById('allPredictionsModal').classList.remove('active');
+      }
+    };
+
+    document.getElementById('programPredictionsModal').onclick = (e) => {
+      if (e.target.id === 'programPredictionsModal') {
+        document.getElementById('programPredictionsModal').classList.remove('active');
+      }
+    };
+
+    document.getElementById('successFactorsModal').onclick = (e) => {
+      if (e.target.id === 'successFactorsModal') {
+        document.getElementById('successFactorsModal').classList.remove('active');
+      }
+    };
+
+    // Filter tabs
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+      tab.onclick = () => {
+        document.querySelectorAll('.filter-tab').forEach(t => {
+          t.classList.remove('active', 'bg-rose-600', 'text-white');
+          t.classList.add('text-gray-600', 'hover:bg-gray-100');
+        });
+        
+        tab.classList.add('active', 'bg-rose-600', 'text-white');
+        tab.classList.remove('text-gray-600', 'hover:bg-gray-100');
+        
+        currentFilter = tab.dataset.filter;
+        renderInterventions();
+      };
+    });
+
+    // Quarter change
+    document.getElementById('quarter').onchange = renderInterventions;
+
+    // Close modals on outside click
+    document.getElementById('interventionModal').onclick = (e) => {
+      if (e.target.id === 'interventionModal') closeModal();
+    };
+
+    document.getElementById('viewModal').onclick = (e) => {
+      if (e.target.id === 'viewModal') {
+        document.getElementById('viewModal').classList.remove('active');
+      }
+    };
+
+    // Initial render
+    renderInterventions();
+
+    // Set active state for first tab
+    document.querySelector('.filter-tab[data-filter="all"]').classList.add('bg-rose-600', 'text-white');
+  </script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!-- sidebar.html -->
+<!-- Tailwind + Font Awesome -->
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.1/dist/tailwind.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+{% load static %}
+<style>
+  :root {
+    --crimson: #8e1414;
+    --crimson-dark: #7a1010;
+  }
+
+  body { font-family: 'Inter', system-ui, sans-serif; }
+
+  /* gentle glassy background for the sidebar */
+  .sidebar-glass {
+    background: linear-gradient(180deg, var(--crimson) 0%, var(--crimson-dark) 100%);
+    backdrop-filter: blur(8px);
+  }
+</style>
+
+<aside class="sidebar fixed top-0 left-0 h-screen w-60 sidebar-glass text-white p-4 flex flex-col justify-between shadow-lg" aria-label="Teacher portal sidebar">
+  <div>
+    <!-- Header -->
+    <div class="flex items-center gap-3 pb-4 border-b border-white/10">
+      <div class="school-logo w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center overflow-hidden">
+        <img src="Pictures/west_logo.jpg" alt="Logo" class="w-full h-full object-cover"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+        <div class="school-initials hidden font-bold text-lg">ZW</div>
+      </div>
+      <div>
+        <h2 class="font-semibold text-base leading-tight">ZNHS WEST</h2>
+        <p class="text-xs text-white/70 font-medium">Teacher Portal</p>
+      </div>
+    </div>
+
+    <!-- NAV -->
+    <nav class="mt-4 space-y-2" role="navigation" aria-label="Main navigation">
+      <!-- Dashboard -->
+      <a href="{% url 'teacher:bothaccess-dashboard' %}"
+         id="nav-dashboard"
+         class="nav-item flex items-center gap-3 p-2.5 rounded-lg transition hover:bg-white/10 text-white font-semibold text-sm">
+        <span class="w-9 h-9 flex items-center justify-center rounded-xl bg-white/10 text-white transition-all duration-200">
+          <i class="fa-solid fa-house"></i>
+        </span>
+        <span>Dashboard</span>
+      </a>
+
+      <!-- Adviser View (always expanded) -->
+      <div class="relative">
+        <a href="{% url 'teacher:adviser-view' %}" class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-white/10 transition nav-item text-white font-semibold text-sm">
+          <span class="w-9 h-9 flex items-center justify-center rounded-xl bg-white/10 text-white transition-all duration-200">
+            <i class="fa-solid fa-user-graduate"></i>
+          </span>
+          <span class="flex-1">Class Advisory</span>
+        </a>
+
+        <!-- Adviser sub-links (always visible) -->
+        <div class="ml-11 mt-2 flex flex-col space-y-1" aria-hidden="false">
+          <a href="{% url 'teacher:adviser-masterlist' %}" class="sub-link flex items-center gap-2 p-2 rounded-md text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium">
+            <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10"><i class="fa-solid fa-users"></i></span>
+            <span>Masterlist</span>
+          </a>
+          {% comment %} <a href="{% url 'teacher:adviser-attendance' %}" class="sub-link flex items-center gap-2 p-2 rounded-md text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium">
+            <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10"><i class="fa-regular fa-calendar-check"></i></span>
+            <span>Attendance</span>
+          </a> {% endcomment %}
+          <a href="{% url 'teacher:adviser-reports' %}" class="sub-link flex items-center gap-2 p-2 rounded-md text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium">
+            <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10"><i class="fa-solid fa-chart-simple"></i></span>
+            <span>Reports</span>
+          </a>
+          <a href="{% url 'teacher:adviser-adviser-intervention' %}" class="sub-link flex items-center gap-2 p-2 rounded-md text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium">
+            <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10"><i class="fa-solid fa-chart-simple"></i></span>
+            <span>Adviser Intervention</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- separator line between Adviser and Subject Teacher -->
+      <div class="my-3 border-t border-white/20"></div>
+
+      <!-- Subject Teacher View (always expanded) -->
+      <div class="relative">
+        <a href="{% url 'teacher:adviser-subview' %}" class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-white/10 transition nav-item text-white font-semibold text-sm">
+          <span class="w-9 h-9 flex items-center justify-center rounded-xl bg-white/10 text-white transition-all duration-200">
+            <i class="fa-solid fa-book-open"></i>
+          </span>
+          <span class="flex-1">Subject Teacher View</span>
+        </a>
+
+        <!-- Subject sub-links (always visible) -->
+        <div class="ml-11 mt-2 flex flex-col space-y-1" aria-hidden="false">
+          <a href="{% url 'teacher:adviser-classrecord' %}" class="sub-link flex items-center gap-2 p-2 rounded-md text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium">
+            <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10"><i class="fa-solid fa-file-pen"></i></span>
+            <span>Class Record</span>
+          </a>
+          <a href="{% url 'teacher:adviser-attendance' %}" class="sub-link flex items-center gap-2 p-2 rounded-md text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium">
+            <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10"><i class="fa-regular fa-calendar-check"></i></span>
+            <span>Attendance</span>
+          </a>
+          <a href="{% url 'teacher:adviser-intervention' %}" class="sub-link flex items-center gap-2 p-2 rounded-md text-white/70 hover:bg-white/10 hover:text-white text-sm font-medium">
+            <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10"><i class="fa-solid fa-hands-holding-child"></i></span>
+            <span>Intervention</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Settings -->
+      <a href="{% url 'teacher:adviser-settings' %}" id="nav-settings" class="nav-item flex items-center gap-3 p-2.5 rounded-lg transition hover:bg-white/10 text-white font-semibold text-sm">
+        <span class="w-9 h-9 flex items-center justify-center rounded-xl bg-white/10 text-white"><i class="fa-solid fa-gear"></i></span>
+        <span>Settings</span>
+      </a>
+    </nav>
+  </div>
+
+  <!-- Footer -->
+  <div class="pt-4 border-t border-white/10">
+    <a href="/logout" class="logout flex items-center gap-3 p-2.5 rounded-lg transition hover:bg-white/10 text-white font-semibold text-sm">
+      <span class="w-9 h-9 flex items-center justify-center rounded-xl bg-white/10 text-white"><i class="fa-solid fa-right-from-bracket"></i></span>
+      <span>Logout</span>
+    </a>
+  </div>
+</aside>
+
+<script>
+  (function () {
+    const sidebar = document.querySelector('.sidebar');
+    const items = Array.from(sidebar.querySelectorAll('.nav-item, .sub-link'));
+
+    // Clicking nav items / sub-links: set active class
+    items.forEach(el => {
+      el.addEventListener('click', (e) => {
+        // Visual active update (do not prevent navigation)
+        items.forEach(x => x.classList.remove('active', 'bg-white/10', 'text-white'));
+        el.classList.add('active', 'bg-white/10', 'text-white');
+      });
+    });
+
+    // On load: ensure Dashboard is active by default if nothing else
+    (function initDefault() {
+      if (!sidebar.querySelector('.nav-item.active, .sub-link.active')) {
+        const dash = sidebar.querySelector('#nav-dashboard');
+        if (dash) dash.classList.add('active', 'bg-white/10', 'text-white');
+      }
+    })();
+
+    // expose a tiny API for dev/testing
+    window.__sidebarApi = { items };
+  })();
+</script>

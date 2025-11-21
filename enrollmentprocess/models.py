@@ -77,7 +77,7 @@ class Student(models.Model):
 
     class Meta:
         verbose_name_plural = "Students"
-
+        
 
 class StudentNonAcademic(models.Model):
     student = models.OneToOneField(Student, on_delete=models.CASCADE, primary_key=True, verbose_name="Student")

@@ -1,0 +1,1611 @@
+<!doctype html>
+{% load static %}
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>SF2 — Daily Attendance</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+  <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    .loader { border: 5px solid #f3f3f3; border-radius: 50%; border-top: 5px solid #3b82f6; width: 40px; height: 40px; animation: spin 1s linear infinite; display:none; }
+    @keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }
+    .focus-ring:focus { outline: none; box-shadow: 0 0 0 4px rgba(59,130,246,0.12); border-color: #60a5fa; }
+    @media print {
+      .no-print { display: none !important; }
+      body { background: #fff; }
+    }
+    .hdr-label { width: 150px; min-width:150px; }
+    input[type="text"], input[type="month"], select { height: 40px; }
+    
+    /* Warning styles for at-risk students */
+    .student-at-risk { background-color: #fef3c7 !important; }
+    .student-dropout { background-color: #fee2e2 !important; }
+    .warning-badge {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-weight: 600;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-100 text-slate-800 antialiased">
+  <!-- Include sidebar -->
+  <div id="sidebar-root">
+    {% include 'teacher/adviser/sidebar.html' %}
+  </div>
+
+  <div class="max-w-screen-2xl mx-auto p-6">
+    <div class="flex items-center justify-between mb-4 gap-4">
+      <div class="flex items-center gap-4">
+        <button onclick="history.back()" class="no-print inline-flex items-center gap-2 text-red-700 hover:text-red-900 rounded px-3 py-2 bg-white border shadow-sm">
+          <i class="fa-solid fa-arrow-left"></i>
+          Back
+        </button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <div class="lg:col-span-9 space-y-6">
+
+        <div class="bg-white rounded-xl shadow-sm p-6 space-y-6">
+            
+          <div class="flex justify-center pl-2">
+            <div class="text-center">
+              <h1 class="text-lg sm:text-xl font-semibold leading-tight">
+                SF2 — Daily Attendance
+              </h1>
+              <p class="text-xs sm:text-sm text-slate-500">
+                School Form 2 - Daily Attendance Report of Learners
+              </p>
+            </div>
+          </div>
+
+          <!-- Header Information Form -->
+          <div class="border rounded-lg p-4 bg-white">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              
+              <div class="space-y-3">
+                <div class="flex items-center">
+                  <label class="hdr-label font-semibold text-sm text-slate-700">School Name</label>
+                  <input id="schoolName" class="flex-1 border border-slate-300 rounded px-3 py-2 text-sm focus-ring" value="Cagayan de Oro National High School">
+                </div>
+                
+                <div class="flex items-center">
+                  <label class="hdr-label font-semibold text-sm text-slate-700">School ID</label>
+                  <input id="schoolId" class="flex-1 border border-slate-300 rounded px-3 py-2 text-sm focus-ring" value="304144">
+                </div>
+
+                <div class="flex items-center">
+                  <label class="hdr-label font-semibold text-sm text-slate-700">School Year</label>
+                  <input id="schoolYear" readonly class="flex-1 border border-slate-300 rounded px-3 py-2 text-sm focus-ring bg-gray-50" value="{{ current_school_year.name }}">
+                  <input type="hidden" id="schoolYearId" value="{{ current_school_year.id }}">
+                </div>
+              </div>
+
+              <div class="space-y-3">
+                <div class="flex items-center">
+                  <label class="hdr-label font-semibold text-sm text-slate-700">Section</label>
+                  <select id="section" class="flex-1 border border-slate-300 rounded px-3 py-2 text-sm focus-ring bg-white">
+                    <option value="">Select Section...</option>
+                    {% for sec in sections %}
+                    <option value="{{ sec.id }}" data-program="{{ sec.program }}">{{ sec.name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="flex items-center">
+                  <label class="hdr-label font-semibold text-sm text-slate-700">Grade Level</label>
+                  <input id="gradeLevel" readonly class="flex-1 border border-slate-300 rounded px-3 py-2 text-sm focus-ring bg-gray-50" value="">
+                </div>
+                
+                <div class="flex items-center">
+                  <label class="hdr-label font-semibold text-sm text-slate-700">Quarter</label>
+                  <select id="reportQuarter" class="flex-1 border border-slate-300 rounded px-3 py-2 text-sm focus-ring bg-white">
+                    <option value="">Select Quarter...</option>
+                    <option value="Q1">Quarter 1</option>
+                    <option value="Q2">Quarter 2</option>
+                    <option value="Q3">Quarter 3</option>
+                    <option value="Q4">Quarter 4</option>
+                  </select>
+                </div>
+
+                <div class="flex items-center">
+                  <label class="hdr-label font-semibold text-sm text-slate-700">Month</label>
+                  <select id="reportMonth" class="flex-1 border border-slate-300 rounded px-3 py-2 text-sm focus-ring bg-white" disabled>
+                    <option value="">Select month...</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex justify-end items-center gap-2 no-print">
+            <button id="printBtn" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded shadow-sm text-sm">
+              <i class="fa-solid fa-print"></i> Print
+            </button>
+            <button id="saveBtn" class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow-sm text-sm" disabled>
+              <i class="fa-solid fa-save"></i> Save
+            </button>
+            <button id="exportExcelBtn" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded shadow-sm text-sm" disabled>
+              <i class="fa-solid fa-file-excel"></i> Download SF2
+            </button>
+          </div>
+
+          <!-- Attendance Table -->
+          <div class="overflow-auto rounded-lg border bg-white shadow-sm">
+            <table id="attendanceTable" class="min-w-full table-auto text-xs"></table>
+          </div>
+
+          <!-- Loader -->
+          <div class="flex items-center justify-center">
+            <div id="loader" class="loader"></div>
+          </div>
+
+        </div>
+
+        <!-- Guidelines and Summary -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+          <div class="lg:col-span-4 bg-blue-50 border-l-4 border-blue-400 p-4 rounded-md h-full">
+            <div class="flex items-center gap-2 mb-2">
+              <i class="fa-solid fa-circle-info text-blue-600"></i>
+              <h3 class="font-semibold text-blue-800">Guidelines</h3>
+            </div>
+            <ul class="list-disc pl-5 text-sm text-slate-700 space-y-1 leading-snug">
+              <li>Mark attendance daily using allowed codes:</li>
+              <li><strong>Blank</strong> = Present, <strong>X</strong> or <strong>E</strong> = Absent, <strong>T</strong> = Tardy</li>
+              <li>Invalid letters will trigger a warning and will be cleared.</li>
+              <li>To compute percentage: <em>(Total Daily Attendance / (No. of days × Enrolment)) × 100</em></li>
+              <li>For dropped/transferred indicate in Remarks (e.g. "dropped - a. domestic", "transferred out: Other School").</li>
+              <li><strong class="text-yellow-700">⚠️ Students with 5-6 absences</strong> will be flagged as at-risk</li>
+              <li><strong class="text-red-700">⚠️ Students with 7+ absences</strong> will be subject to dropout (unless excused)</li>
+            </ul>
+          </div>
+
+          <div class="lg:col-span-8 bg-white border rounded-md p-4 shadow-sm h-full">
+            <div class="flex items-center gap-2 mb-3">
+              <i class="fa-solid fa-chart-pie text-slate-600"></i>
+              <h3 class="font-semibold">Monthly Summary</h3>
+            </div>
+
+            <div class="overflow-auto">
+              <table class="w-full text-sm table-auto">
+                <thead>
+                  <tr class="bg-slate-100">
+                    <th class="text-left px-2 py-2">Item</th>
+                    <th class="px-2 py-2 text-center">M</th>
+                    <th class="px-2 py-2 text-center">F</th>
+                    <th class="px-2 py-2 text-center">TOTAL</th>
+                  </tr>
+                </thead>
+                <tbody class="text-sm">
+                  <tr class="odd:bg-white even:bg-slate-50">
+                    <td class="py-2 px-2">Enrolment (end of month)</td>
+                    <td class="px-1 py-1">
+                      <input id="sum-jun-m" readonly class="w-full border rounded px-1 py-0.5 text-center text-sm bg-white/50">
+                    </td>
+                    <td class="px-1 py-1">
+                      <input id="sum-jun-f" readonly class="w-full border rounded px-1 py-0.5 text-center text-sm bg-white/50">
+                    </td>
+                    <td class="px-1 py-1">
+                      <input id="sum-jun-total" readonly class="w-full border rounded px-1 py-0.5 text-center text-sm bg-white/50">
+                    </td>
+                  </tr>
+
+                  <tr class="odd:bg-white even:bg-slate-50">
+                    <td class="py-2 px-2">Late enrollees during the month</td>
+                    <td class="px-1 py-1"><input id="sum-late-m" class="w-full border rounded px-1 py-0.5 text-center text-sm"></td>
+                    <td class="px-1 py-1"><input id="sum-late-f" class="w-full border rounded px-1 py-0.5 text-center text-sm"></td>
+                    <td class="px-1 py-1"><input id="sum-late-total" readonly class="w-full border rounded px-1 py-0.5 text-center text-sm bg-white/50"></td>
+                  </tr>
+
+                  <tr class="odd:bg-white even:bg-slate-50">
+                    <td class="py-2 px-2">Registered learners as of end of month</td>
+                    <td class="px-1 py-1"><input id="sum-reg-m" readonly class="w-full border rounded px-1 py-0.5 text-center text-sm bg-white/50"></td>
+                    <td class="px-1 py-1"><input id="sum-reg-f" readonly class="w-full border rounded px-1 py-0.5 text-center text-sm bg-white/50"></td>
+                    <td class="px-1 py-1"><input id="sum-reg-total" readonly class="w-full border rounded px-1 py-0.5 text-center text-sm bg-white/50"></td>
+                  </tr>
+
+                  <tr class="odd:bg-white even:bg-slate-50">
+                    <td class="py-2 px-2">Percentage of Enrollment</td>
+                    <td class="px-1 py-1"><input id="sum-perc-m" readonly class="w-full border rounded px-1 py-0.5 text-center text-sm bg-white/50"></td>
+                    <td class="px-1 py-1"><input id="sum-perc-f" readonly class="w-full border rounded px-1 py-0.5 text-center text-sm bg-white/50"></td>
+                    <td class="px-1 py-1"><input id="sum-perc-total" readonly class="w-full border rounded px-1 py-0.5 text-center text-sm bg-white/50"></td>
+                  </tr>
+
+                  <tr class="odd:bg-white even:bg-slate-50">
+                    <td class="py-2 px-2">Average Daily Attendance</td>
+                    <td class="px-1 py-1"><input id="sum-avg-m" readonly class="w-full border rounded px-1 py-0.5 text-center text-sm bg-white/50"></td>
+                    <td class="px-1 py-1"><input id="sum-avg-f" readonly class="w-full border rounded px-1 py-0.5 text-center text-sm bg-white/50"></td>
+                    <td class="px-1 py-1"><input id="sum-avg-total" readonly class="w-full border rounded px-1 py-0.5 text-center text-sm bg-white/50"></td>
+                  </tr>
+
+                  <tr class="odd:bg-white even:bg-slate-50">
+                    <td class="py-2 px-2">Percentage of Attendance</td>
+                    <td class="px-1 py-1"><input id="sum-att-perc-m" readonly class="w-full border rounded px-1 py-0.5 text-center text-sm bg-white/50"></td>
+                    <td class="px-1 py-1"><input id="sum-att-perc-f" readonly class="w-full border rounded px-1 py-0.5 text-center text-sm bg-white/50"></td>
+                    <td class="px-1 py-1"><input id="sum-att-perc-total" readonly class="w-full border rounded px-1 py-0.5 text-center text-sm bg-white/50"></td>
+                  </tr>
+
+                  <tr class="odd:bg-white even:bg-slate-50">
+                    <td class="py-2 px-2">Number of Dropped out</td>
+                    <td class="px-1 py-1"><input id="sum-drop-m" readonly class="w-full border rounded px-1 py-0.5 text-center text-sm bg-white/50"></td>
+                    <td class="px-1 py-1"><input id="sum-drop-f" readonly class="w-full border rounded px-1 py-0.5 text-center text-sm bg-white/50"></td>
+                    <td class="px-1 py-1"><input id="sum-drop-total" readonly class="w-full border rounded px-1 py-0.5 text-center text-sm bg-white/50"></td>
+                  </tr>
+
+                  <tr class="odd:bg-white even:bg-slate-50">
+                    <td class="py-2 px-2">Number of Transferred out</td>
+                    <td class="px-1 py-1"><input id="sum-tout-m" readonly class="w-full border rounded px-1 py-0.5 text-center text-sm bg-white/50"></td>
+                    <td class="px-1 py-1"><input id="sum-tout-f" readonly class="w-full border rounded px-1 py-0.5 text-center text-sm bg-white/50"></td>
+                    <td class="px-1 py-1"><input id="sum-tout-total" readonly class="w-full border rounded px-1 py-0.5 text-center text-sm bg-white/50"></td>
+                  </tr>
+
+                  <tr class="odd:bg-white even:bg-slate-50">
+                    <td class="py-2 px-2">Number of Transferred in</td>
+                    <td class="px-1 py-1"><input id="sum-tin-m" readonly class="w-full border rounded px-1 py-0.5 text-center text-sm bg-white/50"></td>
+                    <td class="px-1 py-1"><input id="sum-tin-f" readonly class="w-full border rounded px-1 py-0.5 text-center text-sm bg-white/50"></td>
+                    <td class="px-1 py-1"><input id="sum-tin-total" readonly class="w-full border rounded px-1 py-0.5 text-center text-sm bg-white/50"></td>
+                  </tr>
+
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Signatures -->
+        <div class="mt-4 bg-white border rounded-md p-4 shadow-sm">
+          <div class="max-w-4xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+              <div class="text-center">
+                <div class="border-b border-slate-400 w-full h-10 mb-2"></div>
+                <input id="adviserName" class="text-center font-semibold w-full" value="{{ teacher.full_name }}">
+                <div class="text-xs text-slate-500 mt-1">(Signature of Adviser over Printed Name)</div>
+              </div>
+
+              <div class="text-center">
+                <div class="border-b border-slate-400 w-full h-10 mb-2"></div>
+                <input id="principalName" class="text-center font-semibold w-full" value="Name of Principal">
+                <div class="text-xs text-slate-500 mt-1">(Signature of School Head over Printed Name)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- History Sidebar -->
+      <div class="lg:col-span-3 space-y-6 no-print">
+        <div class="bg-white rounded-xl shadow-sm p-6 sticky top-6">
+          <div class="flex items-center gap-2 mb-4">
+            <i class="fa-solid fa-clock-rotate-left text-slate-600"></i>
+            <h2 class="text-lg font-semibold">Attendance History</h2>
+          </div>
+          <div id="historyContainer" class="space-y-3 max-h-[70vh] overflow-y-auto">
+            <p id="historyPlaceholder" class="text-sm text-slate-500 text-center p-4">No attendance saved yet.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // ========================================
+    // GLOBAL STATE VARIABLES
+    // ========================================
+    let currentRecordId = null;
+    let currentSectionId = null;
+    let students = [];
+    let schoolDays = [];
+    const VALID_CODES = ['', 'X', 'E', 'T'];
+
+    // Get CSRF token for POST requests
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    // ========================================
+    // INITIALIZATION
+    // ========================================
+    document.addEventListener('DOMContentLoaded', function() {
+      initializeEventListeners();
+      loadAttendanceHistory();
+    });
+
+    function initializeEventListeners() {
+      // Section selector
+      document.getElementById('section').addEventListener('change', handleSectionChange);
+      
+      // Quarter selector
+      document.getElementById('reportQuarter').addEventListener('change', handleQuarterChange);
+      
+      // Month selector
+      document.getElementById('reportMonth').addEventListener('change', handleMonthChange);
+      
+      // Late enrollees inputs (trigger recalculation)
+      document.getElementById('sum-late-m').addEventListener('input', updateSummaryTotals);
+      document.getElementById('sum-late-f').addEventListener('input', updateSummaryTotals);
+      
+      // Action buttons
+      document.getElementById('saveBtn').addEventListener('click', saveAttendance);
+      document.getElementById('printBtn').addEventListener('click', () => window.print());
+      document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
+    }
+
+    // ========================================
+    // SECTION SELECTION HANDLER
+    // ========================================
+    async function handleSectionChange(e) {
+      const sectionId = e.target.value;
+      
+      if (!sectionId) {
+        clearForm();
+        return;
+      }
+
+      try {
+        showLoader();
+        
+        // Fetch section info and students
+        const response = await fetch(`/teacher/api/attendance/section/${sectionId}/`);
+        const data = await response.json();
+        
+        if (data.success) {
+          currentSectionId = sectionId;
+          students = data.students;
+          
+          // Update grade level
+          document.getElementById('gradeLevel').value = data.section.grade_level;
+          
+          // Enable quarter selector
+          document.getElementById('reportQuarter').disabled = false;
+          
+          Swal.fire({
+            icon: 'success',
+            title: 'Section Loaded',
+            text: `${data.students.length} students found`,
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000
+          });
+        } else {
+          throw new Error(data.error || 'Failed to load section');
+        }
+        
+      } catch (error) {
+        console.error('Error loading section:', error);
+        Swal.fire('Error', error.message, 'error');
+      } finally {
+        hideLoader();
+      }
+    }
+
+    // ========================================
+    // QUARTER SELECTION HANDLER
+    // ========================================
+    async function handleQuarterChange(e) {
+      const quarter = e.target.value;
+      const schoolYearId = document.getElementById('schoolYearId').value;
+      
+      if (!quarter || !schoolYearId) {
+        document.getElementById('reportMonth').disabled = true;
+        return;
+      }
+
+      try {
+        showLoader();
+        
+        // Fetch available months for this quarter
+        const response = await fetch(`/teacher/api/attendance/quarter-months/?quarter=${quarter}&school_year_id=${schoolYearId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          // Populate month selector
+          const monthSelect = document.getElementById('reportMonth');
+          monthSelect.innerHTML = '<option value="">Select month...</option>';
+          
+          data.months.forEach(month => {
+            const option = document.createElement('option');
+            option.value = month.value;
+            option.textContent = month.label;
+            option.dataset.year = month.year;
+            option.dataset.month = month.month;
+            monthSelect.appendChild(option);
+          });
+          
+          monthSelect.disabled = false;
+          
+        } else {
+          throw new Error(data.error || 'Failed to load months');
+        }
+        
+      } catch (error) {
+        console.error('Error loading months:', error);
+        Swal.fire('Error', error.message, 'error');
+      } finally {
+        hideLoader();
+      }
+    }
+
+    // ========================================
+    // MONTH SELECTION HANDLER
+    // ========================================
+    async function handleMonthChange(e) {
+      const selectedOption = e.target.selectedOptions[0];
+      
+      if (!selectedOption || !selectedOption.value) {
+        clearTable();
+        return;
+      }
+
+      const month = selectedOption.dataset.month;
+      const year = selectedOption.dataset.year;
+      const quarter = document.getElementById('reportQuarter').value;
+      const schoolYearId = document.getElementById('schoolYearId').value;
+
+      if (!currentSectionId || !quarter || !month || !year) {
+        Swal.fire('Error', 'Please select section and quarter first', 'warning');
+        return;
+      }
+
+      try {
+        showLoader();
+        
+        // Load attendance record
+        const response = await fetch(
+          `/teacher/api/attendance/load/?section_id=${currentSectionId}&school_year_id=${schoolYearId}&quarter=${quarter}&month=${month}&year=${year}`
+        );
+        const data = await response.json();
+        
+        if (data.success) {
+          currentRecordId = data.record.id;
+          
+          // Update header fields
+          document.getElementById('schoolName').value = data.record.school_name;
+          document.getElementById('schoolId').value = data.record.school_id;
+          document.getElementById('adviserName').value = data.record.adviser_name;
+          document.getElementById('principalName').value = data.record.principal_name;
+          
+          // Build attendance table
+          buildAttendanceTable(data.record.total_days, data.students);
+          
+          // Load summary data
+          loadSummaryData(data.record);
+          
+          // Enable action buttons
+          document.getElementById('saveBtn').disabled = data.record.is_finalized;
+          document.getElementById('exportExcelBtn').disabled = false;
+          
+          if (data.record.is_finalized) {
+            Swal.fire({
+              icon: 'info',
+              title: 'Record Finalized',
+              text: 'This attendance record is finalized and cannot be edited.',
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 3000
+            });
+          }
+          
+        } else {
+          throw new Error(data.error || 'Failed to load attendance');
+        }
+        
+      } catch (error) {
+        console.error('Error loading attendance:', error);
+        Swal.fire('Error', error.message, 'error');
+      } finally {
+        hideLoader();
+      }
+    }
+
+    // ========================================
+    // BUILD ATTENDANCE TABLE
+    // ========================================
+    function buildAttendanceTable(totalDays, studentsData) {
+      const table = document.getElementById('attendanceTable');
+      table.innerHTML = '';
+      
+      // Calculate school days (for column headers)
+      const monthVal = document.getElementById('reportMonth').value;
+      const [year, month] = monthVal.split('-').map(Number);
+      
+      schoolDays = [];
+      const date = new Date(year, month - 1, 1);
+      while (date.getMonth() === month - 1) {
+        if (date.getDay() >= 1 && date.getDay() <= 5) {
+          schoolDays.push(new Date(date));
+        }
+        date.setDate(date.getDate() + 1);
+      }
+
+      const dayNames = ["M", "T", "W", "TH", "F"];
+
+      // Build header
+      let headerHTML = `
+        <thead>
+          <tr class="bg-slate-100">
+            <th rowspan="2" class="p-2">#</th>
+            <th rowspan="2" style="width:300px;" class="p-2 text-left">
+              LEARNER'S NAME<br><span class="text-xs">(Last Name, First Name)</span>
+            </th>
+      `;
+      
+      schoolDays.forEach(d => {
+        headerHTML += `<th class="p-2 border">${d.getDate()}</th>`;
+      });
+      
+      headerHTML += `
+            <th colspan="2" class="p-2 border">Total for the Month</th>
+            <th rowspan="2" style="width:300px;" class="p-2">
+              REMARKS / WARNING
+            </th>
+          </tr>
+          <tr class="bg-slate-50">
+      `;
+      
+      schoolDays.forEach(d => {
+        headerHTML += `<th class="p-2 border">${dayNames[d.getDay()-1]}</th>`;
+      });
+      
+      headerHTML += `
+            <th class="p-2 border">ABSENT</th>
+            <th class="p-2 border">TARDY</th>
+          </tr>
+        </thead>
+      `;
+
+      // Build body
+      let bodyHTML = '<tbody>';
+      const maleStudents = studentsData.filter(s => s.gender === 'Male');
+      const femaleStudents = studentsData.filter(s => s.gender === 'Female');
+
+      let counter = 1;
+      
+      // Male students
+      maleStudents.forEach(s => {
+        const rowClass = s.is_dropout ? 'student-dropout' : (s.is_at_risk ? 'student-at-risk' : 'odd:bg-white even:bg-slate-50');
+        
+        bodyHTML += `
+          <tr data-gender="Male" data-student-id="${s.student_id}" data-attendance-id="${s.id}" class="${rowClass}">
+            <td class="p-2 text-center">${counter++}</td>
+            <td class="student-name p-2 text-sm">
+              ${s.student_name}
+              ${s.warning_message ? `<div class="warning-badge mt-1 ${s.is_dropout ? 'bg-red-200 text-red-800' : 'bg-yellow-200 text-yellow-800'}">${s.warning_message}</div>` : ''}
+            </td>
+        `;
+        
+        s.daily_attendance.forEach((code, i) => {
+          bodyHTML += `<td class="p-1 border"><input class="attend-input focus-ring text-center text-sm w-full bg-transparent" data-day="${i}" value="${code}"></td>`;
+        });
+        
+        bodyHTML += `
+            <td class="absent-total p-2 text-center font-semibold">${s.total_absences}</td>
+            <td class="tardy-total p-2 text-center font-semibold">${s.total_tardies}</td>
+            <td class="p-2">
+              <textarea class="remarks-input focus-ring text-sm w-full bg-transparent border rounded px-2 py-1" rows="2" placeholder="Remarks...">${s.remarks}</textarea>
+              ${s.total_absences >= 5 ? `
+                <label class="flex items-center gap-2 mt-2 text-xs">
+                  <input type="checkbox" class="excuse-checkbox" ${s.has_valid_excuse ? 'checked' : ''}>
+                  <span>Valid excuse (remove warning)</span>
+                </label>
+              ` : ''}
+            </td>
+          </tr>
+        `;
+      });
+
+      bodyHTML += `
+        <tr class="totals-row bg-slate-100 font-semibold male-total">
+          <td colspan="2">MALE | Total per Day »</td>
+          ${schoolDays.map(() => `<td class="day-total p-2 text-center">0</td>`).join('')}
+          <td class="p-2 text-center">0</td>
+          <td class="p-2 text-center">0</td>
+          <td class="p-2"></td>
+        </tr>
+      `;
+
+      // Female students
+      femaleStudents.forEach(s => {
+        const rowClass = s.is_dropout ? 'student-dropout' : (s.is_at_risk ? 'student-at-risk' : 'odd:bg-white even:bg-slate-50');
+        
+        bodyHTML += `
+          <tr data-gender="Female" data-student-id="${s.student_id}" data-attendance-id="${s.id}" class="${rowClass}">
+            <td class="p-2 text-center">${counter++}</td>
+            <td class="student-name p-2 text-sm">
+              ${s.student_name}
+              ${s.warning_message ? `<div class="warning-badge mt-1 ${s.is_dropout ? 'bg-red-200 text-red-800' : 'bg-yellow-200 text-yellow-800'}">${s.warning_message}</div>` : ''}
+            </td>
+        `;
+        
+        s.daily_attendance.forEach((code, i) => {
+          bodyHTML += `<td class="p-1 border"><input class="attend-input focus-ring text-center text-sm w-full bg-transparent" data-day="${i}" value="${code}"></td>`;
+        });
+        
+        bodyHTML += `
+            <td class="absent-total p-2 text-center font-semibold">${s.total_absences}</td>
+            <td class="tardy-total p-2 text-center font-semibold">${s.total_tardies}</td>
+            <td class="p-2">
+              <textarea class="remarks-input focus-ring text-sm w-full bg-transparent border rounded px-2 py-1" rows="2" placeholder="Remarks...">${s.remarks}</textarea>
+              ${s.total_absences >= 5 ? `
+                <label class="flex items-center gap-2 mt-2 text-xs">
+                  <input type="checkbox" class="excuse-checkbox" ${s.has_valid_excuse ? 'checked' : ''}>
+                  <span>Valid excuse (remove warning)</span>
+                </label>
+              ` : ''}
+            </td>
+          </tr>
+        `;
+      });
+
+      bodyHTML += `
+        <tr class="totals-row bg-slate-100 font-semibold female-total">
+          <td colspan="2">FEMALE | Total per Day »</td>
+          ${schoolDays.map(() => `<td class="day-total p-2 text-center">0</td>`).join('')}
+          <td class="p-2 text-center">0</td>
+          <td class="p-2 text-center">0</td>
+          <td class="p-2"></td>
+        </tr>
+        <tr class="totals-row bg-slate-200 font-semibold combined-total">
+          <td colspan="2">COMBINED | Total per Day »</td>
+          ${schoolDays.map(() => `<td class="day-total p-2 text-center">0</td>`).join('')}
+          <td class="p-2 text-center">0</td>
+          <td class="p-2 text-center">0</td>
+          <td class="p-2"></td>
+        </tr>
+      `;
+      
+      bodyHTML += '</tbody>';
+
+      table.innerHTML = headerHTML + bodyHTML;
+
+      // Attach event listeners
+      attachTableEventListeners();
+      
+      // Initial calculation
+      updateAllCalculations();
+    }
+
+    // ========================================
+    // ATTACH EVENT LISTENERS TO TABLE
+    // ========================================
+    function attachTableEventListeners() {
+      // Attendance inputs
+      document.querySelectorAll('.attend-input').forEach(input => {
+        input.addEventListener('input', handleAttendInput);
+      });
+
+      // Remarks inputs
+      document.querySelectorAll('.remarks-input').forEach(input => {
+        input.addEventListener('input', updateAllCalculations);
+      });
+
+      // Excuse checkboxes
+      document.querySelectorAll('.excuse-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', handleExcuseChange);
+      });
+    }
+
+    // ========================================
+    // ATTENDANCE INPUT VALIDATION
+    // ========================================
+    function handleAttendInput(e) {
+      const raw = e.target.value || '';
+      const up = raw.toString().trim().toUpperCase();
+
+      if (up === '') {
+        e.target.value = '';
+        updateAllCalculations();
+        return;
+      }
+
+      if (VALID_CODES.includes(up)) {
+        e.target.value = up;
+        updateAllCalculations();
+        return;
+      }
+
+      // Invalid code
+      e.target.value = '';
+      Swal.fire({
+        icon: 'warning',
+        title: 'Invalid attendance code',
+        text: 'Please use only these codes: blank (present), X or E (absent), T (tardy).',
+        confirmButtonColor: '#ef4444'
+      }).then(() => {
+        e.target.focus();
+      });
+    }
+
+    // ========================================
+    // EXCUSE CHECKBOX HANDLER
+    // ========================================
+    async function handleExcuseChange(e) {
+      const row = e.target.closest('tr');
+      const attendanceId = row.dataset.attendanceId;
+      const hasValidExcuse = e.target.checked;
+
+      try {
+        const response = await fetch(`/teacher/api/attendance/student/${attendanceId}/excuse/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+          },
+          body: JSON.stringify({ has_valid_excuse: hasValidExcuse })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          // Update row styling
+          row.classList.remove('student-at-risk', 'student-dropout');
+          
+          if (!hasValidExcuse) {
+            if (data.is_dropout) {
+              row.classList.add('student-dropout');
+            } else if (data.is_at_risk) {
+              row.classList.add('student-at-risk');
+            }
+          }
+
+          // Update warning message
+          const nameCell = row.querySelector('.student-name');
+          const existingWarning = nameCell.querySelector('.warning-badge');
+          if (existingWarning) {
+            if (data.warning_message) {
+              existingWarning.textContent = data.warning_message;
+            } else {
+              existingWarning.remove();
+            }
+          }
+
+          Swal.fire({
+            icon: 'success',
+            title: hasValidExcuse ? 'Excuse Applied' : 'Excuse Removed',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000
+          });
+        } else {
+          throw new Error(data.error);
+        }
+      } catch (error) {
+        console.error('Error updating excuse:', error);
+        e.target.checked = !hasValidExcuse; // Revert
+        Swal.fire('Error', error.message, 'error');
+      }
+    }
+
+    // ========================================
+    // UPDATE ALL CALCULATIONS
+    // ========================================
+    function updateAllCalculations() {
+      const table = document.getElementById('attendanceTable');
+      const maleRows = Array.from(table.querySelectorAll('tr[data-gender="Male"]'));
+      const femaleRows = Array.from(table.querySelectorAll('tr[data-gender="Female"]'));
+      
+      const dayTotals = {
+        male: Array(schoolDays.length).fill(0),
+        female: Array(schoolDays.length).fill(0),
+        combined: Array(schoolDays.length).fill(0)
+      };
+      
+      let grandTotals = {
+        male: { absent: 0, tardy: 0, present: 0 },
+        female: { absent: 0, tardy: 0, present: 0 }
+      };
+
+      const processRows = (rows, genderKey) => {
+        rows.forEach(row => {
+          let absentCount = 0, tardyCount = 0;
+          
+          row.querySelectorAll('.attend-input').forEach((input, dayIndex) => {
+            const value = (input.value || '').toString().trim().toUpperCase();
+            
+            if (value === 'X' || value === 'E') {
+              absentCount++;
+              grandTotals[genderKey].absent++;
+            } else {
+              dayTotals[genderKey][dayIndex]++;
+              dayTotals.combined[dayIndex]++;
+              grandTotals[genderKey].present++;
+              
+              if (value === 'T') {
+                tardyCount++;
+                grandTotals[genderKey].tardy++;
+              }
+            }
+          });
+          
+          // Update row totals
+          const absentEl = row.querySelector('.absent-total');
+          const tardyEl = row.querySelector('.tardy-total');
+          if (absentEl) absentEl.textContent = absentCount;
+          if (tardyEl) tardyEl.textContent = tardyCount;
+          
+          // Show/hide warning and excuse checkbox
+          const remarksCell = row.querySelector('td:last-child');
+          const existingWarning = remarksCell.querySelector('.warning-badge');
+          const existingCheckbox = remarksCell.querySelector('.excuse-checkbox')?.parentElement;
+          
+          if (absentCount >= 7) {
+            if (!existingWarning) {
+              const warning = document.createElement('div');
+              warning.className = 'warning-badge mt-1 bg-red-200 text-red-800';
+              warning.textContent = `⚠️ DROPOUT RISK: ${absentCount} absences (7+ threshold)`;
+              remarksCell.insertBefore(warning, remarksCell.querySelector('textarea').nextSibling);
+            } else {
+              existingWarning.textContent = `⚠️ DROPOUT RISK: ${absentCount} absences (7+ threshold)`;
+              existingWarning.className = 'warning-badge mt-1 bg-red-200 text-red-800';
+            }
+            row.classList.add('student-dropout');
+            row.classList.remove('student-at-risk');
+          } else if (absentCount >= 5) {
+            if (!existingWarning) {
+              const warning = document.createElement('div');
+              warning.className = 'warning-badge mt-1 bg-yellow-200 text-yellow-800';
+              const remaining = 7 - absentCount;
+              warning.textContent = `⚠️ WARNING: ${absentCount} absences (${remaining} more until dropout threshold)`;
+              remarksCell.insertBefore(warning, remarksCell.querySelector('textarea').nextSibling);
+            } else {
+              const remaining = 7 - absentCount;
+              existingWarning.textContent = `⚠️ WARNING: ${absentCount} absences (${remaining} more until dropout threshold)`;
+              existingWarning.className = 'warning-badge mt-1 bg-yellow-200 text-yellow-800';
+            }
+            row.classList.add('student-at-risk');
+            row.classList.remove('student-dropout');
+          } else {
+            if (existingWarning) {
+              existingWarning.remove();
+            }
+            row.classList.remove('student-at-risk', 'student-dropout');
+          }
+          
+          // Show excuse checkbox if absences >= 5
+          if (absentCount >= 5 && !existingCheckbox) {
+            const label = document.createElement('label');
+            label.className = 'flex items-center gap-2 mt-2 text-xs';
+            label.innerHTML = `
+              <input type="checkbox" class="excuse-checkbox">
+              <span>Valid excuse (remove warning)</span>
+            `;
+            remarksCell.appendChild(label);
+            label.querySelector('.excuse-checkbox').addEventListener('change', handleExcuseChange);
+          } else if (absentCount < 5 && existingCheckbox) {
+            existingCheckbox.remove();
+          }
+        });
+      };
+
+      processRows(maleRows, 'male');
+      processRows(femaleRows, 'female');
+
+      // Update totals rows
+      const maleTotalRow = table.querySelector('.male-total');
+      const femaleTotalRow = table.querySelector('.female-total');
+      const combinedTotalRow = table.querySelector('.combined-total');
+
+      if (maleTotalRow) {
+        dayTotals.male.forEach((total, i) => {
+          maleTotalRow.querySelectorAll('.day-total')[i].textContent = total;
+        });
+        maleTotalRow.children[maleTotalRow.children.length - 3].textContent = grandTotals.male.absent;
+        maleTotalRow.children[maleTotalRow.children.length - 2].textContent = grandTotals.male.tardy;
+      }
+
+      if (femaleTotalRow) {
+        dayTotals.female.forEach((total, i) => {
+          femaleTotalRow.querySelectorAll('.day-total')[i].textContent = total;
+        });
+        femaleTotalRow.children[femaleTotalRow.children.length - 3].textContent = grandTotals.female.absent;
+        femaleTotalRow.children[femaleTotalRow.children.length - 2].textContent = grandTotals.female.tardy;
+      }
+
+      if (combinedTotalRow) {
+        dayTotals.combined.forEach((total, i) => {
+          combinedTotalRow.querySelectorAll('.day-total')[i].textContent = total;
+        });
+        const combinedAbsent = grandTotals.male.absent + grandTotals.female.absent;
+        const combinedTardy = grandTotals.male.tardy + grandTotals.female.tardy;
+        combinedTotalRow.children[combinedTotalRow.children.length - 3].textContent = combinedAbsent;
+        combinedTotalRow.children[combinedTotalRow.children.length - 2].textContent = combinedTardy;
+      }
+
+      // Update summary section
+      updateSummaryFromTable(maleRows.length, femaleRows.length, grandTotals);
+    }
+
+    // ========================================
+    // UPDATE SUMMARY SECTION
+    // ========================================
+    function updateSummaryFromTable(numMale, numFemale, grandTotals) {
+      // Enrollment (end of month)
+      document.getElementById('sum-jun-m').value = numMale;
+      document.getElementById('sum-jun-f').value = numFemale;
+      document.getElementById('sum-jun-total').value = numMale + numFemale;
+
+      // Late enrollees total
+      const lateMale = parseInt(document.getElementById('sum-late-m').value) || 0;
+      const lateFemale = parseInt(document.getElementById('sum-late-f').value) || 0;
+      document.getElementById('sum-late-total').value = lateMale + lateFemale;
+
+      // Registered learners
+      const regMale = numMale + lateMale;
+      const regFemale = numFemale + lateFemale;
+      document.getElementById('sum-reg-m').value = regMale;
+      document.getElementById('sum-reg-f').value = regFemale;
+      document.getElementById('sum-reg-total').value = regMale + regFemale;
+
+      // Percentage of Enrollment (100% if no late enrollees)
+      const percMale = numMale > 0 ? ((numMale / regMale) * 100).toFixed(2) : 0;
+      const percFemale = numFemale > 0 ? ((numFemale / regFemale) * 100).toFixed(2) : 0;
+      const percTotal = ((numMale + numFemale) / (regMale + regFemale) * 100).toFixed(2);
+      document.getElementById('sum-perc-m').value = percMale + '%';
+      document.getElementById('sum-perc-f').value = percFemale + '%';
+      document.getElementById('sum-perc-total').value = percTotal + '%';
+
+      // Average Daily Attendance
+      const avgMale = schoolDays.length > 0 ? (grandTotals.male.present / schoolDays.length).toFixed(2) : 0;
+      const avgFemale = schoolDays.length > 0 ? (grandTotals.female.present / schoolDays.length).toFixed(2) : 0;
+      const avgTotal = (parseFloat(avgMale) + parseFloat(avgFemale)).toFixed(2);
+      document.getElementById('sum-avg-m').value = avgMale;
+      document.getElementById('sum-avg-f').value = avgFemale;
+      document.getElementById('sum-avg-total').value = avgTotal;
+
+      // Percentage of Attendance
+      const attPercMale = (schoolDays.length > 0 && numMale > 0) 
+        ? ((grandTotals.male.present / (schoolDays.length * numMale)) * 100).toFixed(2) 
+        : 0;
+      const attPercFemale = (schoolDays.length > 0 && numFemale > 0) 
+        ? ((grandTotals.female.present / (schoolDays.length * numFemale)) * 100).toFixed(2) 
+        : 0;
+      const attPercTotal = (schoolDays.length > 0 && (numMale + numFemale) > 0)
+        ? (((grandTotals.male.present + grandTotals.female.present) / (schoolDays.length * (numMale + numFemale))) * 100).toFixed(2)
+        : 0;
+      document.getElementById('sum-att-perc-m').value = attPercMale + '%';
+      document.getElementById('sum-att-perc-f').value = attPercFemale + '%';
+      document.getElementById('sum-att-perc-total').value = attPercTotal + '%';
+
+      // Count dropped/transferred from remarks
+      const table = document.getElementById('attendanceTable');
+      let dropM = 0, dropF = 0, toutM = 0, toutF = 0, tinM = 0, tinF = 0;
+      
+      table.querySelectorAll('tr[data-gender]').forEach(row => {
+        const gender = row.getAttribute('data-gender');
+        const rInput = row.querySelector('.remarks-input');
+        if (!rInput) return;
+        
+        const remark = (rInput.value || '').toString().trim().toLowerCase();
+        if (!remark) return;
+
+        if (remark.includes('drop')) {
+          if (gender === 'Male') dropM++; else dropF++;
+        }
+        if (remark.includes('transfer out') || remark.includes('transferred out')) {
+          if (gender === 'Male') toutM++; else toutF++;
+        }
+        if (remark.includes('transfer in') || remark.includes('transferred in')) {
+          if (gender === 'Male') tinM++; else tinF++;
+        }
+      });
+
+      document.getElementById('sum-drop-m').value = dropM;
+      document.getElementById('sum-drop-f').value = dropF;
+      document.getElementById('sum-drop-total').value = dropM + dropF;
+
+      document.getElementById('sum-tout-m').value = toutM;
+      document.getElementById('sum-tout-f').value = toutF;
+      document.getElementById('sum-tout-total').value = toutM + toutF;
+
+      document.getElementById('sum-tin-m').value = tinM;
+      document.getElementById('sum-tin-f').value = tinF;
+      document.getElementById('sum-tin-total').value = tinM + tinF;
+    }
+
+    // ========================================
+    // UPDATE SUMMARY TOTALS (when late enrollees change)
+    // ========================================
+    function updateSummaryTotals() {
+      const lateMale = parseInt(document.getElementById('sum-late-m').value) || 0;
+      const lateFemale = parseInt(document.getElementById('sum-late-f').value) || 0;
+      document.getElementById('sum-late-total').value = lateMale + lateFemale;
+      
+      // Trigger full recalculation
+      updateAllCalculations();
+    }
+
+    // ========================================
+    // LOAD SUMMARY DATA FROM RECORD
+    // ========================================
+    function loadSummaryData(record) {
+      document.getElementById('sum-jun-m').value = record.enrollment_male;
+      document.getElementById('sum-jun-f').value = record.enrollment_female;
+      document.getElementById('sum-jun-total').value = record.enrollment_male + record.enrollment_female;
+
+      document.getElementById('sum-late-m').value = record.late_enrollees_male;
+      document.getElementById('sum-late-f').value = record.late_enrollees_female;
+      document.getElementById('sum-late-total').value = record.late_enrollees_male + record.late_enrollees_female;
+
+      document.getElementById('sum-reg-m').value = record.registered_male;
+      document.getElementById('sum-reg-f').value = record.registered_female;
+      document.getElementById('sum-reg-total').value = record.registered_male + record.registered_female;
+
+      document.getElementById('sum-avg-m').value = record.avg_attendance_male;
+      document.getElementById('sum-avg-f').value = record.avg_attendance_female;
+      document.getElementById('sum-avg-total').value = (parseFloat(record.avg_attendance_male) + parseFloat(record.avg_attendance_female)).toFixed(2);
+
+      document.getElementById('sum-att-perc-m').value = record.attendance_percentage_male + '%';
+      document.getElementById('sum-att-perc-f').value = record.attendance_percentage_female + '%';
+      const avgPerc = ((parseFloat(record.attendance_percentage_male) + parseFloat(record.attendance_percentage_female)) / 2).toFixed(2);
+      document.getElementById('sum-att-perc-total').value = avgPerc + '%';
+
+      document.getElementById('sum-drop-m').value = record.dropped_male;
+      document.getElementById('sum-drop-f').value = record.dropped_female;
+      document.getElementById('sum-drop-total').value = record.dropped_male + record.dropped_female;
+
+      document.getElementById('sum-tout-m').value = record.transferred_out_male;
+      document.getElementById('sum-tout-f').value = record.transferred_out_female;
+      document.getElementById('sum-tout-total').value = record.transferred_out_male + record.transferred_out_female;
+
+      document.getElementById('sum-tin-m').value = record.transferred_in_male;
+      document.getElementById('sum-tin-f').value = record.transferred_in_female;
+      document.getElementById('sum-tin-total').value = record.transferred_in_male + record.transferred_in_female;
+    }
+
+    // ========================================
+    // SAVE ATTENDANCE
+    // ========================================
+    async function saveAttendance() {
+      if (!currentRecordId) {
+        Swal.fire('Error', 'No attendance record loaded', 'warning');
+        return;
+      }
+
+      try {
+        showLoader();
+
+        // Collect all student attendance data
+        const table = document.getElementById('attendanceTable');
+        const studentsData = [];
+
+        table.querySelectorAll('tr[data-attendance-id]').forEach(row => {
+          const attendanceId = row.dataset.attendanceId;
+          const dailyAttendance = [];
+          
+          row.querySelectorAll('.attend-input').forEach(input => {
+            dailyAttendance.push(input.value.trim().toUpperCase());
+          });
+
+          const remarksInput = row.querySelector('.remarks-input');
+          const excuseCheckbox = row.querySelector('.excuse-checkbox');
+
+          studentsData.push({
+            id: attendanceId,
+            daily_attendance: dailyAttendance,
+            remarks: remarksInput ? remarksInput.value : '',
+            has_valid_excuse: excuseCheckbox ? excuseCheckbox.checked : false
+          });
+        });
+
+        // Collect summary data
+        const summaryData = {
+          late_enrollees_male: parseInt(document.getElementById('sum-late-m').value) || 0,
+          late_enrollees_female: parseInt(document.getElementById('sum-late-f').value) || 0,
+        };
+
+        // Collect header data
+        const headerData = {
+          school_name: document.getElementById('schoolName').value,
+          school_id: document.getElementById('schoolId').value,
+          grade_level: document.getElementById('gradeLevel').value,
+          adviser_name: document.getElementById('adviserName').value,
+          principal_name: document.getElementById('principalName').value,
+        };
+
+        // Send to server
+        const response = await fetch('/teacher/api/attendance/save/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+          },
+          body: JSON.stringify({
+            record_id: currentRecordId,
+            students: studentsData,
+            summary: summaryData,
+            header: headerData
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Saved!',
+            text: 'Attendance saved successfully',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000
+          });
+
+          // Refresh history
+          loadAttendanceHistory();
+        } else {
+          throw new Error(data.error || 'Failed to save attendance');
+        }
+
+      } catch (error) {
+        console.error('Error saving attendance:', error);
+        Swal.fire('Error', error.message, 'error');
+      } finally {
+        hideLoader();
+      }
+    }
+
+    // ========================================
+    // EXPORT TO EXCEL
+    // ========================================
+    async function exportToExcel() {
+      if (!currentRecordId) {
+        Swal.fire('Error', 'No attendance record to export', 'warning');
+        return;
+      }
+
+      try {
+        showLoader();
+
+        // Fetch export data
+        const response = await fetch(`/teacher/api/attendance/record/${currentRecordId}/export/`);
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to export');
+        }
+
+        const exportData = result.data;
+
+        // Create Excel workbook
+        const wb = new ExcelJS.Workbook();
+        const ws = wb.addWorksheet('SF2', { 
+          pageSetup: { paperSize: 9, orientation: 'landscape' } 
+        });
+
+        const border = { 
+          top: { style: 'thin' }, 
+          left: { style: 'thin' }, 
+          bottom: { style: 'thin' }, 
+          right: { style: 'thin' } 
+        };
+        const centerAlign = { vertical: 'middle', horizontal: 'center', wrapText: true };
+        const leftAlign = { vertical: 'middle', horizontal: 'left', wrapText: true };
+        const rightAlign = { vertical: 'middle', horizontal: 'right' };
+
+        const totalDays = exportData.record_info.total_days;
+        const dateColsStart = 3;
+        const dateColsEnd = dateColsStart + totalDays - 1;
+        const totalsEndCol = dateColsEnd + 2;
+        const remarksCol = totalsEndCol + 1;
+
+        // Title row
+        ws.mergeCells(1, 1, 1, remarksCol);
+        ws.getCell(1, 1).value = "School Form 2 (SF2) Daily Attendance Report of Learners";
+        ws.getCell(1, 1).font = { bold: true, size: 12 };
+        ws.getCell(1, 1).alignment = centerAlign;
+        ws.getRow(1).height = 20;
+
+        // Subtitle
+        ws.mergeCells(3, 1, 3, remarksCol);
+        ws.getCell(3, 1).value = "(This replaces Form 1, Form 2 & STS Form 4 - Absenteeism and Dropout Profile)";
+        ws.getCell(3, 1).font = { italic: true, size: 8 };
+        ws.getCell(3, 1).alignment = centerAlign;
+
+        // Header information
+        const infoRow = ws.getRow(5);
+        infoRow.getCell(2).value = 'School Name';
+        ws.mergeCells('C5:E5');
+        infoRow.getCell(3).value = exportData.record_info.school_name;
+        infoRow.getCell(6).value = 'School ID';
+        infoRow.getCell(7).value = exportData.record_info.school_id;
+        infoRow.getCell(11).value = 'School Year';
+        infoRow.getCell(12).value = exportData.record_info.school_year;
+
+        const infoRow2 = ws.getRow(6);
+        infoRow2.getCell(2).value = 'Section';
+        infoRow2.getCell(3).value = exportData.record_info.section;
+        infoRow2.getCell(6).value = 'Grade Level';
+        infoRow2.getCell(7).value = exportData.record_info.grade_level;
+        infoRow2.getCell(9).value = 'Quarter';
+        infoRow2.getCell(10).value = exportData.record_info.quarter;
+        infoRow2.getCell(12).value = 'For the Month of';
+        ws.mergeCells('M6:O6');
+        infoRow2.getCell(13).value = exportData.record_info.month;
+
+        // Table headers
+        const dateHeaderRow1 = ws.getRow(8);
+        const dateHeaderRow2 = ws.getRow(9);
+        
+        ws.mergeCells('A8:A9');
+        ws.getCell('A8').value = '#';
+        ws.mergeCells('B8:B9');
+        ws.getCell('B8').value = "LEARNER'S NAME\n(Last Name, First Name)";
+
+        // Day numbers
+        exportData.students[0].daily_attendance.forEach((_, i) => {
+          dateHeaderRow1.getCell(dateColsStart + i).value = i + 1;
+        });
+
+        // Day names (assume Mon-Fri pattern)
+        const dayNames = ["M", "T", "W", "TH", "F"];
+        exportData.students[0].daily_attendance.forEach((_, i) => {
+          dateHeaderRow2.getCell(dateColsStart + i).value = dayNames[i % 5];
+        });
+
+        ws.mergeCells(8, totalsEndCol - 1, 8, totalsEndCol);
+        ws.getCell(8, totalsEndCol - 1).value = 'Total for the Month';
+        ws.getCell(9, totalsEndCol - 1).value = 'ABSENT';
+        ws.getCell(9, totalsEndCol).value = 'TARDY';
+
+        ws.mergeCells(8, remarksCol, 9, remarksCol);
+        ws.getCell(8, remarksCol).value = "REMARKS (If DROPPED OUT, state reason. If TRANSFERRED IN/OUT, write name of School.)";
+
+        [dateHeaderRow1, dateHeaderRow2].forEach(row => {
+          row.eachCell({ includeEmpty: true }, c => {
+            c.font = { bold: true, size: 8 };
+            c.alignment = centerAlign;
+            c.border = border;
+          });
+        });
+
+        // Student rows
+        let currentRowNum = 10;
+        exportData.students.forEach((student, idx) => {
+          const excelRow = ws.getRow(currentRowNum);
+          
+          excelRow.getCell(1).value = idx + 1;
+          excelRow.getCell(2).value = student.name;
+          excelRow.getCell(2).alignment = leftAlign;
+
+          student.daily_attendance.forEach((code, i) => {
+            excelRow.getCell(dateColsStart + i).value = code;
+            excelRow.getCell(dateColsStart + i).alignment = centerAlign;
+          });
+
+          excelRow.getCell(totalsEndCol - 1).value = student.total_absences;
+          excelRow.getCell(totalsEndCol - 1).alignment = centerAlign;
+          
+          excelRow.getCell(totalsEndCol).value = student.total_tardies;
+          excelRow.getCell(totalsEndCol).alignment = centerAlign;
+
+          excelRow.getCell(remarksCol).value = student.remarks;
+          excelRow.getCell(remarksCol).alignment = leftAlign;
+
+          excelRow.eachCell({ includeEmpty: true }, c => {
+            c.border = border;
+            c.font = { size: 9 };
+          });
+          excelRow.height = 20;
+
+          currentRowNum++;
+        });
+
+        // Summary section
+        currentRowNum += 2;
+        const summaryHeader = ws.getRow(currentRowNum);
+        ws.mergeCells(currentRowNum, 3, currentRowNum, 6);
+        summaryHeader.getCell(3).value = `Month: ${exportData.record_info.month}`;
+        ws.mergeCells(currentRowNum, 7, currentRowNum, 10);
+        summaryHeader.getCell(7).value = `No. of Days of Classes: ${exportData.record_info.total_days}`;
+        summaryHeader.getCell(3).font = { bold: true };
+        summaryHeader.getCell(7).font = { bold: true };
+
+        currentRowNum++;
+        const summaryTblHeader = ws.getRow(currentRowNum);
+        ws.mergeCells(currentRowNum, 3, currentRowNum, 6);
+        summaryTblHeader.getCell(3).value = "SUMMARY";
+        summaryTblHeader.getCell(7).value = "M";
+        summaryTblHeader.getCell(8).value = "F";
+        summaryTblHeader.getCell(9).value = "TOTAL";
+        
+        [summaryTblHeader.getCell(3), summaryTblHeader.getCell(7), 
+         summaryTblHeader.getCell(8), summaryTblHeader.getCell(9)].forEach(c => {
+          c.font = { bold: true };
+          c.alignment = centerAlign;
+          c.border = border;
+        });
+
+        // Summary rows
+        const summaryRows = [
+          { label: "Enrolment (end of month)", m: exportData.summary.enrollment_male, f: exportData.summary.enrollment_female, t: exportData.summary.enrollment_total },
+          { label: "Late enrollees during the month", m: exportData.summary.late_enrollees_male, f: exportData.summary.late_enrollees_female, t: exportData.summary.late_enrollees_total },
+          { label: "Registered learners as of end of month", m: exportData.summary.registered_male, f: exportData.summary.registered_female, t: exportData.summary.registered_total },
+          { label: "Average Daily Attendance", m: exportData.summary.avg_attendance_male, f: exportData.summary.avg_attendance_female, t: exportData.summary.avg_attendance_total },
+          { label: "Percentage of Attendance", m: exportData.summary.attendance_percentage_male + '%', f: exportData.summary.attendance_percentage_female + '%', t: exportData.summary.attendance_percentage_total.toFixed(2) + '%' },
+          { label: "Number of Dropped out", m: exportData.summary.dropped_male, f: exportData.summary.dropped_female, t: exportData.summary.dropped_total },
+          { label: "Number of Transferred out", m: exportData.summary.transferred_out_male, f: exportData.summary.transferred_out_female, t: exportData.summary.transferred_out_total },
+          { label: "Number of Transferred in", m: exportData.summary.transferred_in_male, f: exportData.summary.transferred_in_female, t: exportData.summary.transferred_in_total },
+        ];
+
+        summaryRows.forEach(item => {
+          currentRowNum++;
+          const row = ws.getRow(currentRowNum);
+          ws.mergeCells(currentRowNum, 3, currentRowNum, 6);
+          row.getCell(3).value = item.label;
+          row.getCell(3).alignment = leftAlign;
+          row.getCell(7).value = item.m;
+          row.getCell(8).value = item.f;
+          row.getCell(9).value = item.t;
+          [row.getCell(3), row.getCell(7), row.getCell(8), row.getCell(9)].forEach(c => {
+            c.border = border;
+          });
+        });
+
+        // Certification and signatures
+        currentRowNum += 2;
+        ws.mergeCells(currentRowNum, 1, currentRowNum, remarksCol);
+        ws.getCell(currentRowNum, 1).value = "I hereby certify that the foregoing data are true and correct.";
+        ws.getCell(currentRowNum, 1).alignment = centerAlign;
+
+        currentRowNum += 2;
+        ws.mergeCells(currentRowNum, 3, currentRowNum, 7);
+        ws.getCell(currentRowNum, 3).value = exportData.signatures.adviser_name;
+        ws.getCell(currentRowNum, 3).alignment = centerAlign;
+        ws.getCell(currentRowNum, 3).font = { bold: true };
+
+        ws.mergeCells(currentRowNum, 10, currentRowNum, 14);
+        ws.getCell(currentRowNum, 10).value = exportData.signatures.principal_name;
+        ws.getCell(currentRowNum, 10).alignment = centerAlign;
+        ws.getCell(currentRowNum, 10).font = { bold: true };
+
+        currentRowNum++;
+        ws.mergeCells(currentRowNum, 3, currentRowNum, 7);
+        ws.getCell(currentRowNum, 3).value = "(Signature of Adviser over Printed Name)";
+        ws.getCell(currentRowNum, 3).alignment = centerAlign;
+        ws.getCell(currentRowNum, 3).font = { size: 8 };
+
+        ws.mergeCells(currentRowNum, 10, currentRowNum, 14);
+        ws.getCell(currentRowNum, 10).value = "(Signature of School Head over Printed Name)";
+        ws.getCell(currentRowNum, 10).alignment = centerAlign;
+        ws.getCell(currentRowNum, 10).font = { size: 8 };
+
+        // Set column widths
+        ws.getColumn(1).width = 5;
+        ws.getColumn(2).width = 35;
+        for (let i = dateColsStart; i <= remarksCol; i++) {
+          ws.getColumn(i).width = (i === remarksCol) ? 35 : 6;
+        }
+
+        // Download
+        const buffer = await wb.xlsx.writeBuffer();
+        const fileName = `SF2_Attendance_${exportData.record_info.section}_${exportData.record_info.month}_${exportData.record_info.year}.xlsx`;
+        saveAs(new Blob([buffer]), fileName);
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Exported!',
+          text: 'SF2 downloaded successfully',
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000
+        });
+
+      } catch (error) {
+        console.error('Error exporting:', error);
+        Swal.fire('Error', error.message, 'error');
+      } finally {
+        hideLoader();
+      }
+    }
+
+    // ========================================
+    // LOAD ATTENDANCE HISTORY (SIDEBAR)
+    // ========================================
+    async function loadAttendanceHistory() {
+      try {
+        const response = await fetch('/teacher/api/attendance/history/');
+        const data = await response.json();
+
+        if (data.success) {
+          const container = document.getElementById('historyContainer');
+          const placeholder = document.getElementById('historyPlaceholder');
+
+          if (data.history.length === 0) {
+            container.innerHTML = '';
+            container.appendChild(placeholder);
+            return;
+          }
+
+          container.innerHTML = '';
+
+          data.history.forEach(record => {
+            const el = document.createElement('div');
+            el.className = 'p-3 border rounded-lg bg-slate-50 hover:bg-slate-100 group cursor-pointer';
+
+            el.innerHTML = `
+              <div class="flex justify-between items-center">
+                <div>
+                  <div class="font-semibold text-sm text-blue-700">${record.month_name} ${record.year}</div>
+                  <div class="text-xs text-slate-600">Q${record.quarter.replace('Q', '')} | ${record.section_name}</div>
+                  <div class="text-xs text-slate-500 mt-1">${record.total_students} students</div>
+                  ${record.at_risk_count > 0 ? `<div class="text-xs text-yellow-700 mt-1">⚠️ ${record.at_risk_count} at risk</div>` : ''}
+                  ${record.dropout_count > 0 ? `<div class="text-xs text-red-700 mt-1">⚠️ ${record.dropout_count} dropout risk</div>` : ''}
+                  ${record.is_finalized ? `<div class="text-xs text-green-700 mt-1">✓ Finalized</div>` : ''}
+                </div>
+                <div class="flex items-center gap-3">
+                  <button title="Load this record" class="load-history-btn text-blue-600 hover:text-blue-800" data-record-id="${record.id}">
+                    <i class="fa-solid fa-upload"></i>
+                  </button>
+                  ${!record.is_finalized ? `
+                    <button title="Delete this record" class="delete-history-btn text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity" data-record-id="${record.id}">
+                      <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                  ` : ''}
+                </div>
+              </div>
+              <div class="text-xs text-slate-400 mt-2">${record.updated_at}</div>
+            `;
+
+            container.appendChild(el);
+          });
+
+          // Attach event listeners
+          container.querySelectorAll('.load-history-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              const recordId = e.currentTarget.getAttribute('data-record-id');
+              loadHistoryRecord(recordId);
+            });
+          });
+
+          container.querySelectorAll('.delete-history-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              const recordId = e.currentTarget.getAttribute('data-record-id');
+              deleteHistoryRecord(recordId);
+            });
+          });
+        }
+
+      } catch (error) {
+        console.error('Error loading history:', error);
+      }
+    }
+
+    // ========================================
+    // LOAD SPECIFIC HISTORY RECORD
+    // ========================================
+    async function loadHistoryRecord(recordId) {
+      // This would need the record details to set the form fields
+      // For now, just show a message
+      Swal.fire({
+        icon: 'info',
+        title: 'Feature Coming Soon',
+        text: 'You can view this record by selecting the same section, quarter, and month from the dropdowns.',
+      });
+    }
+
+    // ========================================
+    // DELETE HISTORY RECORD
+    // ========================================
+    async function deleteHistoryRecord(recordId) {
+      const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: "This attendance record will be permanently deleted.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+      });
+
+      if (!result.isConfirmed) return;
+
+      try {
+        showLoader();
+
+        const response = await fetch(`/teacher/api/attendance/record/${recordId}/delete/`, {
+          method: 'DELETE',
+          headers: {
+            'X-CSRFToken': csrftoken
+          }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          Swal.fire('Deleted!', data.message, 'success');
+          loadAttendanceHistory(); // Refresh list
+
+          // If currently viewing this record, clear the form
+          if (currentRecordId == recordId) {
+            clearForm();
+          }
+        } else {
+          throw new Error(data.error || 'Failed to delete');
+        }
+
+      } catch (error) {
+        console.error('Error deleting record:', error);
+        Swal.fire('Error', error.message, 'error');
+      } finally {
+        hideLoader();
+      }
+    }
+
+    // ========================================
+    // UTILITY FUNCTIONS
+    // ========================================
+    function showLoader() {
+      document.getElementById('loader').style.display = 'block';
+    }
+
+    function hideLoader() {
+      document.getElementById('loader').style.display = 'none';
+    }
+
+    function clearForm() {
+      currentRecordId = null;
+      currentSectionId = null;
+      students = [];
+      schoolDays = [];
+
+      document.getElementById('section').value = '';
+      document.getElementById('gradeLevel').value = '';
+      document.getElementById('reportQuarter').value = '';
+      document.getElementById('reportQuarter').disabled = false;
+      document.getElementById('reportMonth').innerHTML = '<option value="">Select month...</option>';
+      document.getElementById('reportMonth').disabled = true;
+
+      clearTable();
+
+      document.getElementById('saveBtn').disabled = true;
+      document.getElementById('exportExcelBtn').disabled = true;
+    }
+
+    function clearTable() {
+      document.getElementById('attendanceTable').innerHTML = '';
+      
+      // Clear summary
+      ['sum-jun-m', 'sum-jun-f', 'sum-jun-total', 'sum-late-m', 'sum-late-f', 
+       'sum-late-total', 'sum-reg-m', 'sum-reg-f', 'sum-reg-total', 'sum-perc-m',
+       'sum-perc-f', 'sum-perc-total', 'sum-avg-m', 'sum-avg-f', 'sum-avg-total',
+       'sum-att-perc-m', 'sum-att-perc-f', 'sum-att-perc-total', 'sum-drop-m',
+       'sum-drop-f', 'sum-drop-total', 'sum-tout-m', 'sum-tout-f', 'sum-tout-total',
+       'sum-tin-m', 'sum-tin-f', 'sum-tin-total'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+    }
+  </script>
+</body>
+</html>
