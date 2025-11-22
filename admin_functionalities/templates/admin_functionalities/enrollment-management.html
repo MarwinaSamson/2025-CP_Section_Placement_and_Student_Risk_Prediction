@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="{% static 'admin_functionalities/css/admin.css' %}" />
     <link rel="stylesheet" href="{% static 'admin_functionalities/css/enrollment.css' %}" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    
 </head>
 
 <body>
@@ -108,7 +109,7 @@
                     </div>
                 </div>
             </header>
-            <h1 id="programHeader" style="background: #2c3e50; color: #fff; padding: 1rem; text-align: center;">
+            <h1 id="programHeader" style="background: #c41e3a; color: #fff; padding: 1rem; text-align: center;">
             🚀 OHSP – Enrollment Requests
            </h1>
 
@@ -239,6 +240,142 @@
     <link rel="stylesheet" href="{% static 'admin_functionalities/css/admin.css' %}" />
     <link rel="stylesheet" href="{% static 'admin_functionalities/css/enrollment.css' %}" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        .container {
+        max-width: 1200px;
+        margin: auto;
+        padding: 20px;
+        }
+        
+        /* Stats cards */
+        .stats {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 20px;
+        }
+        
+        .stats .card {
+        flex: 1;
+        padding: 20px;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        text-align: center;
+        }
+        
+        .stats .card h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        color: #c41e3a;
+        }
+        
+        .stats .card p {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin: 5px 0 0;
+        color: #333;
+        }
+        
+        /* Filter */
+        .filter-bar {
+        margin: 20px 0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        }
+        
+        .filter-bar label {
+        font-weight: bold;
+        color: #333;
+        }
+        
+        .filter-bar select {
+        padding: 8px 12px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        background: white;
+        }
+        
+        /* Table */
+        #requestsTable {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        #requestsTable th,
+        #requestsTable td {
+        padding: 15px;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+        }
+        
+        #requestsTable th {
+        background: #c41e3a;
+        color: white;
+        font-weight: 600;
+        }
+        
+        #requestsTable tr:hover {
+        background: #f8f9fa;
+        cursor: pointer;
+        }
+        
+        .view-details-btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        background: #c41e3a;
+        color: #fff;
+        text-decoration: none;
+        display: inline-block;
+        }
+        
+        .view-details-btn:hover {
+        background: #a3192e;
+        }
+        
+        /* Program Header */
+        #programHeader {
+        background: #c41e3a !important;
+        color: #fff;
+        padding: 1rem;
+        text-align: center;
+        border-radius: 10px;
+        margin: 20px 0;
+        }
+        
+        /* modal */
+        .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        }
+        
+        .modal-content {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .close-modal:hover {
+        color: #dc3545;
+        }
+    </style>
+
 </head>
 
 <body>
@@ -372,6 +509,7 @@
                         <option value="approved">Approved Requests</option>
                         <option value="rejected">Rejected Requests</option>
                     </select>
+                    </div>
                 </div>
 
                 <!-- Requests Table -->
