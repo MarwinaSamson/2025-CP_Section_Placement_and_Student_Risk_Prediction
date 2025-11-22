@@ -1399,17 +1399,45 @@ def check_early_warnings(request):
 def calculate_required_performance(student_grade, class_record):
     """
     Calculate what scores student needs on remaining tasks to reach passing.
-    FIXED: Use proper percentage calculations based on INITIAL grade.
+    Handles variable number of assessments (not always 10).
     """
     # Get weights
     ww_weight = class_record.written_works_weight / 100
     pt_weight = class_record.performance_tasks_weight / 100
     qa_weight = class_record.quarterly_assessment_weight / 100
     
-    # Get HPS totals
-    ww_hps_total = class_record.get_ww_hps_total()
-    pt_hps_total = class_record.get_pt_hps_total()
-    qa_hps_total = class_record.get_qa_hps_total()
+    # Get ALL HPS values (including unused columns)
+    ww_hps_all = [
+        class_record.ww_hps_1, class_record.ww_hps_2, class_record.ww_hps_3,
+        class_record.ww_hps_4, class_record.ww_hps_5, class_record.ww_hps_6,
+        class_record.ww_hps_7, class_record.ww_hps_8, class_record.ww_hps_9,
+        class_record.ww_hps_10
+    ]
+    
+    pt_hps_all = [
+        class_record.pt_hps_1, class_record.pt_hps_2, class_record.pt_hps_3,
+        class_record.pt_hps_4, class_record.pt_hps_5, class_record.pt_hps_6,
+        class_record.pt_hps_7, class_record.pt_hps_8, class_record.pt_hps_9,
+        class_record.pt_hps_10
+    ]
+    
+    # Filter only ACTIVE assessments (HPS > 0 means column is being used)
+    ww_active_indices = [i for i, hps in enumerate(ww_hps_all) if hps > 0]
+    pt_active_indices = [i for i, hps in enumerate(pt_hps_all) if hps > 0]
+    
+    ww_active_hps = [ww_hps_all[i] for i in ww_active_indices]
+    pt_active_hps = [pt_hps_all[i] for i in pt_active_indices]
+    
+    ww_active_count = len(ww_active_hps)
+    pt_active_count = len(pt_active_hps)
+    
+    # Get ALL scores
+    ww_scores_all = student_grade.get_ww_scores_list()
+    pt_scores_all = student_grade.get_pt_scores_list()
+    
+    # Get only scores for ACTIVE assessments
+    ww_active_scores = [ww_scores_all[i] for i in ww_active_indices]
+    pt_active_scores = [pt_scores_all[i] for i in pt_active_indices]
     
     # Current status
     current_ww_ws = student_grade.ww_weighted_score
@@ -1417,12 +1445,12 @@ def calculate_required_performance(student_grade, class_record):
     current_qa_ws = student_grade.qa_weighted_score
     current_initial_grade = student_grade.initial_grade
     
-    # Check if QA is done
-    qa_done = student_grade.qa_score_1 > 0
-    
     # Target: Initial Grade = 60 → Transmutes to 75
     target_initial_grade = 60.0
     points_needed = max(0, target_initial_grade - current_initial_grade)
+    
+    # Check if QA is done
+    qa_done = student_grade.qa_score_1 > 0
     
     result = {
         'current_grade': student_grade.quarterly_grade,
@@ -1438,70 +1466,126 @@ def calculate_required_performance(student_grade, class_record):
     # CASE 1: QA NOT DONE (Quarter In Progress)
     # ============================================================
     if not qa_done:
-        # Get scores
-        ww_scores = [
-            student_grade.ww_score_1, student_grade.ww_score_2, student_grade.ww_score_3,
-            student_grade.ww_score_4, student_grade.ww_score_5, student_grade.ww_score_6,
-            student_grade.ww_score_7, student_grade.ww_score_8, student_grade.ww_score_9,
-            student_grade.ww_score_10
-        ]
-        pt_scores = [
-            student_grade.pt_score_1, student_grade.pt_score_2, student_grade.pt_score_3,
-            student_grade.pt_score_4, student_grade.pt_score_5, student_grade.pt_score_6,
-            student_grade.pt_score_7, student_grade.pt_score_8, student_grade.pt_score_9,
-            student_grade.pt_score_10
-        ]
+        # Count completed and remaining (only among ACTIVE assessments)
+        ww_completed_scores = [s for s in ww_active_scores if s > 0]
+        pt_completed_scores = [s for s in pt_active_scores if s > 0]
         
-        ww_completed = [s for s in ww_scores if s > 0]
-        pt_completed = [s for s in pt_scores if s > 0]
+        ww_remaining_count = ww_active_count - len(ww_completed_scores)
+        pt_remaining_count = pt_active_count - len(pt_completed_scores)
         
-        ww_current_avg = sum(ww_completed) / len(ww_completed) if ww_completed else 0
-        pt_current_avg = sum(pt_completed) / len(pt_completed) if pt_completed else 0
+        ww_current_avg = sum(ww_completed_scores) / len(ww_completed_scores) if ww_completed_scores else 0
+        pt_current_avg = sum(pt_completed_scores) / len(pt_completed_scores) if pt_completed_scores else 0
         
-        # Calculate needed percentages
-        ww_ps_current = student_grade.ww_percentage
-        ww_ps_needed = ((target_initial_grade * ww_weight) / ww_weight) if ww_weight > 0 else 0
-        ww_improvement = max(0, ww_ps_needed - ww_ps_current)
+        # Calculate needed weighted scores
+        ww_ws_target = target_initial_grade * ww_weight
+        pt_ws_target = target_initial_grade * pt_weight
+        qa_ws_target = target_initial_grade * qa_weight
         
-        pt_ps_current = student_grade.pt_percentage
-        pt_ps_needed = ((target_initial_grade * pt_weight) / pt_weight) if pt_weight > 0 else 0
-        pt_improvement = max(0, pt_ps_needed - pt_ps_current)
+        ww_ws_needed = ww_ws_target - current_ww_ws
+        pt_ws_needed = pt_ws_target - current_pt_ws
+        qa_ws_needed = qa_ws_target - current_qa_ws
         
-        qa_ps_needed = ((target_initial_grade * qa_weight) / qa_weight) if qa_weight > 0 else 0
-        qa_score_needed = (qa_ps_needed / 100) * qa_hps_total
+        # Convert to percentages
+        ww_ps_needed = (ww_ws_needed / ww_weight) if ww_weight > 0 else 0
+        pt_ps_needed = (pt_ws_needed / pt_weight) if pt_weight > 0 else 0
+        qa_ps_needed = (qa_ws_needed / qa_weight) if qa_weight > 0 else 0
+        
+        # Find NEXT upcoming assessment (first zero score among ACTIVE assessments)
+        next_ww_hps = None
+        next_ww_index = -1
+        for i in range(ww_active_count):
+            if ww_active_scores[i] == 0:
+                next_ww_hps = ww_active_hps[i]
+                next_ww_index = i + 1  # Display as 1-based
+                break
+        
+        next_pt_hps = None
+        next_pt_index = -1
+        for i in range(pt_active_count):
+            if pt_active_scores[i] == 0:
+                next_pt_hps = pt_active_hps[i]
+                next_pt_index = i + 1
+                break
+        
+        # Calculate remaining HPS totals (only for ACTIVE assessments not yet taken)
+        remaining_ww_hps_total = sum(
+            ww_active_hps[i] for i in range(ww_active_count) 
+            if ww_active_scores[i] == 0
+        )
+        
+        remaining_pt_hps_total = sum(
+            pt_active_hps[i] for i in range(pt_active_count) 
+            if pt_active_scores[i] == 0
+        )
+        
+        # Calculate target scores
+        ww_target_per_next = 0
+        ww_total_target_remaining = 0
+        
+        if ww_remaining_count > 0 and remaining_ww_hps_total > 0:
+            ww_total_target_remaining = (ww_ps_needed / 100) * remaining_ww_hps_total
+            ww_avg_target = ww_total_target_remaining / ww_remaining_count
+            if next_ww_hps:
+                ww_target_per_next = min(next_ww_hps, max(0, ww_avg_target))
+        
+        pt_target_per_next = 0
+        pt_total_target_remaining = 0
+        
+        if pt_remaining_count > 0 and remaining_pt_hps_total > 0:
+            pt_total_target_remaining = (pt_ps_needed / 100) * remaining_pt_hps_total
+            pt_avg_target = pt_total_target_remaining / pt_remaining_count
+            if next_pt_hps:
+                pt_target_per_next = min(next_pt_hps, max(0, pt_avg_target))
+        
+        # QA target
+        qa_hps_total = class_record.qa_hps_1
+        qa_target_score = min(qa_hps_total, max(0, (qa_ps_needed / 100) * qa_hps_total))
         
         result['advice'] = {
             'ww': {
                 'current_avg': round(ww_current_avg, 1),
-                'current_percentage': round(ww_ps_current, 1),
+                'current_percentage': round(student_grade.ww_percentage, 1),
+                'completed_count': len(ww_completed_scores),
+                'remaining_count': ww_remaining_count,
+                'target_per_next': round(ww_target_per_next, 1),
+                'target_hps': next_ww_hps or 10,
+                'next_index': next_ww_index,
+                'total_target_remaining': round(ww_total_target_remaining, 1),
+                'remaining_hps_total': remaining_ww_hps_total,
                 'needed_percentage': round(min(100, ww_ps_needed), 1),
-                'improvement_needed': round(ww_improvement, 1),
                 'message': (
-                    f"Maintain at least {min(100, ww_ps_needed):.0f}% in Written Works" 
-                    if ww_improvement > 0 
-                    else "Current Written Works performance is adequate"
+                    f"Score at least {round(ww_target_per_next, 1)}/{next_ww_hps} on WW #{next_ww_index} (next upcoming)"
+                    if ww_remaining_count > 0 and next_ww_hps
+                    else f"All Written Works completed. Current: {round(ww_current_avg, 1)} average"
                 )
             },
             'pt': {
                 'current_avg': round(pt_current_avg, 1),
-                'current_percentage': round(pt_ps_current, 1),
+                'current_percentage': round(student_grade.pt_percentage, 1),
+                'completed_count': len(pt_completed_scores),
+                'remaining_count': pt_remaining_count,
+                'target_per_next': round(pt_target_per_next, 1),
+                'target_hps': next_pt_hps or 10,
+                'next_index': next_pt_index,
+                'total_target_remaining': round(pt_total_target_remaining, 1),
+                'remaining_hps_total': remaining_pt_hps_total,
                 'needed_percentage': round(min(100, pt_ps_needed), 1),
-                'improvement_needed': round(pt_improvement, 1),
                 'message': (
-                    f"Maintain at least {min(100, pt_ps_needed):.0f}% in Performance Tasks"
-                    if pt_improvement > 0
-                    else "Current Performance Tasks performance is adequate"
+                    f"Score at least {round(pt_target_per_next, 1)}/{next_pt_hps} on PT #{next_pt_index} (next upcoming)"
+                    if pt_remaining_count > 0 and next_pt_hps
+                    else f"All Performance Tasks completed. Current: {round(pt_current_avg, 1)} average"
                 )
             },
             'qa': {
                 'needed_percentage': round(min(100, qa_ps_needed), 1),
-                'needed_score': round(min(qa_hps_total, max(0, qa_score_needed)), 1),
-                'message': f"Score at least {min(qa_hps_total, max(0, qa_score_needed)):.0f}/{qa_hps_total} on the Quarterly Assessment"
+                'needed_score': round(qa_target_score, 1),
+                'total_hps': qa_hps_total,
+                'message': f"Score at least {round(qa_target_score, 0)}/{qa_hps_total} on the Quarterly Assessment"
             },
             'overall_message': (
-                f"Student needs {points_needed:.1f} more points to reach passing grade."
+                f"To reach 75, student needs {round(points_needed, 1)} more points from upcoming assessments."
                 if points_needed > 0
-                else "Student is on track to pass."
+                else "Student is on track to pass. Maintain current performance."
             )
         }
     
@@ -1531,72 +1615,6 @@ def calculate_required_performance(student_grade, class_record):
     return result
 
 
-def calculate_required_performance(student_grade, class_record):
-    """
-    Calculate what scores student needs on remaining tasks to reach 75.
-    Returns dict with required scores for each component.
-    """
-    # Get weights
-    ww_weight = class_record.written_works_weight / 100
-    pt_weight = class_record.performance_tasks_weight / 100
-    qa_weight = class_record.quarterly_assessment_weight / 100
-    
-    # Get HPS totals
-    ww_hps_total = class_record.get_ww_hps_total()
-    pt_hps_total = class_record.get_pt_hps_total()
-    qa_hps_total = class_record.get_qa_hps_total()
-    
-    # Count completed tasks (non-zero scores)
-    ww_scores = student_grade.get_ww_scores_list()
-    pt_scores = student_grade.get_pt_scores_list()
-    
-    ww_completed = sum(1 for score in ww_scores if score > 0)
-    pt_completed = sum(1 for score in pt_scores if score > 0)
-    qa_completed = 1 if student_grade.qa_score_1 > 0 else 0
-    
-    ww_remaining = 10 - ww_completed
-    pt_remaining = 10 - pt_completed
-    qa_remaining = 1 - qa_completed
-    
-    # Calculate current weighted scores
-    current_ww_ws = student_grade.ww_weighted_score
-    current_pt_ws = student_grade.pt_weighted_score
-    current_qa_ws = student_grade.qa_weighted_score
-    
-    # Target initial grade (75 transmutes from ~60)
-    target_initial_grade = 60.0
-    
-    # Calculate points needed
-    points_needed = target_initial_grade - (current_ww_ws + current_pt_ws + current_qa_ws)
-    
-    # Simple approach: distribute evenly across remaining tasks
-    result = {
-        'ww_remaining_count': ww_remaining,
-        'pt_remaining_count': pt_remaining,
-        'qa_remaining_count': qa_remaining,
-        'points_needed': round(points_needed, 2),
-    }
-    
-    # Calculate minimum needed on each remaining task
-    if ww_remaining > 0:
-        # How many points needed from WW component
-        ww_points_needed = (target_initial_grade * ww_weight) - current_ww_ws
-        # What percentage needed on remaining WW
-        ww_percentage_needed = (ww_points_needed / ww_weight) / ww_remaining if ww_remaining > 0 else 0
-        # Convert to score out of 10 (assuming each WW is worth 10)
-        result['ww_min_per_task'] = min(10, max(0, round(ww_percentage_needed / 10, 1)))
-    
-    if pt_remaining > 0:
-        pt_points_needed = (target_initial_grade * pt_weight) - current_pt_ws
-        pt_percentage_needed = (pt_points_needed / pt_weight) / pt_remaining if pt_remaining > 0 else 0
-        result['pt_min_per_task'] = min(10, max(0, round(pt_percentage_needed / 10, 1)))
-    
-    if qa_remaining > 0:
-        qa_points_needed = (target_initial_grade * qa_weight) - current_qa_ws
-        qa_percentage_needed = (qa_points_needed / qa_weight)
-        result['qa_min_score'] = min(qa_hps_total, max(0, round((qa_percentage_needed / 100) * qa_hps_total, 1)))
-    
-    return result
 
 
 @login_required
