@@ -1516,3 +1516,42 @@ class AttendanceHistory(models.Model):
     def get_formatted_time(self):
         """Get formatted time for display"""
         return self.timestamp.strftime('%I:%M %p')
+    
+# cLASSRECORD WARNING
+class EarlyWarningAlert(models.Model):
+    """
+    Tracks early warning alerts for students at risk of failing.
+    """
+    WARNING_TYPE_CHOICES = [
+        ('at_risk', 'At Risk (70-74, Quarter In Progress)'),
+        ('failed', 'Failed (<75, Quarter Complete)'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('dismissed', 'Dismissed'),
+        ('intervention_created', 'Intervention Created'),
+        ('resolved', 'Resolved'),
+    ]
+    
+    student_grade = models.ForeignKey(StudentGrade, on_delete=models.CASCADE, related_name='early_warnings')
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='early_warnings')
+    class_record = models.ForeignKey(ClassRecord, on_delete=models.CASCADE, related_name='early_warnings')
+    
+    warning_type = models.CharField(max_length=10, choices=WARNING_TYPE_CHOICES)
+    current_grade = models.PositiveIntegerField()
+    initial_grade = models.DecimalField(max_digits=5, decimal_places=2, default=0) 
+    required_performance = models.JSONField(default=dict)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    intervention = models.ForeignKey('Intervention', on_delete=models.SET_NULL, null=True, blank=True)
+    
+    flagged_at = models.DateTimeField(auto_now_add=True)
+    viewed_by_teacher = models.BooleanField(default=False)
+    viewed_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        verbose_name = "Early Warning Alert"
+        ordering = ['-flagged_at']
+    
+    def __str__(self):
+        return f"{self.student.last_name} - {self.warning_type} - Grade {self.current_grade}"

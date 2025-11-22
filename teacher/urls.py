@@ -52,7 +52,7 @@
 
 # teacher/urls.py
 from django.urls import path
-from .views import subjectteacher_views, adviser_views, adviser_dashboard_views, adviser_view_views, adviser_masterlist_views, adviser_attendance_views, adviser_settings_views, adviser_learnersprofile_views
+from .views import subjectteacher_views, adviser_views, adviser_dashboard_views, adviser_view_views, adviser_masterlist_views, adviser_attendance_views, adviser_settings_views, adviser_learnersprofile_views, adviser_classrecord_views
 
 app_name = 'teacher'
 
@@ -61,7 +61,7 @@ urlpatterns = [
     # ADVISER + SUBJECT TEACHER
     path('bothaccess-dashboard/', adviser_dashboard_views.bothaccess_dashboard, name='bothaccess-dashboard'),
     path('adviserview/', adviser_view_views.adviser_view, name='adviser-view'),
-    path('adviserclass-record/', adviser_views.adviser_classrecord, name='adviser-classrecord'),
+    path('adviserclass-record/', adviser_classrecord_views.adviser_classrecord, name='adviser-classrecord'),
     path('adviserintervention/', adviser_views.adviser_intervention, name='adviser-intervention'),
     path('advisermasterlist/', adviser_masterlist_views.adviser_masterlist, name='adviser-masterlist'),
     path('adviserattendance/', adviser_attendance_views.adviser_attendance, name='adviser-attendance'),  # Main page
@@ -101,6 +101,17 @@ urlpatterns = [
     path('api/attendance/record/<int:record_id>/delete/', adviser_attendance_views.delete_attendance_record, name='api-delete-attendance'),
     path('api/attendance/record/<int:record_id>/export/', adviser_attendance_views.export_attendance_data, name='api-export-attendance'),
     
+    # Classrecord
+    path('api/classrecord/get/', adviser_classrecord_views.get_class_record, name='api-get-classrecord'),
+    path('api/classrecord/save/', adviser_classrecord_views.save_class_record, name='api-save-classrecord'),
+    path('api/classrecord/<int:record_id>/export/pdf/', adviser_classrecord_views.export_class_record_pdf, name='api-export-pdf'),
+    path('api/classrecord/<int:record_id>/export/excel/', adviser_classrecord_views.export_class_record_excel, name='api-export-excel'),
+    path('api/classrecord/history/', adviser_classrecord_views.get_class_record_history, name='api-classrecord-history'),
+    # Early Warning System Endpoints
+    path('api/classrecord/warnings/check/', adviser_classrecord_views.check_early_warnings, name='api-check-warnings'),
+    path('api/classrecord/warnings/get/', adviser_classrecord_views.get_early_warnings, name='api-get-warnings'),
+    path('api/classrecord/warnings/dismiss/', adviser_classrecord_views.dismiss_warning, name='api-dismiss-warning'),
+
     # SUBJECT TEACHER
     path('subjectteacher-dashboard/', subjectteacher_views.subjectteacher_dashboard, name='subjectteacher-dashboard'),
     path('settings/', subjectteacher_views.teacher_settings, name='teacher-settings'),

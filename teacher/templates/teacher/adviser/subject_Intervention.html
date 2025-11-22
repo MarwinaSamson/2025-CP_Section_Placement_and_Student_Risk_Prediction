@@ -849,6 +849,39 @@
       // Save new intervention
       document.getElementById("btn-save-new-intervention").addEventListener("click", saveNewIntervention);
     });
+
+    // Add to your intervention page's DOMContentLoaded
+document.addEventListener('DOMContentLoaded', () => {
+    // Check if redirected from early warning system
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    if (urlParams.has('warning_id')) {
+        console.log('Intervention created from early warning');
+        
+        // Pre-fill intervention form
+        const studentId = urlParams.get('student_id');
+        const studentName = urlParams.get('student_name');
+        const subjectName = urlParams.get('subject_name');
+        const quarter = urlParams.get('quarter');
+        const grade = urlParams.get('grade');
+        const reason = urlParams.get('reason');
+        
+        // Auto-fill the form (adjust selectors based on your actual form)
+        const reasonField = document.getElementById('input-inter-desc');
+        if (reasonField) {
+            reasonField.value = `Student is currently failing with a grade of ${grade} in ${subjectName} (${quarter}). Immediate intervention required to help student reach passing grade of 75.`;
+        }
+        
+        // Set tier to Tier 3 (intensive)
+        const tierField = document.getElementById('input-inter-tier');
+        if (tierField) {
+            tierField.value = 'Tier 3';
+        }
+        
+        // Show notification
+        showNotification(`Creating intervention for ${studentName}`, 'info');
+    }
+});
   </script>
 </body>
 </html>
