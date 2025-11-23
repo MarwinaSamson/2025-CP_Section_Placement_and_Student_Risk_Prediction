@@ -31,15 +31,21 @@ from enrollmentprocess.models import Student
 # MAIN VIEW - Class Record Page
 # ============================================================================
 
+
 @login_required
 def adviser_classrecord(request):
     """
     Main view for the E-Class Record page.
     Displays the interface for managing student grades across quarters.
+    Now uses session-selected section for auto-loading.
     """
     try:
         # Get the logged-in teacher
         teacher = Teacher.objects.get(user=request.user)
+        
+        # Get selected section from session
+        selected_section_id = request.session.get('selected_section_id')
+        selected_section = None
         
         # Get current school year
         current_sy = SchoolYear.get_current()
@@ -52,6 +58,8 @@ def adviser_classrecord(request):
                 'school_year_choices': [],
                 'sections_with_subjects': '{}',
                 'quarter_choices': ClassRecord.QUARTER_CHOICES,
+                'selected_section_id': None,
+                'selected_section': None,
             })
         
         # CRITICAL: Get sections where teacher is adviser
@@ -73,9 +81,23 @@ def adviser_classrecord(request):
         # Combine sections
         all_sections = (adviser_sections | taught_sections).distinct().order_by('name')
         
+        # Get the selected section object if ID exists
+        if selected_section_id:
+            try:
+                selected_section = all_sections.get(id=selected_section_id)
+                print(f"\n✅ Session-selected section: {selected_section.name} (ID: {selected_section_id})")
+            except Section.DoesNotExist:
+                print(f"\n⚠️ Invalid section ID in session: {selected_section_id}")
+                # Clear invalid session data
+                request.session.pop('selected_section_id', None)
+                request.session.pop('selected_section_name', None)
+                request.session.pop('selected_section_program', None)
+                selected_section_id = None
+        
         # Debug output
         print("\n" + "="*80)
         print(f"DEBUG - Teacher: {teacher.full_name} (ID: {teacher.id})")
+        print(f"DEBUG - Selected Section from Session: {selected_section.name if selected_section else 'None'}")
         print(f"DEBUG - Adviser sections: {adviser_sections.count()}")
         for sec in adviser_sections:
             print(f"  - {sec.name} (ID: {sec.id})")
@@ -143,6 +165,8 @@ def adviser_classrecord(request):
             'sections_with_subjects': sections_with_subjects_json,
             'all_subjects': all_subjects,
             'quarter_choices': ClassRecord.QUARTER_CHOICES,
+            'selected_section_id': selected_section_id,  # Pass to template
+            'selected_section': selected_section,  # Pass section object
         }
         
         return render(request, 'teacher/adviser/Class_Record.html', context)
@@ -156,6 +180,8 @@ def adviser_classrecord(request):
             'school_year_choices': [],
             'sections_with_subjects': '{}',
             'quarter_choices': [],
+            'selected_section_id': None,
+            'selected_section': None,
         })
     except Exception as e:
         print(f"ERROR in adviser_classrecord: {str(e)}")
@@ -168,6 +194,8 @@ def adviser_classrecord(request):
             'school_year_choices': [],
             'sections_with_subjects': '{}',
             'quarter_choices': [],
+            'selected_section_id': None,
+            'selected_section': None,
         })
 
 # ============================================================================

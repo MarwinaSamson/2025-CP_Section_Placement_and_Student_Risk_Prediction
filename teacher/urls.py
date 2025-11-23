@@ -52,7 +52,7 @@
 
 # teacher/urls.py
 from django.urls import path
-from .views import subjectteacher_views, adviser_views, adviser_dashboard_views, adviser_view_views, adviser_masterlist_views, adviser_attendance_views, adviser_settings_views, adviser_learnersprofile_views, adviser_classrecord_views
+from .views import subjectteacher_views, adviser_views, adviser_dashboard_views, adviser_view_views, adviser_masterlist_views, adviser_attendance_views, adviser_settings_views, adviser_learnersprofile_views, adviser_classrecord_views, adviser_subintervention_views, adviser_subview_views
 
 app_name = 'teacher'
 
@@ -62,12 +62,12 @@ urlpatterns = [
     path('bothaccess-dashboard/', adviser_dashboard_views.bothaccess_dashboard, name='bothaccess-dashboard'),
     path('adviserview/', adviser_view_views.adviser_view, name='adviser-view'),
     path('adviserclass-record/', adviser_classrecord_views.adviser_classrecord, name='adviser-classrecord'),
-    path('adviserintervention/', adviser_views.adviser_intervention, name='adviser-intervention'),
+    path('adviserintervention/', adviser_subintervention_views. adviser_sub_intervention, name='adviser-intervention'),
     path('advisermasterlist/', adviser_masterlist_views.adviser_masterlist, name='adviser-masterlist'),
     path('adviserattendance/', adviser_attendance_views.adviser_attendance, name='adviser-attendance'),  # Main page
     path('adviserreports/', adviser_views.adviser_reports, name='adviser-reports'),
     path('advisersettings/', adviser_settings_views.adviser_settings, name='adviser-settings'),
-    path('advisersubview/', adviser_views.adviser_subview, name='adviser-subview'),
+    path('advisersubview/', adviser_subview_views.adviser_subview, name='adviser-subview'),
     path('adviserlearnersprofile/', adviser_learnersprofile_views.adviser_learnerprofile, name='adviser-studentprofile'),
     path('adviser-adviser-intervention/', adviser_views.adviser_adviser_intervention, name='adviser-adviser-intervention'),
     path('adviser-viewclass/', adviser_views.adviser_viewclass, name='adviser-viewclass'),
@@ -78,6 +78,21 @@ urlpatterns = [
     path('api/interventions/<int:intervention_id>/update/', adviser_view_views.add_intervention_update, name='api-add-update'),
     path('api/interventions/<int:intervention_id>/delete/', adviser_view_views.delete_intervention, name='api-delete-intervention'),
     path('api/interventions/updates/<int:update_id>/delete/', adviser_view_views.delete_intervention_update, name='api-delete-update'),
+    
+    # INTERVENTION SYSTEM ENDPOINTS (NEW)
+    path('adviser-sub-intervention/', adviser_subintervention_views.adviser_sub_intervention, name='adviser-sub-intervention'),
+    path('api/intervention/students/', adviser_subintervention_views.get_intervention_students, name='api-intervention-students'),
+    path('api/intervention/student/<int:student_id>/details/', adviser_subintervention_views.get_student_intervention_details, name='api-student-intervention-details'),
+    path('api/intervention/action/create/', adviser_subintervention_views.create_intervention_action, name='api-create-intervention-action'),
+    path('api/intervention/action/<int:action_id>/', adviser_subintervention_views.get_intervention_action, name='api-get-intervention-action'),
+    path('api/intervention/action/<int:action_id>/update/', adviser_subintervention_views.update_intervention_action, name='api-update-intervention-action'),
+    path('api/intervention/action/<int:action_id>/delete/', adviser_subintervention_views.delete_intervention_action, name='api-delete-intervention-action'),
+    path('api/intervention/note/add/', adviser_subintervention_views.add_intervention_note, name='api-add-intervention-note'),
+    path('api/intervention/<int:intervention_id>/resolve/', adviser_subintervention_views.resolve_intervention, name='api-resolve-intervention'),
+    path('api/intervention/<int:intervention_id>/reactivate/', adviser_subintervention_views.reactivate_intervention, name='api-reactivate-intervention'),
+    path('api/intervention/<int:intervention_id>/escalate/', adviser_subintervention_views.escalate_to_tier_3, name='api-escalate-intervention'),
+    
+   
     
     # MASTERLIST API ENDPOINTS
     path('api/masterlist/student/<int:student_id>/grades/', adviser_masterlist_views.get_student_grades, name='api-student-grades'),
@@ -112,7 +127,14 @@ urlpatterns = [
     path('api/classrecord/warnings/get/', adviser_classrecord_views.get_early_warnings, name='api-get-warnings'),
     path('api/classrecord/warnings/dismiss/', adviser_classrecord_views.dismiss_warning, name='api-dismiss-warning'),
 
-    # SUBJECT TEACHER
+    # Subject Teacher View
+    # path('subject-teacher-view/', adviser_subview_views.subject_teacher_view, name='subject-teacher-view'),
+    path('api/set-active-section/', adviser_subview_views.set_active_section, name='set-active-section'),
+    path('api/get-active-section/', adviser_subview_views.get_active_section, name='get-active-section'),
+    path('api/clear-active-section/', adviser_subview_views.clear_active_section, name='clear-active-section'),
+
+
+    # SUBJECT TEACHER(LATER NA TO BASTA ANOTHER FOLDER TO)
     path('subjectteacher-dashboard/', subjectteacher_views.subjectteacher_dashboard, name='subjectteacher-dashboard'),
     path('settings/', subjectteacher_views.teacher_settings, name='teacher-settings'),
     path('sub-teacher-view/', subjectteacher_views.sub_teacher_view, name='sub-teacher-view'),

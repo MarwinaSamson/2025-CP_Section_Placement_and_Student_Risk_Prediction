@@ -235,6 +235,369 @@ class InterventionUpdate(models.Model):
             return 'update-worsened'
         return ''
     
+# SubjectTeacher Intervention
+
+class InterventionPlan(models.Model):
+    """
+    Main intervention plan for students who need support.
+    Tracks risk levels and intervention tiers.
+    """
+    QUARTER_CHOICES = [
+        ('Q1', 'Quarter 1'),
+        ('Q2', 'Quarter 2'),
+        ('Q3', 'Quarter 3'),
+        ('Q4', 'Quarter 4'),
+    ]
+    
+    RISK_LEVEL_CHOICES = [
+        ('At Risk', 'At Risk'),
+        ('Critical', 'Critical'),
+        ('Resolved', 'Resolved'),
+    ]
+    
+    TIER_CHOICES = [
+        ('Tier 1', 'Tier 1: Prevention'),
+        ('Tier 2', 'Tier 2: Targeted Support'),
+        ('Tier 3', 'Tier 3: Intensive Intervention'),
+    ]
+    
+    # Core Information
+    student = models.ForeignKey(
+        Student, 
+        on_delete=models.CASCADE, 
+        related_name='intervention_plans',
+        verbose_name="Student"
+    )
+    section = models.ForeignKey(
+        Section,
+        on_delete=models.CASCADE,
+        related_name='intervention_plans',
+        verbose_name="Section"
+    )
+    subject = models.ForeignKey(
+        Subject,
+        on_delete=models.CASCADE,
+        related_name='intervention_plans',
+        verbose_name="Subject"
+    )
+    created_by = models.ForeignKey(
+        Teacher,
+        on_delete=models.CASCADE,
+        related_name='created_intervention_plans',
+        verbose_name="Created By"
+    )
+    
+    # Period
+    quarter = models.CharField(
+        max_length=2, 
+        choices=QUARTER_CHOICES,
+        verbose_name="Quarter"
+    )
+    school_year = models.ForeignKey(
+        SchoolYear,
+        on_delete=models.CASCADE,
+        related_name='intervention_plans',
+        verbose_name="School Year"
+    )
+    
+    # Risk Assessment
+    risk_level = models.CharField(
+        max_length=20,
+        choices=RISK_LEVEL_CHOICES,
+        default='At Risk',
+        verbose_name="Risk Level"
+    )
+    current_grade = models.FloatField(
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        verbose_name="Current Grade"
+    )
+    total_absences = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Total Absences"
+    )
+    missing_written_works = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Missing Written Works"
+    )
+    missing_performance_tasks = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Missing Performance Tasks"
+    )
+    missed_quarterly_assessment = models.BooleanField(
+        default=False,
+        verbose_name="Missed Quarterly Assessment"
+    )
+    
+    # Intervention Details
+    current_tier = models.CharField(
+        max_length=10,
+        choices=TIER_CHOICES,
+        default='Tier 1',
+        verbose_name="Current Intervention Tier"
+    )
+    
+    # Status
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name="Is Active"
+    )
+    is_resolved = models.BooleanField(
+        default=False,
+        verbose_name="Is Resolved"
+    )
+    resolved_date = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Resolved Date"
+    )
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Intervention Plan"
+        verbose_name_plural = "Intervention Plans"
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['student', 'quarter', 'school_year']),
+            models.Index(fields=['risk_level', 'is_active']),
+            models.Index(fields=['section', 'subject']),
+        ]
+    
+    def __str__(self):
+        return f"{self.student.last_name}, {self.student.first_name} - {self.subject.subject_name} ({self.quarter})"
+    
+    def calculate_risk_level(self):
+        """
+        Calculate risk level based on current data:
+        - Critical: 7+ absences OR missed QA OR too many missing works
+        - At Risk: 5+ absences OR 2+ missing works
+        """
+        # Critical conditions
+        if self.total_absences >= 7:
+            return 'Critical'
+        if self.missed_quarterly_assessment:
+            return 'Critical'
+        if self.missing_written_works >= 4 or self.missing_performance_tasks >= 3:
+            return 'Critical'
+        
+        # At Risk conditions
+        if self.total_absences >= 5:
+            return 'At Risk'
+        if self.missing_written_works >= 2 or self.missing_performance_tasks >= 2:
+            return 'At Risk'
+        if self.missing_written_works >= 1 and self.missing_performance_tasks >= 1:
+            return 'At Risk'
+        
+        # If resolved
+        if self.is_resolved:
+            return 'Resolved'
+        
+        return 'At Risk'
+    
+    def determine_tier(self):
+        """
+        Determine intervention tier based on risk level and response:
+        - Tier 1: Prevention (initial warning)
+        - Tier 2: Targeted (student not responding to Tier 1)
+        - Tier 3: Intensive (requires adviser intervention)
+        """
+        if self.risk_level == 'Critical':
+            return 'Tier 2'
+        
+        # Check if student has been unresponsive
+        recent_actions = self.intervention_actions.filter(
+            created_at__gte=timezone.now() - timezone.timedelta(days=14)
+        ).count()
+        
+        if recent_actions >= 2 and self.risk_level == 'At Risk':
+            return 'Tier 2'
+        
+        return 'Tier 1'
+    
+    def update_risk_assessment(self):
+        """Update risk level and tier based on current data"""
+        self.risk_level = self.calculate_risk_level()
+        self.current_tier = self.determine_tier()
+        self.save()
+    
+    def get_risk_factors(self):
+        """Get list of risk factors for this student"""
+        factors = []
+        
+        if self.current_grade < 75:
+            factors.append(f"Failing grade: {self.current_grade}")
+        
+        if self.total_absences >= 7:
+            factors.append(f"Excessive absences: {self.total_absences}")
+        elif self.total_absences >= 5:
+            factors.append(f"High absences: {self.total_absences}")
+        
+        if self.missing_written_works > 0:
+            factors.append(f"Missing written works: {self.missing_written_works}")
+        
+        if self.missing_performance_tasks > 0:
+            factors.append(f"Missing performance tasks: {self.missing_performance_tasks}")
+        
+        if self.missed_quarterly_assessment:
+            factors.append("Missed quarterly assessment")
+        
+        return factors
+
+
+class InterventionAction(models.Model):
+    """
+    Individual intervention actions taken for a student.
+    Records what was done, when, and the outcome.
+    """
+    ACTION_TYPE_CHOICES = [
+        ('Student Conference', 'Student Conference'),
+        ('Parent Contact', 'Parent Contact'),
+        ('Tutoring Session', 'Tutoring Session'),
+        ('Makeup Work', 'Makeup Work Opportunity'),
+        ('Behavior Plan', 'Behavior Plan'),
+        ('Counseling Referral', 'Counseling Referral'),
+        ('Other', 'Other'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('Planned', 'Planned'),
+        ('In Progress', 'In Progress'),
+        ('Completed', 'Completed'),
+        ('Not Completed', 'Not Completed'),
+    ]
+    
+    intervention_plan = models.ForeignKey(
+        InterventionPlan,
+        on_delete=models.CASCADE,
+        related_name='intervention_actions',
+        verbose_name="Intervention Plan"
+    )
+    
+    # Action Details
+    tier = models.CharField(
+        max_length=10,
+        choices=InterventionPlan.TIER_CHOICES,
+        verbose_name="Tier"
+    )
+    action_type = models.CharField(
+        max_length=30,
+        choices=ACTION_TYPE_CHOICES,
+        verbose_name="Action Type"
+    )
+    action_name = models.CharField(
+        max_length=200,
+        verbose_name="Action Name"
+    )
+    description = models.TextField(
+        verbose_name="Description"
+    )
+    
+    # Timeline
+    start_date = models.DateField(
+        verbose_name="Start Date"
+    )
+    target_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Target Completion Date"
+    )
+    completion_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Actual Completion Date"
+    )
+    
+    # Status and Progress
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='Planned',
+        verbose_name="Status"
+    )
+    progress_notes = models.TextField(
+        blank=True,
+        verbose_name="Progress Notes"
+    )
+    teacher_notes = models.TextField(
+        blank=True,
+        verbose_name="Teacher Notes"
+    )
+    
+    # Who handled this
+    handled_by = models.ForeignKey(
+        Teacher,
+        on_delete=models.CASCADE,
+        related_name='handled_intervention_actions',
+        verbose_name="Handled By"
+    )
+    
+    # Outcome
+    was_successful = models.BooleanField(
+        null=True,
+        blank=True,
+        verbose_name="Was Successful"
+    )
+    outcome_notes = models.TextField(
+        blank=True,
+        verbose_name="Outcome Notes"
+    )
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Intervention Action"
+        verbose_name_plural = "Intervention Actions"
+        ordering = ['-start_date', '-created_at']
+        indexes = [
+            models.Index(fields=['intervention_plan', 'status']),
+            models.Index(fields=['tier', 'action_type']),
+        ]
+    
+    def __str__(self):
+        return f"{self.action_name} - {self.intervention_plan.student.last_name}"
+
+
+class InterventionNote(models.Model):
+    """
+    Progress notes and observations for intervention plans.
+    """
+    intervention_plan = models.ForeignKey(
+        InterventionPlan,
+        on_delete=models.CASCADE,
+        related_name='notes',
+        verbose_name="Intervention Plan"
+    )
+    
+    note = models.TextField(
+        verbose_name="Note"
+    )
+    note_date = models.DateField(
+        default=timezone.now,
+        verbose_name="Note Date"
+    )
+    
+    created_by = models.ForeignKey(
+        Teacher,
+        on_delete=models.CASCADE,
+        related_name='intervention_notes',
+        verbose_name="Created By"
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = "Intervention Note"
+        verbose_name_plural = "Intervention Notes"
+        ordering = ['-note_date', '-created_at']
+    
+    def __str__(self):
+        return f"Note for {self.intervention_plan.student.last_name} ({self.note_date})"
+    
 # classrecord
 
 class ClassRecord(models.Model):
@@ -306,28 +669,28 @@ class ClassRecord(models.Model):
     
     # Highest Possible Scores for each component (up to 10 items each)
     # Written Works HPS
-    ww_hps_1 = models.PositiveIntegerField(default=10, verbose_name="WW Item 1 HPS")
-    ww_hps_2 = models.PositiveIntegerField(default=10, verbose_name="WW Item 2 HPS")
-    ww_hps_3 = models.PositiveIntegerField(default=10, verbose_name="WW Item 3 HPS")
-    ww_hps_4 = models.PositiveIntegerField(default=10, verbose_name="WW Item 4 HPS")
-    ww_hps_5 = models.PositiveIntegerField(default=10, verbose_name="WW Item 5 HPS")
-    ww_hps_6 = models.PositiveIntegerField(default=10, verbose_name="WW Item 6 HPS")
-    ww_hps_7 = models.PositiveIntegerField(default=10, verbose_name="WW Item 7 HPS")
-    ww_hps_8 = models.PositiveIntegerField(default=10, verbose_name="WW Item 8 HPS")
-    ww_hps_9 = models.PositiveIntegerField(default=10, verbose_name="WW Item 9 HPS")
-    ww_hps_10 = models.PositiveIntegerField(default=10, verbose_name="WW Item 10 HPS")
+    ww_hps_1 = models.PositiveIntegerField(default=0, verbose_name="WW Item 1 HPS")
+    ww_hps_2 = models.PositiveIntegerField(default=0, verbose_name="WW Item 2 HPS")
+    ww_hps_3 = models.PositiveIntegerField(default=0, verbose_name="WW Item 3 HPS")
+    ww_hps_4 = models.PositiveIntegerField(default=0, verbose_name="WW Item 4 HPS")
+    ww_hps_5 = models.PositiveIntegerField(default=0, verbose_name="WW Item 5 HPS")
+    ww_hps_6 = models.PositiveIntegerField(default=0, verbose_name="WW Item 6 HPS")
+    ww_hps_7 = models.PositiveIntegerField(default=0, verbose_name="WW Item 7 HPS")
+    ww_hps_8 = models.PositiveIntegerField(default=0, verbose_name="WW Item 8 HPS")
+    ww_hps_9 = models.PositiveIntegerField(default=0, verbose_name="WW Item 9 HPS")
+    ww_hps_10 = models.PositiveIntegerField(default=0, verbose_name="WW Item 10 HPS")
     
     # Performance Tasks HPS
-    pt_hps_1 = models.PositiveIntegerField(default=10, verbose_name="PT Item 1 HPS")
-    pt_hps_2 = models.PositiveIntegerField(default=10, verbose_name="PT Item 2 HPS")
-    pt_hps_3 = models.PositiveIntegerField(default=10, verbose_name="PT Item 3 HPS")
-    pt_hps_4 = models.PositiveIntegerField(default=10, verbose_name="PT Item 4 HPS")
-    pt_hps_5 = models.PositiveIntegerField(default=10, verbose_name="PT Item 5 HPS")
-    pt_hps_6 = models.PositiveIntegerField(default=10, verbose_name="PT Item 6 HPS")
-    pt_hps_7 = models.PositiveIntegerField(default=10, verbose_name="PT Item 7 HPS")
-    pt_hps_8 = models.PositiveIntegerField(default=10, verbose_name="PT Item 8 HPS")
-    pt_hps_9 = models.PositiveIntegerField(default=10, verbose_name="PT Item 9 HPS")
-    pt_hps_10 = models.PositiveIntegerField(default=10, verbose_name="PT Item 10 HPS")
+    pt_hps_1 = models.PositiveIntegerField(default=0, verbose_name="PT Item 1 HPS")
+    pt_hps_2 = models.PositiveIntegerField(default=0, verbose_name="PT Item 2 HPS")
+    pt_hps_3 = models.PositiveIntegerField(default=0, verbose_name="PT Item 3 HPS")
+    pt_hps_4 = models.PositiveIntegerField(default=0, verbose_name="PT Item 4 HPS")
+    pt_hps_5 = models.PositiveIntegerField(default=0, verbose_name="PT Item 5 HPS")
+    pt_hps_6 = models.PositiveIntegerField(default=0, verbose_name="PT Item 6 HPS")
+    pt_hps_7 = models.PositiveIntegerField(default=0, verbose_name="PT Item 7 HPS")
+    pt_hps_8 = models.PositiveIntegerField(default=0, verbose_name="PT Item 8 HPS")
+    pt_hps_9 = models.PositiveIntegerField(default=0, verbose_name="PT Item 9 HPS")
+    pt_hps_10 = models.PositiveIntegerField(default=0, verbose_name="PT Item 10 HPS")
     
     # Quarterly Assessment HPS
     qa_hps_1 = models.PositiveIntegerField(default=50, verbose_name="QA Item 1 HPS")

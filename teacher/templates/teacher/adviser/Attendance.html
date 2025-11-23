@@ -1606,6 +1606,34 @@
         if (el) el.value = '';
       });
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+    // Auto-select section from session
+    const selectedSectionId = {{ selected_section_id|default:'null' }};
+    
+    if (selectedSectionId) {
+        console.log('📌 Attendance - Auto-selecting section:', selectedSectionId);
+        
+        // Find the section dropdown in attendance form
+        const sectionSelect = document.querySelector('select[name="section"]') || 
+                             document.getElementById('section') ||
+                             document.querySelector('.section-dropdown');
+        
+        if (sectionSelect) {
+            sectionSelect.value = selectedSectionId;
+            
+            // Trigger change to load section info
+            const changeEvent = new Event('change', { bubbles: true });
+            sectionSelect.dispatchEvent(changeEvent);
+            
+            console.log('✅ Attendance section auto-selected');
+            
+            // Optional: Auto-load section data
+            // If you have a function like loadSectionInfo(), call it here:
+            // loadSectionInfo(selectedSectionId);
+        }
+    }
+});
   </script>
 </body>
 </html>

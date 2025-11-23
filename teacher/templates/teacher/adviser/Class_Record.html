@@ -715,6 +715,15 @@
   .failed-highlight .warning-badge {
     color: #dc3545;
   }
+
+  #save-btn.unsaved {
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
+  }
   </style>
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased">
@@ -851,29 +860,29 @@
             <th class="hps-label"></th>
             <th class="hps-label student-name">Highest Possible Score</th>
             <th class="hps-label student-sex"></th>
-            <td><input type="number" class="hps" id="q1-ww-hps-1" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-ww-hps-2" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-ww-hps-3" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-ww-hps-4" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-ww-hps-5" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-ww-hps-6" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-ww-hps-7" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-ww-hps-8" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-ww-hps-9" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-ww-hps-10" data-quarter="1" value="10"></td>
+            <td><input type="number" class="hps" id="q1-ww-hps-1" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-ww-hps-2" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-ww-hps-3" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-ww-hps-4" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-ww-hps-5" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-ww-hps-6" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-ww-hps-7" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-ww-hps-8" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-ww-hps-9" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-ww-hps-10" data-quarter="1" value="0"></td>
             <td class="hps-total" id="q1-ww-hps-total">100</td>
             <td class="locked">100</td><td class="locked" id="q1-ww-hps-ws">30.00</td>
             
-            <td><input type="number" class="hps" id="q1-pt-hps-1" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-pt-hps-2" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-pt-hps-3" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-pt-hps-4" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-pt-hps-5" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-pt-hps-6" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-pt-hps-7" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-pt-hps-8" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-pt-hps-9" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-pt-hps-10" data-quarter="1" value="10"></td>
+            <td><input type="number" class="hps" id="q1-pt-hps-1" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-pt-hps-2" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-pt-hps-3" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-pt-hps-4" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-pt-hps-5" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-pt-hps-6" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-pt-hps-7" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-pt-hps-8" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-pt-hps-9" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-pt-hps-10" data-quarter="1" value="0"></td>
             <td class="hps-total" id="q1-pt-hps-total">100</td>
             <td class="locked">100</td><td class="locked" id="q1-pt-hps-ws">50.00</td>
             
@@ -1299,7 +1308,10 @@
 <script>
 console.log('=== Starting Class Record Initialization ===');
 
-// Initialize with error handling
+// ============================================================================
+// GLOBAL VARIABLES & CONFIGURATION
+// ============================================================================
+
 window.SECTIONS_WITH_SUBJECTS = {};
 try {
     const sectionsData = '{{ sections_with_subjects|escapejs }}';
@@ -1329,6 +1341,10 @@ let currentClassRecordId = null;
 let unsavedChanges = false;
 let autoSaveTimeout = null;
 
+// Early Warning System state
+let activeWarnings = {};
+let currentWarningData = null;
+
 // Debug all the data
 console.log('Teacher ID:', window.CURRENT_TEACHER_ID);
 console.log('School Year:', window.CURRENT_SCHOOL_YEAR);
@@ -1336,6 +1352,127 @@ console.log('Total sections in dropdown:', {{ all_sections|length }});
 console.log('Total subjects available:', {{ all_subjects|length }});
 
 console.log('=== Initialization Complete ===\n');
+
+
+// ============================================================================
+// HELPER FUNCTIONS - Utilities
+// ============================================================================
+
+function getCsrfToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+}
+
+function showLoader(message) {
+    const loader = document.getElementById('main-loader');
+    if (loader) {
+        loader.style.display = 'block';
+    }
+}
+
+function hideLoader() {
+    const loader = document.getElementById('main-loader');
+    if (loader) {
+        loader.style.display = 'none';
+    }
+}
+
+function showNotification(message, type = 'info') {
+    console.log(`[${type.toUpperCase()}] ${message}`);
+    
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 8px;
+        color: white;
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        font-weight: 500;
+        ${type === 'success' ? 'background: #10b981;' : ''}
+        ${type === 'error' ? 'background: #ef4444;' : ''}
+        ${type === 'warning' ? 'background: #f59e0b;' : ''}
+        ${type === 'info' ? 'background: #3b82f6;' : ''}
+    `;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+/**
+ * Update cell value only if changed (prevents unnecessary reflows)
+ */
+function updateCellValue(cell, newValue) {
+    if (!cell) return;
+    const currentValue = cell.innerText || cell.textContent;
+    if (currentValue !== String(newValue)) {
+        cell.innerText = newValue;
+        highlightChangedCell(cell);
+    }
+}
+
+/**
+ * Add visual feedback when a grade changes
+ */
+function highlightChangedCell(cell) {
+    if (!cell) return;
+    
+    cell.style.transition = 'background-color 0.3s ease';
+    cell.style.backgroundColor = '#d4edda'; // Light green
+    
+    setTimeout(() => {
+        cell.style.backgroundColor = '';
+    }, 1000);
+}
+
+/**
+ * Mark as unsaved (visual indicator)
+ */
+function markUnsaved() {
+    unsavedChanges = true;
+    
+    const saveBtn = document.getElementById('save-btn');
+    if (saveBtn && !saveBtn.classList.contains('unsaved')) {
+        saveBtn.classList.add('unsaved');
+        saveBtn.innerHTML = '<i class="fa-solid fa-save"></i> Save*';
+        saveBtn.style.backgroundColor = '#ffc107';
+    }
+}
+
+/**
+ * Clear unsaved indicator after successful save
+ */
+function clearUnsavedIndicator() {
+    unsavedChanges = false;
+    
+    const saveBtn = document.getElementById('save-btn');
+    if (saveBtn) {
+        saveBtn.classList.remove('unsaved');
+        saveBtn.innerHTML = '<i class="fa-solid fa-save"></i> Save';
+        saveBtn.style.backgroundColor = '#007bff';
+    }
+}
+
+/**
+ * Debounce helper - delays function execution
+ */
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
 
 
 // ============================================================================
@@ -1359,16 +1496,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
-            // Clear existing subject options
             subjectSelect.innerHTML = '<option value="">Select Subject</option>';
-            
-            // Get subjects for this section
             const sectionData = window.SECTIONS_WITH_SUBJECTS[sectionId];
             
             if (sectionData && sectionData.subjects && sectionData.subjects.length > 0) {
                 console.log('Found subjects for section:', sectionData.subjects);
                 
-                // Populate subjects dropdown
                 sectionData.subjects.forEach(subject => {
                     const option = document.createElement('option');
                     option.value = subject.code;
@@ -1377,10 +1510,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     subjectSelect.appendChild(option);
                 });
                 
-                // Enable the subject dropdown
                 subjectSelect.disabled = false;
                 
-                // Auto-select first subject if there's only one
                 if (sectionData.subjects.length === 1) {
                     subjectSelect.value = sectionData.subjects[0].code;
                     subjectSelect.dispatchEvent(new Event('change'));
@@ -1435,32 +1566,68 @@ document.addEventListener('DOMContentLoaded', () => {
         printBtn.addEventListener('click', () => window.print());
     }
     
-    // Auto-save on input changes (debounced)
+    // ========================================================================
+    // REAL-TIME INPUT HANDLERS - INSTANT CALCULATIONS
+    // ========================================================================
     const mainContainer = document.querySelector('.main-container');
     if (mainContainer) {
         mainContainer.addEventListener('input', (e) => {
             const target = e.target;
             
+            // Case 1: Student score input changed - CALCULATE IMMEDIATELY
             if (target.classList.contains('score')) {
                 const activeTab = document.querySelector('.tab-content[style*="display: block"]');
                 if (activeTab) {
                     const qNum = activeTab.id.replace('Q', '');
-                    calculateQuarterGrades(qNum);
+                    
+                    // ✅ INSTANT CALCULATION (no delay)
+                    requestAnimationFrame(() => {
+                        calculateQuarterGrades(qNum);
+                    });
                 }
                 markUnsaved();
-                debouncedAutoSave();
             }
+            // Case 2: HPS changed - CALCULATE IMMEDIATELY
             else if (target.classList.contains('hps')) {
                 const qNum = target.dataset.quarter;
-                calculateQuarterHPS(qNum);
+                
+                // ✅ INSTANT CALCULATION
+                requestAnimationFrame(() => {
+                    calculateQuarterHPS(qNum);
+                    calculateQuarterGrades(qNum);
+                });
                 markUnsaved();
-                debouncedAutoSave();
             }
+            // Case 3: Weight changed - CALCULATE IMMEDIATELY
             else if (target.classList.contains('weight-input')) {
                 const qNum = target.dataset.quarter;
-                updateQuarterWeights(qNum);
+                
+                // ✅ INSTANT CALCULATION
+                requestAnimationFrame(() => {
+                    updateQuarterWeights(qNum);
+                    calculateQuarterGrades(qNum);
+                });
                 markUnsaved();
-                debouncedAutoSave();
+            }
+        });
+        
+        // ====================================================================
+        // DEBOUNCED AUTO-SAVE (Separate from calculations)
+        // Only saves to server, doesn't trigger calculations
+        // ====================================================================
+        const debouncedSave = debounce(() => {
+            if (unsavedChanges && currentClassRecordId) {
+                console.log('🔄 Auto-saving after 5 seconds of inactivity...');
+                saveClassRecord();
+            }
+        }, 5000);
+        
+        mainContainer.addEventListener('input', (e) => {
+            const target = e.target;
+            if (target.classList.contains('score') || 
+                target.classList.contains('hps') || 
+                target.classList.contains('weight-input')) {
+                debouncedSave();
             }
         });
     }
@@ -1489,6 +1656,25 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Load history sidebar
     loadHistory();
+    
+    // Initialize early warning system
+    setTimeout(() => {
+        initializeEarlyWarningSystem();
+    }, 1000);
+    
+    // Auto-select section from session
+    const selectedSectionId = {{ selected_section_id|default:'null' }};
+    if (selectedSectionId) {
+        console.log('📌 Auto-selecting section from session:', selectedSectionId);
+        
+        const sectionSelect = document.getElementById('section-select');
+        if (sectionSelect) {
+            sectionSelect.value = selectedSectionId;
+            const event = new Event('change', { bubbles: true });
+            sectionSelect.dispatchEvent(event);
+            console.log('✅ Section auto-selected and change event triggered');
+        }
+    }
     
     // Warn before leaving with unsaved changes
     window.addEventListener('beforeunload', (e) => {
@@ -1538,8 +1724,7 @@ async function loadClassRecord(sectionId, subjectCode, quarter) {
                 showNotification('Class record loaded successfully', 'info');
             }
             
-            // Reset unsaved changes flag
-            unsavedChanges = false;
+            clearUnsavedIndicator();
         } else {
             showNotification(data.error || 'Failed to load class record', 'error');
             console.error('Error:', data.error);
@@ -1560,7 +1745,6 @@ async function loadClassRecord(sectionId, subjectCode, quarter) {
 function populateClassRecord(classRecord, students, quarter) {
     console.log('=== POPULATING CLASS RECORD ===');
     console.log('Quarter:', quarter);
-    console.log('Students:', students);
     console.log('Students count:', students.length);
     
     const qNum = quarter.replace('Q', '');
@@ -1591,17 +1775,15 @@ function populateClassRecord(classRecord, students, quarter) {
     
     // Populate student rows
     const tbody = document.getElementById(`${qLower}-body`);
-    console.log('Table body element:', tbody);
     
     if (!tbody) {
         console.error('❌ Table body not found:', `${qLower}-body`);
         return;
     }
     
-    tbody.innerHTML = ''; // Clear existing rows
+    tbody.innerHTML = '';
     
     if (students.length === 0) {
-        console.warn('⚠ No students to display');
         tbody.innerHTML = `
             <tr>
                 <td colspan="32" style="text-align: center; padding: 20px; color: #888;">
@@ -1612,14 +1794,12 @@ function populateClassRecord(classRecord, students, quarter) {
         return;
     }
     
-    // Create rows for each student
     students.forEach((student, idx) => {
-        console.log(`Creating row for student ${idx + 1}:`, student.name);
         const row = createStudentRow(qLower, student, idx + 1);
         tbody.appendChild(row);
     });
     
-    console.log(`✅ Successfully added ${students.length} student rows to table`);
+    console.log(`✅ Successfully added ${students.length} student rows`);
     
     // Update summary section name
     const summaryName = document.getElementById('summary-section-name');
@@ -1635,21 +1815,17 @@ function populateClassRecord(classRecord, students, quarter) {
 
 
 function createStudentRow(quarter, student, number) {
-    console.log('Creating row HTML for:', student.name);
-    
     const row = document.createElement('tr');
     row.id = `${quarter}-student-${student.id}`;
     row.dataset.studentId = student.id;
     row.dataset.gradeId = student.grade_id;
     
-    // Start building the row HTML
     let rowHTML = `
         <td>${number}</td>
         <td class="student-name">${student.name}</td>
         <td class="student-sex">${student.gender}</td>
     `;
     
-    // Written Works columns (10 columns)
     student.scores.ww.forEach((score) => {
         rowHTML += `<td><input type="number" class="score ${quarter}-ww" value="${score || 0}" step="0.01"></td>`;
     });
@@ -1659,7 +1835,6 @@ function createStudentRow(quarter, student, number) {
         <td class="locked ${quarter}-ww-ws">${(student.computed.ww_weighted_score || 0).toFixed(2)}</td>
     `;
     
-    // Performance Tasks columns (10 columns)
     student.scores.pt.forEach((score) => {
         rowHTML += `<td><input type="number" class="score ${quarter}-pt" value="${score || 0}" step="0.01"></td>`;
     });
@@ -1669,14 +1844,12 @@ function createStudentRow(quarter, student, number) {
         <td class="locked ${quarter}-pt-ws">${(student.computed.pt_weighted_score || 0).toFixed(2)}</td>
     `;
     
-    // Quarterly Assessment columns
     rowHTML += `
         <td><input type="number" class="score ${quarter}-qa" value="${student.scores.qa[0] || 0}" step="0.01"></td>
         <td class="locked ${quarter}-qa-ps">${(student.computed.qa_percentage || 0).toFixed(2)}</td>
         <td class="locked ${quarter}-qa-ws">${(student.computed.qa_weighted_score || 0).toFixed(2)}</td>
     `;
     
-    // Grade columns
     rowHTML += `
         <td class="locked ${quarter}-initial-grade">${(student.computed.initial_grade || 0).toFixed(2)}</td>
         <td class="locked ${quarter}-quarterly-grade">${student.computed.quarterly_grade || 0}</td>
@@ -1688,278 +1861,7 @@ function createStudentRow(quarter, student, number) {
 
 
 // ============================================================================
-// SAVE CLASS RECORD TO API
-// ============================================================================
-
-async function saveClassRecord() {
-    if (!currentClassRecordId) {
-        showNotification('No class record loaded', 'warning');
-        return;
-    }
-    
-    showLoader('Saving class record...');
-    
-    try {
-        // Collect current data from UI
-        const activeTab = document.querySelector('.tab-content[style*="display: block"]');
-        const qNum = activeTab?.id.replace('Q', '') || '1';
-        const q = `q${qNum}`;
-        
-        // Collect weights
-        const weights = {
-            ww: parseInt(document.getElementById(`${q}-ww-weight`)?.value) || 30,
-            pt: parseInt(document.getElementById(`${q}-pt-weight`)?.value) || 50,
-            qa: parseInt(document.getElementById(`${q}-qa-weight`)?.value) || 20
-        };
-        
-        // Collect HPS
-        const hps = {
-            ww: [],
-            pt: [],
-            qa: []
-        };
-        
-        for (let i = 1; i <= 10; i++) {
-            const wwHps = document.getElementById(`${q}-ww-hps-${i}`);
-            const ptHps = document.getElementById(`${q}-pt-hps-${i}`);
-            if (wwHps) hps.ww.push(parseInt(wwHps.value) || 10);
-            if (ptHps) hps.pt.push(parseInt(ptHps.value) || 10);
-        }
-        
-        const qaHps = document.getElementById(`${q}-qa-hps-1`);
-        if (qaHps) hps.qa.push(parseInt(qaHps.value) || 50);
-        
-        // Collect student scores
-        const students = [];
-        const tbody = document.getElementById(`${q}-body`);
-        
-        if (tbody) {
-            tbody.querySelectorAll('tr[data-grade-id]').forEach(row => {
-                const gradeId = row.dataset.gradeId;
-                if (!gradeId) return;
-                
-                const scores = {
-                    ww: [],
-                    pt: [],
-                    qa: []
-                };
-                
-                row.querySelectorAll(`.${q}-ww`).forEach(input => {
-                    scores.ww.push(parseFloat(input.value) || 0);
-                });
-                
-                row.querySelectorAll(`.${q}-pt`).forEach(input => {
-                    scores.pt.push(parseFloat(input.value) || 0);
-                });
-                
-                row.querySelectorAll(`.${q}-qa`).forEach(input => {
-                    scores.qa.push(parseFloat(input.value) || 0);
-                });
-                
-                students.push({
-                    grade_id: parseInt(gradeId),
-                    scores: scores
-                });
-            });
-        }
-        
-        // Send to backend
-        const response = await fetch(window.API_SAVE_CLASSRECORD, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCsrfToken()
-            },
-            body: JSON.stringify({
-                class_record_id: currentClassRecordId,
-                weights: weights,
-                hps: hps,
-                students: students
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showNotification('Class record saved successfully!', 'success');
-            unsavedChanges = false;
-            
-            // Show modal
-            const modal = document.getElementById('saveModal');
-            if (modal) {
-                modal.style.display = 'block';
-                setTimeout(() => {
-                    modal.style.display = 'none';
-                }, 2000);
-            }
-            
-            // Reload history
-            loadHistory();
-        } else {
-            showNotification(data.error || 'Failed to save class record', 'error');
-        }
-    } catch (error) {
-        console.error('Error saving class record:', error);
-        showNotification('Error saving class record. Please try again.', 'error');
-    } finally {
-        hideLoader();
-    }
-}
-
-
-// Debounced auto-save
-function debouncedAutoSave() {
-    if (autoSaveTimeout) {
-        clearTimeout(autoSaveTimeout);
-    }
-    
-    autoSaveTimeout = setTimeout(() => {
-        console.log('Auto-saving...');
-        saveClassRecord();
-    }, 5000); // 5 seconds after last change
-}
-
-
-function markUnsaved() {
-    unsavedChanges = true;
-}
-
-
-// ============================================================================
-// EXPORT FUNCTIONS
-// ============================================================================
-
-function exportToPdf() {
-    if (!currentClassRecordId) {
-        showNotification('No class record loaded', 'warning');
-        return;
-    }
-    
-    const url = window.API_EXPORT_PDF.replace('{id}', currentClassRecordId);
-    
-    showLoader('Generating PDF...');
-    
-    try {
-        window.location.href = url;
-        showNotification('PDF download started', 'success');
-    } catch (error) {
-        console.error('Error exporting PDF:', error);
-        showNotification('Error exporting PDF. Please try again.', 'error');
-    } finally {
-        setTimeout(() => hideLoader(), 1000);
-    }
-}
-
-
-function exportToExcel() {
-    if (!currentClassRecordId) {
-        showNotification('No class record loaded', 'warning');
-        return;
-    }
-    
-    const url = window.API_EXPORT_EXCEL.replace('{id}', currentClassRecordId);
-    
-    showLoader('Generating Excel file...');
-    
-    try {
-        window.location.href = url;
-        showNotification('Excel download started', 'success');
-    } catch (error) {
-        console.error('Error exporting Excel:', error);
-        showNotification('Error exporting Excel. Please try again.', 'error');
-    } finally {
-        setTimeout(() => hideLoader(), 1000);
-    }
-}
-
-
-// ============================================================================
-// HISTORY SIDEBAR
-// ============================================================================
-
-async function loadHistory() {
-    try {
-        const response = await fetch(window.API_CLASSRECORD_HISTORY, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCsrfToken()
-            }
-        });
-        
-        const data = await response.json();
-        
-        if (data.success && data.history) {
-            displayHistory(data.history);
-        }
-    } catch (error) {
-        console.error('Error loading history:', error);
-    }
-}
-
-
-function displayHistory(history) {
-    const historyList = document.getElementById('history-list');
-    const emptyMsg = document.getElementById('history-list-empty');
-    
-    if (!historyList) return;
-    
-    if (history.length === 0) {
-        if (emptyMsg) emptyMsg.style.display = 'block';
-        return;
-    }
-    
-    if (emptyMsg) emptyMsg.style.display = 'none';
-    historyList.innerHTML = '';
-    
-    history.forEach(log => {
-        const item = document.createElement('div');
-        item.className = 'history-item';
-        item.innerHTML = `
-            <strong>${log.action}</strong>
-            <span>${log.date} at ${log.time}</span>
-        `;
-        historyList.appendChild(item);
-    });
-}
-
-
-// ============================================================================
-// TAB SWITCHING
-// ============================================================================
-
-function openTab(event, tabName) {
-    // Hide all tab contents
-    let tabContent = document.getElementsByClassName("tab-content");
-    for (let i = 0; i < tabContent.length; i++) {
-        tabContent[i].style.display = "none";
-    }
-    
-    // Remove active class from all tabs
-    let tabLinks = document.getElementsByClassName("tab-link");
-    for (let i = 0; i < tabLinks.length; i++) {
-        tabLinks[i].className = tabLinks[i].className.replace(" active", "");
-    }
-    
-    // Show the current tab
-    const tab = document.getElementById(tabName);
-    if (tab) tab.style.display = "block";
-    if (event?.currentTarget) event.currentTarget.className += " active";
-    
-    // Reload data when switching quarters (except Summary)
-    if (tabName !== 'Summary') {
-        const sectionId = document.getElementById('section-select')?.value;
-        const subjectCode = document.getElementById('subject-select')?.value;
-        
-        if (sectionId && subjectCode) {
-            loadClassRecord(sectionId, subjectCode, tabName);
-        }
-    }
-}
-
-
-// ============================================================================
-// CALCULATION FUNCTIONS
+// CALCULATION FUNCTIONS - OPTIMIZED FOR REAL-TIME
 // ============================================================================
 
 function updateQuarterWeights(qNum) {
@@ -1975,15 +1877,9 @@ function updateQuarterWeights(qNum) {
     if (ptHeader) ptHeader.innerText = `Performance Tasks (${pt}%)`;
     if (qaHeader) qaHeader.innerText = `Quarterly Assessment (${qa}%)`;
 
-    const wwWs = document.getElementById(`q${qNum}-ww-hps-ws`);
-    const ptWs = document.getElementById(`q${qNum}-pt-hps-ws`);
-    const qaWs = document.getElementById(`q${qNum}-qa-hps-ws`);
-    
-    if (wwWs) wwWs.innerText = (ww).toFixed(2);
-    if (ptWs) ptWs.innerText = (pt).toFixed(2);
-    if (qaWs) qaWs.innerText = (qa).toFixed(2);
-
-    calculateQuarterGrades(qNum);
+    updateCellValue(document.getElementById(`q${qNum}-ww-hps-ws`), ww.toFixed(2));
+    updateCellValue(document.getElementById(`q${qNum}-pt-hps-ws`), pt.toFixed(2));
+    updateCellValue(document.getElementById(`q${qNum}-qa-hps-ws`), qa.toFixed(2));
 }
 
 
@@ -1992,25 +1888,22 @@ function calculateQuarterHPS(qNum) {
     document.querySelectorAll(`#q${qNum}-table .hps-row .hps[id^="q${qNum}-ww-hps-"]`).forEach(input => {
         wwHpsTotal += Number(input.value) || 0;
     });
-    const wwTotal = document.getElementById(`q${qNum}-ww-hps-total`);
-    if (wwTotal) wwTotal.innerText = wwHpsTotal;
+    updateCellValue(document.getElementById(`q${qNum}-ww-hps-total`), wwHpsTotal);
 
     let ptHpsTotal = 0;
     document.querySelectorAll(`#q${qNum}-table .hps-row .hps[id^="q${qNum}-pt-hps-"]`).forEach(input => {
         ptHpsTotal += Number(input.value) || 0;
     });
-    const ptTotal = document.getElementById(`q${qNum}-pt-hps-total`);
-    if (ptTotal) ptTotal.innerText = ptHpsTotal;
+    updateCellValue(document.getElementById(`q${qNum}-pt-hps-total`), ptHpsTotal);
     
     let qaHpsTotal = Number(document.getElementById(`q${qNum}-qa-hps-1`)?.value) || 0;
-    const qaTotal = document.getElementById(`q${qNum}-qa-hps-total`);
-    if (qaTotal) qaTotal.innerText = qaHpsTotal;
-    
-    calculateQuarterGrades(qNum);
+    updateCellValue(document.getElementById(`q${qNum}-qa-hps-total`), qaHpsTotal);
 }
 
 
 function calculateQuarterGrades(qNum) {
+    console.log(`⚡ Calculating grades for Q${qNum} (INSTANT)`);
+    
     const WW_WEIGHT = (Number(document.getElementById(`q${qNum}-ww-weight`)?.value) || 0) / 100;
     const PT_WEIGHT = (Number(document.getElementById(`q${qNum}-pt-weight`)?.value) || 0) / 100;
     const QA_WEIGHT = (Number(document.getElementById(`q${qNum}-qa-weight`)?.value) || 0) / 100;
@@ -2031,12 +1924,9 @@ function calculateQuarterGrades(qNum) {
         const wwPS = (wwTotal / wwHpsTotal) * 100;
         const wwWS = wwPS * WW_WEIGHT;
         
-        const wwTotalCell = row.querySelector(`.q${qNum}-ww-total`);
-        const wwPSCell = row.querySelector(`.q${qNum}-ww-ps`);
-        const wwWSCell = row.querySelector(`.q${qNum}-ww-ws`);
-        if (wwTotalCell) wwTotalCell.innerText = wwTotal.toFixed(2);
-        if (wwPSCell) wwPSCell.innerText = wwPS.toFixed(2);
-        if (wwWSCell) wwWSCell.innerText = wwWS.toFixed(2);
+        updateCellValue(row.querySelector(`.q${qNum}-ww-total`), wwTotal.toFixed(2));
+        updateCellValue(row.querySelector(`.q${qNum}-ww-ps`), wwPS.toFixed(2));
+        updateCellValue(row.querySelector(`.q${qNum}-ww-ws`), wwWS.toFixed(2));
 
         // Calculate Performance Tasks
         let ptTotal = 0;
@@ -2046,12 +1936,9 @@ function calculateQuarterGrades(qNum) {
         const ptPS = (ptTotal / ptHpsTotal) * 100;
         const ptWS = ptPS * PT_WEIGHT;
         
-        const ptTotalCell = row.querySelector(`.q${qNum}-pt-total`);
-        const ptPSCell = row.querySelector(`.q${qNum}-pt-ps`);
-        const ptWSCell = row.querySelector(`.q${qNum}-pt-ws`);
-        if (ptTotalCell) ptTotalCell.innerText = ptTotal.toFixed(2);
-        if (ptPSCell) ptPSCell.innerText = ptPS.toFixed(2);
-        if (ptWSCell) ptWSCell.innerText = ptWS.toFixed(2);
+        updateCellValue(row.querySelector(`.q${qNum}-pt-total`), ptTotal.toFixed(2));
+        updateCellValue(row.querySelector(`.q${qNum}-pt-ps`), ptPS.toFixed(2));
+        updateCellValue(row.querySelector(`.q${qNum}-pt-ws`), ptWS.toFixed(2));
 
         // Calculate Quarterly Assessment
         let qaTotal = 0;
@@ -2061,23 +1948,21 @@ function calculateQuarterGrades(qNum) {
         const qaPS = (qaTotal / qaHpsTotal) * 100;
         const qaWS = qaPS * QA_WEIGHT;
         
-        const qaPSCell = row.querySelector(`.q${qNum}-qa-ps`);
-        const qaWSCell = row.querySelector(`.q${qNum}-qa-ws`);
-        if (qaPSCell) qaPSCell.innerText = qaPS.toFixed(2);
-        if (qaWSCell) qaWSCell.innerText = qaWS.toFixed(2);
+        updateCellValue(row.querySelector(`.q${qNum}-qa-ps`), qaPS.toFixed(2));
+        updateCellValue(row.querySelector(`.q${qNum}-qa-ws`), qaWS.toFixed(2));
 
         // Calculate Final Grades
         const initialGrade = wwWS + ptWS + qaWS;
         const quarterlyGrade = transmute(initialGrade);
         
-        const initialGradeCell = row.querySelector(`.q${qNum}-initial-grade`);
-        const quarterlyGradeCell = row.querySelector(`.q${qNum}-quarterly-grade`);
-        if (initialGradeCell) initialGradeCell.innerText = initialGrade.toFixed(2);
-        if (quarterlyGradeCell) quarterlyGradeCell.innerText = quarterlyGrade;
+        updateCellValue(row.querySelector(`.q${qNum}-initial-grade`), initialGrade.toFixed(2));
+        updateCellValue(row.querySelector(`.q${qNum}-quarterly-grade`), quarterlyGrade);
         
-        // Update summary if available
         calculateSummary(row.dataset.studentId);
     });
+    
+    // Check warnings after calculation
+    setTimeout(() => checkEarlyWarnings(qNum), 100);
 }
 
 
@@ -2085,10 +1970,7 @@ function calculateSummary(studentId) {
     const summaryRow = document.getElementById(`summary-student-${studentId}`);
     if (!summaryRow) return;
 
-    let q1Grade = 0;
-    let q2Grade = 0;
-    let q3Grade = 0;
-    let q4Grade = 0;
+    let q1Grade = 0, q2Grade = 0, q3Grade = 0, q4Grade = 0;
 
     const q1Row = document.getElementById(`q1-student-${studentId}`);
     if (q1Row) {
@@ -2182,191 +2064,252 @@ function transmute(initialGrade) {
 
 
 // ============================================================================
-// HELPER FUNCTIONS
+// SAVE CLASS RECORD TO API
 // ============================================================================
 
-function getCsrfToken() {
-    return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
-}
-
-
-function showLoader(message) {
-    const loader = document.getElementById('main-loader');
-    if (loader) {
-        loader.style.display = 'block';
+async function saveClassRecord() {
+    if (!currentClassRecordId) {
+        showNotification('No class record loaded', 'warning');
+        return;
     }
-}
-
-
-function hideLoader() {
-    const loader = document.getElementById('main-loader');
-    if (loader) {
-        loader.style.display = 'none';
-    }
-}
-
-
-function showNotification(message, type = 'info') {
-    console.log(`[${type.toUpperCase()}] ${message}`);
     
-    // Create toast notification
-    const toast = document.createElement('div');
-    toast.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 15px 20px;
-        border-radius: 8px;
-        color: white;
-        z-index: 10000;
-        animation: slideIn 0.3s ease;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        font-weight: 500;
-        ${type === 'success' ? 'background: #10b981;' : ''}
-        ${type === 'error' ? 'background: #ef4444;' : ''}
-        ${type === 'warning' ? 'background: #f59e0b;' : ''}
-        ${type === 'info' ? 'background: #3b82f6;' : ''}
-    `;
-    toast.textContent = message;
-    document.body.appendChild(toast);
+    showLoader('Saving class record...');
     
-    setTimeout(() => {
-        toast.style.animation = 'slideOut 0.3s ease';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-}
-
-function calculateRequiredPerformance(studentGrade, classRecord) {
-    const ww_weight = classRecord.written_works_weight / 100;
-    const pt_weight = classRecord.performance_tasks_weight / 100;
-    const qa_weight = classRecord.quarterly_assessment_weight / 100;
-    
-    // Current status
-    const current_ww_ws = studentGrade.ww_weighted_score;
-    const current_pt_ws = studentGrade.pt_weighted_score;
-    const current_qa_ws = studentGrade.qa_weighted_score;
-    const current_initial_grade = studentGrade.initial_grade;
-    
-    // Target: Initial Grade ≈ 60 → Transmutes to 75
-    const target_initial_grade = 60.0;
-    const points_needed = target_initial_grade - current_initial_grade;
-    
-    // Check if QA is done
-    const qa_done = studentGrade.qa_score_1 > 0;
-    
-    let result = {
-        current_grade: studentGrade.quarterly_grade,
-        target_grade: 75,
-        points_needed: Math.max(0, points_needed),
-        qa_completed: qa_done,
-        warning_type: qa_done ? 'failed' : 'at_risk'
-    };
-    
-    // ============================================================
-    // CASE 1: QA NOT DONE (Quarter In Progress)
-    // ============================================================
-    if (!qa_done) {
-        // Calculate current AVERAGES (not totals)
-        const ww_scores = studentGrade.get_ww_scores_list();
-        const pt_scores = studentGrade.get_pt_scores_list();
+    try {
+        const activeTab = document.querySelector('.tab-content[style*="display: block"]');
+        const qNum = activeTab?.id.replace('Q', '') || '1';
+        const q = `q${qNum}`;
         
-        const ww_completed_scores = ww_scores.filter(s => s > 0);
-        const pt_completed_scores = pt_scores.filter(s => s > 0);
-        
-        const ww_current_avg = ww_completed_scores.length > 0 
-            ? (ww_completed_scores.reduce((a, b) => a + b, 0) / ww_completed_scores.length) 
-            : 0;
-        
-        const pt_current_avg = pt_completed_scores.length > 0
-            ? (pt_completed_scores.reduce((a, b) => a + b, 0) / pt_completed_scores.length)
-            : 0;
-        
-        // Calculate what PERCENTAGE they need on remaining work
-        // Formula: (Target WS - Current WS) / Weight = Required Percentage
-        
-        // For WW: How much of the WW component is left?
-        const ww_ps_current = studentGrade.ww_percentage;
-        const ww_ps_needed = ((target_initial_grade * ww_weight) - current_ww_ws) / ww_weight;
-        const ww_improvement_needed = Math.max(0, ww_ps_needed - ww_ps_current);
-        
-        // For PT: Same calculation
-        const pt_ps_current = studentGrade.pt_percentage;
-        const pt_ps_needed = ((target_initial_grade * pt_weight) - current_pt_ws) / pt_weight;
-        const pt_improvement_needed = Math.max(0, pt_ps_needed - pt_ps_current);
-        
-        // For QA: Simple calculation
-        const qa_ps_needed = ((target_initial_grade * qa_weight) - current_qa_ws) / qa_weight;
-        
-        result.advice = {
-            ww: {
-                current_avg: ww_current_avg.toFixed(1),
-                current_percentage: ww_ps_current.toFixed(1),
-                needed_percentage: Math.min(100, ww_ps_needed).toFixed(1),
-                improvement_needed: ww_improvement_needed.toFixed(1),
-                message: ww_improvement_needed > 0 
-                    ? `Improve average from ${ww_current_avg.toFixed(1)}/10 to maintain at least ${ww_ps_needed.toFixed(0)}% in Written Works`
-                    : `Maintain current performance in Written Works`
-            },
-            pt: {
-                current_avg: pt_current_avg.toFixed(1),
-                current_percentage: pt_ps_current.toFixed(1),
-                needed_percentage: Math.min(100, pt_ps_needed).toFixed(1),
-                improvement_needed: pt_improvement_needed.toFixed(1),
-                message: pt_improvement_needed > 0
-                    ? `Improve average from ${pt_current_avg.toFixed(1)}/10 to maintain at least ${pt_ps_needed.toFixed(0)}% in Performance Tasks`
-                    : `Maintain current performance in Performance Tasks`
-            },
-            qa: {
-                needed_percentage: Math.min(100, qa_ps_needed).toFixed(1),
-                needed_score: Math.min(classRecord.qa_hps_1, Math.max(0, (qa_ps_needed / 100) * classRecord.qa_hps_1)).toFixed(1),
-                message: `Score at least ${Math.min(classRecord.qa_hps_1, Math.max(0, (qa_ps_needed / 100) * classRecord.qa_hps_1)).toFixed(0)}/${classRecord.qa_hps_1} on the Quarterly Assessment`
-            },
-            overall_message: points_needed > 0 
-                ? `Student needs ${points_needed.toFixed(1)} more points to reach passing grade.`
-                : `Student is on track but needs to maintain performance.`
+        // Collect weights
+        const weights = {
+            ww: parseInt(document.getElementById(`${q}-ww-weight`)?.value) || 30,
+            pt: parseInt(document.getElementById(`${q}-pt-weight`)?.value) || 50,
+            qa: parseInt(document.getElementById(`${q}-qa-weight`)?.value) || 20
         };
-    }
-    
-    // ============================================================
-    // CASE 2: QA DONE (Quarter Complete)
-    // ============================================================
-    else {
-        result.advice = {
-            message: `Quarter is complete. Student scored ${studentGrade.quarterly_grade} (below passing grade of 75).`,
-            intervention_required: true,
-            components: {
-                ww: {
-                    percentage: studentGrade.ww_percentage.toFixed(1),
-                    weighted: studentGrade.ww_weighted_score.toFixed(2)
-                },
-                pt: {
-                    percentage: studentGrade.pt_percentage.toFixed(1),
-                    weighted: studentGrade.pt_weighted_score.toFixed(2)
-                },
-                qa: {
-                    percentage: studentGrade.qa_percentage.toFixed(1),
-                    weighted: studentGrade.qa_weighted_score.toFixed(2)
-                }
+        
+        // Collect HPS
+        const hps = {
+            ww: [],
+            pt: [],
+            qa: []
+        };
+        
+        for (let i = 1; i <= 10; i++) {
+            const wwHps = document.getElementById(`${q}-ww-hps-${i}`);
+            const ptHps = document.getElementById(`${q}-pt-hps-${i}`);
+            if (wwHps) hps.ww.push(parseInt(wwHps.value) || 10);
+            if (ptHps) hps.pt.push(parseInt(ptHps.value) || 10);
+        }
+        
+        const qaHps = document.getElementById(`${q}-qa-hps-1`);
+        if (qaHps) hps.qa.push(parseInt(qaHps.value) || 50);
+        
+        // Collect student scores
+        const students = [];
+        const tbody = document.getElementById(`${q}-body`);
+        
+        if (tbody) {
+            tbody.querySelectorAll('tr[data-grade-id]').forEach(row => {
+                const gradeId = row.dataset.gradeId;
+                if (!gradeId) return;
+                
+                const scores = {
+                    ww: [],
+                    pt: [],
+                    qa: []
+                };
+                
+                row.querySelectorAll(`.${q}-ww`).forEach(input => {
+                    scores.ww.push(parseFloat(input.value) || 0);
+                });
+                
+                row.querySelectorAll(`.${q}-pt`).forEach(input => {
+                    scores.pt.push(parseFloat(input.value) || 0);
+                });
+                
+                row.querySelectorAll(`.${q}-qa`).forEach(input => {
+                    scores.qa.push(parseFloat(input.value) || 0);
+                });
+                
+                students.push({
+                    grade_id: parseInt(gradeId),
+                    scores: scores
+                });
+            });
+        }
+        
+        // Send to backend
+        const response = await fetch(window.API_SAVE_CLASSRECORD, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify({
+                class_record_id: currentClassRecordId,
+                weights: weights,
+                hps: hps,
+                students: students
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('Class record saved successfully!', 'success');
+            clearUnsavedIndicator();
+            
+            // Show modal
+            const modal = document.getElementById('saveModal');
+            if (modal) {
+                modal.style.display = 'block';
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                }, 2000);
             }
-        };
+            
+            loadHistory();
+        } else {
+            showNotification(data.error || 'Failed to save class record', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving class record:', error);
+        showNotification('Error saving class record. Please try again.', 'error');
+    } finally {
+        hideLoader();
     }
-    
-    return result;
 }
 
 
 // ============================================================================
-// EARLY WARNING SYSTEM - NEW FUNCTIONS
+// EXPORT FUNCTIONS
 // ============================================================================
 
-// Global state for warnings
-let activeWarnings = {};
-let currentWarningData = null;
+function exportToPdf() {
+    if (!currentClassRecordId) {
+        showNotification('No class record loaded', 'warning');
+        return;
+    }
+    
+    const url = window.API_EXPORT_PDF.replace('{id}', currentClassRecordId);
+    showLoader('Generating PDF...');
+    
+    try {
+        window.location.href = url;
+        showNotification('PDF download started', 'success');
+    } catch (error) {
+        console.error('Error exporting PDF:', error);
+        showNotification('Error exporting PDF. Please try again.', 'error');
+    } finally {
+        setTimeout(() => hideLoader(), 1000);
+    }
+}
 
-/**
- * Check for early warnings after calculating grades
- * Call this after calculateQuarterGrades() completes
- */
+function exportToExcel() {
+    if (!currentClassRecordId) {
+        showNotification('No class record loaded', 'warning');
+        return;
+    }
+    
+    const url = window.API_EXPORT_EXCEL.replace('{id}', currentClassRecordId);
+    showLoader('Generating Excel file...');
+    
+    try {
+        window.location.href = url;
+        showNotification('Excel download started', 'success');
+    } catch (error) {
+        console.error('Error exporting Excel:', error);
+        showNotification('Error exporting Excel. Please try again.', 'error');
+    } finally {
+        setTimeout(() => hideLoader(), 1000);
+    }
+}
+
+
+// ============================================================================
+// HISTORY SIDEBAR
+// ============================================================================
+
+async function loadHistory() {
+    try {
+        const response = await fetch(window.API_CLASSRECORD_HISTORY, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.history) {
+            displayHistory(data.history);
+        }
+    } catch (error) {
+        console.error('Error loading history:', error);
+    }
+}
+
+function displayHistory(history) {
+    const historyList = document.getElementById('history-list');
+    const emptyMsg = document.getElementById('history-list-empty');
+    
+    if (!historyList) return;
+    
+    if (history.length === 0) {
+        if (emptyMsg) emptyMsg.style.display = 'block';
+        return;
+    }
+    
+    if (emptyMsg) emptyMsg.style.display = 'none';
+    historyList.innerHTML = '';
+    
+    history.forEach(log => {
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        item.innerHTML = `
+            <strong>${log.action}</strong>
+            <span>${log.date} at ${log.time}</span>
+        `;
+        historyList.appendChild(item);
+    });
+}
+
+
+// ============================================================================
+// TAB SWITCHING
+// ============================================================================
+
+function openTab(event, tabName) {
+    let tabContent = document.getElementsByClassName("tab-content");
+    for (let i = 0; i < tabContent.length; i++) {
+        tabContent[i].style.display = "none";
+    }
+    
+    let tabLinks = document.getElementsByClassName("tab-link");
+    for (let i = 0; i < tabLinks.length; i++) {
+        tabLinks[i].className = tabLinks[i].className.replace(" active", "");
+    }
+    
+    const tab = document.getElementById(tabName);
+    if (tab) tab.style.display = "block";
+    if (event?.currentTarget) event.currentTarget.className += " active";
+    
+    if (tabName !== 'Summary') {
+        const sectionId = document.getElementById('section-select')?.value;
+        const subjectCode = document.getElementById('subject-select')?.value;
+        
+        if (sectionId && subjectCode) {
+            loadClassRecord(sectionId, subjectCode, tabName);
+        }
+    }
+}
+
+
+// ============================================================================
+// EARLY WARNING SYSTEM
+// ============================================================================
+
 async function checkEarlyWarnings(qNum) {
     if (!currentClassRecordId) return;
     
@@ -2389,8 +2332,6 @@ async function checkEarlyWarnings(qNum) {
         
         if (data.success) {
             console.log('Warnings checked:', data.warnings_created);
-            
-            // Fetch and apply highlights
             await loadAndApplyWarnings(qNum);
         }
     } catch (error) {
@@ -2398,9 +2339,6 @@ async function checkEarlyWarnings(qNum) {
     }
 }
 
-/**
- * Load warnings from server and apply visual highlights
- */
 async function loadAndApplyWarnings(qNum) {
     if (!currentClassRecordId) return;
     
@@ -2416,14 +2354,11 @@ async function loadAndApplyWarnings(qNum) {
         if (data.success) {
             activeWarnings = {};
             
-            // Store warnings by student_id for quick lookup
             data.warnings.forEach(warning => {
                 activeWarnings[warning.student_id] = warning;
             });
             
-            // Apply visual highlights to table
             applyWarningHighlights(qNum);
-            
             console.log(`Applied ${data.warnings.length} warning highlights`);
         }
     } catch (error) {
@@ -2431,9 +2366,6 @@ async function loadAndApplyWarnings(qNum) {
     }
 }
 
-/**
- * Apply visual highlights to student name cells
- */
 function applyWarningHighlights(qNum) {
     const tbody = document.getElementById(`q${qNum}-body`);
     if (!tbody) return;
@@ -2444,16 +2376,13 @@ function applyWarningHighlights(qNum) {
         
         if (!nameCell) return;
         
-        // Remove existing highlights
         nameCell.classList.remove('at-risk-highlight', 'failed-highlight');
         const existingBadge = nameCell.querySelector('.warning-badge');
         if (existingBadge) existingBadge.remove();
         
-        // Check if this student has an active warning
         const warning = activeWarnings[studentId];
         
         if (warning) {
-            // Apply appropriate highlight
             if (warning.warning_type === 'failed') {
                 nameCell.classList.add('failed-highlight');
                 nameCell.innerHTML += ' <i class="fa-solid fa-circle-exclamation warning-badge"></i>';
@@ -2462,19 +2391,13 @@ function applyWarningHighlights(qNum) {
                 nameCell.innerHTML += ' <i class="fa-solid fa-triangle-exclamation warning-badge"></i>';
             }
             
-            // Make clickable
             nameCell.style.cursor = 'pointer';
             nameCell.dataset.warningId = warning.id;
-            
-            // Add click event
             nameCell.onclick = () => showWarningModal(warning);
         }
     });
 }
 
-/**
- * Show warning modal with student details
- */
 function showWarningModal(warning) {
     currentWarningData = warning;
     
@@ -2486,7 +2409,6 @@ function showWarningModal(warning) {
     const atRiskContent = document.getElementById('warning-at-risk-content');
     const failedContent = document.getElementById('warning-failed-content');
     
-    // Update modal styling based on warning type
     if (warning.warning_type === 'failed') {
         modal.classList.add('failed-warning');
         header.style.backgroundColor = '#dc3545';
@@ -2494,15 +2416,12 @@ function showWarningModal(warning) {
         title.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Student Has Failed';
         statusText.textContent = 'has not achieved the passing grade';
         
-        // Show failed content, hide at-risk content
         atRiskContent.style.display = 'none';
         failedContent.style.display = 'block';
         
-        // Enable intervention button
         document.getElementById('btn-create-intervention').disabled = false;
         document.getElementById('btn-create-intervention').style.opacity = '1';
         
-        // Populate breakdown
         const advice = warning.required_performance.advice;
         if (advice && advice.components) {
             document.getElementById('warning-breakdown').innerHTML = `
@@ -2523,29 +2442,21 @@ function showWarningModal(warning) {
                         <div style="font-size: 12px; color: #666; margin-top: 5px;">Weighted: ${advice.components.qa.weighted} pts</div>
                     </div>
                 </div>
-                <div style="margin-top: 15px; padding: 12px; background: #f8f9fa; border-radius: 5px;">
-                    <strong>Final Initial Grade:</strong> ${warning.required_performance.current_grade} (Transmuted: ${warning.current_grade})
-                </div>
             `;
         }
-        
     } else {
-        // AT-RISK
         modal.classList.remove('failed-warning');
         header.style.backgroundColor = '#ffc107';
         header.style.color = '#000';
         title.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Student At Risk';
         statusText.textContent = 'is at risk of failing';
         
-        // Show at-risk content, hide failed content
         atRiskContent.style.display = 'block';
         failedContent.style.display = 'none';
         
-        // Disable intervention button
         document.getElementById('btn-create-intervention').disabled = true;
         document.getElementById('btn-create-intervention').style.opacity = '0.5';
         
-        // Populate current performance
         const advice = warning.required_performance.advice;
         if (advice) {
             document.getElementById('warning-current-performance').innerHTML = `
@@ -2564,9 +2475,7 @@ function showWarningModal(warning) {
                     </div>
                     <div style="background: white; padding: 12px; border-radius: 5px; border-left: 4px solid #ffc107;">
                         <div style="font-weight: bold; margin-bottom: 5px;">📄 Quarterly Assessment</div>
-                        <div style="color: #666; font-size: 14px;">
-                            Not yet taken
-                        </div>
+                        <div style="color: #666; font-size: 14px;">Not yet taken</div>
                     </div>
                 </div>
             `;
@@ -2586,19 +2495,13 @@ function showWarningModal(warning) {
                         ${advice.qa.message}
                     </li>
                 </ul>
-                <div style="margin-top: 15px; padding: 12px; background: #f1f3f5; border-radius: 5px; text-align: center;">
-                    <strong style="color: #495057;">Overall:</strong> 
-                    <span style="color: #666;">${advice.overall_message}</span>
-                </div>
             `;
         }
     }
     
-    // Populate student info
     document.getElementById('warning-student-name').textContent = warning.student_name;
     document.getElementById('warning-current-grade').textContent = warning.current_grade;
     
-    // Get subject and quarter from current class record
     const subjectSelect = document.getElementById('subject-select');
     const subjectText = subjectSelect.options[subjectSelect.selectedIndex]?.text || 'Unknown Subject';
     const activeTab = document.querySelector('.tab-link.active');
@@ -2607,22 +2510,15 @@ function showWarningModal(warning) {
     document.getElementById('warning-subject').textContent = subjectText;
     document.getElementById('warning-quarter').textContent = quarterText;
     
-    // Show modal
     modal.style.display = 'block';
 }
 
-/**
- * Close warning modal
- */
 function closeWarningModal() {
     const modal = document.getElementById('warningModal');
     modal.style.display = 'none';
     currentWarningData = null;
 }
 
-/**
- * Dismiss warning (mark as dismissed in database)
- */
 async function dismissWarning() {
     if (!currentWarningData) return;
     
@@ -2645,7 +2541,6 @@ async function dismissWarning() {
             showNotification('Warning dismissed', 'info');
             closeWarningModal();
             
-            // Refresh warnings
             const activeTab = document.querySelector('.tab-content[style*="display: block"]');
             if (activeTab) {
                 const qNum = activeTab.id.replace('Q', '');
@@ -2658,13 +2553,9 @@ async function dismissWarning() {
     }
 }
 
-/**
- * Create intervention from warning (redirect to intervention page)
- */
 function createInterventionFromWarning() {
     if (!currentWarningData) return;
     
-    // Get current context
     const sectionSelect = document.getElementById('section-select');
     const subjectSelect = document.getElementById('subject-select');
     const activeTab = document.querySelector('.tab-link.active');
@@ -2674,7 +2565,6 @@ function createInterventionFromWarning() {
     const subjectName = subjectSelect.options[subjectSelect.selectedIndex]?.text || '';
     const quarter = activeTab?.getAttribute('data-quarter') || 'Q1';
     
-    // Build redirect URL with query params
     const params = new URLSearchParams({
         student_id: currentWarningData.student_id,
         student_name: currentWarningData.student_name,
@@ -2687,17 +2577,12 @@ function createInterventionFromWarning() {
         warning_id: currentWarningData.id
     });
     
-    // Redirect to intervention page
     window.location.href = `{% url 'teacher:adviser-intervention' %}?${params.toString()}`;
 }
 
-/**
- * Initialize early warning system when page loads
- */
 function initializeEarlyWarningSystem() {
     console.log('Initializing Early Warning System...');
     
-    // Load warnings for current quarter
     const activeTab = document.querySelector('.tab-content[style*="display: block"]');
     if (activeTab && currentClassRecordId) {
         const qNum = activeTab.id.replace('Q', '');
@@ -2705,37 +2590,7 @@ function initializeEarlyWarningSystem() {
     }
 }
 
-// ============================================================================
-// MODIFY EXISTING FUNCTIONS TO INTEGRATE WARNING SYSTEM
-// ============================================================================
-
-// UPDATE: Modify your existing calculateQuarterGrades function
-// Add this at the END of the calculateQuarterGrades function:
-
-// Find this function and add to the end:
-function calculateQuarterGrades(qNum) {
-    // ... your existing calculation code ...
-    
-    // ADD THIS AT THE END:
-    // Check for early warnings after calculations complete
-    checkEarlyWarnings(qNum);
-}
-
-// UPDATE: Modify your existing DOMContentLoaded event
-// Find the existing DOMContentLoaded and add this inside it:
-
-document.addEventListener('DOMContentLoaded', () => {
-    // ... your existing initialization code ...
-    
-    // ADD THIS AFTER YOUR EXISTING CODE:
-    // Initialize early warning system
-    setTimeout(() => {
-        initializeEarlyWarningSystem();
-    }, 1000); // Small delay to ensure everything else is loaded
-    
-    console.log('✓ Early Warning System initialized');
-});
+console.log('✅ E-Class Record JavaScript fully loaded with real-time calculations');
 </script>
-
 </body>
 </html>
