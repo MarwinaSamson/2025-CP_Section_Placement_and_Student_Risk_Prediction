@@ -72,6 +72,38 @@ urlpatterns = [
     path('adviser-adviser-intervention/', adviser_views.adviser_adviser_intervention, name='adviser-adviser-intervention'),
     path('adviser-viewclass/', adviser_views.adviser_viewclass, name='adviser-viewclass'),
     
+     # Adviser View (Read-only subject interventions)
+    path('adviser/view/', adviser_view_views.adviser_view, name='adviser_view'),
+    path('adviser/view/interventions/', adviser_view_views.get_subject_interventions, name='get_subject_interventions'),
+    path('adviser/view/intervention/<int:intervention_id>/', adviser_view_views.get_intervention_details, name='get_intervention_details'),
+    path('adviser/view/tier3/<int:student_id>/', adviser_view_views.get_tier3_interventions_for_student, name='get_tier3_interventions'),
+    path('adviser/view/create-intervention/', adviser_view_views.create_adviser_intervention, name='create_adviser_intervention'),
+    
+    # ===== ADVISER VIEW ENDPOINTS (Read-only subject interventions) =====
+    # Get all subject teacher interventions for section
+    path('adviser/view/interventions/', adviser_view_views.get_subject_interventions, name='get_subject_interventions'),
+    # Get details of specific subject intervention
+    path('adviser/view/intervention/<int:intervention_id>/', adviser_view_views.get_intervention_details, name='get_intervention_details'),
+    # Get all Tier 3 interventions for a student
+    path('adviser/view/tier3/<int:student_id>/', adviser_view_views.get_tier3_interventions_for_student, name='get_tier3_interventions'),
+    # Create adviser intervention from Tier 3 escalation
+    path('adviser/view/create-intervention/', adviser_view_views.create_adviser_intervention, name='create_adviser_intervention'),
+    # ===== ADVISER INTERVENTION ENDPOINTS (Adviser-created interventions) =====
+    path('adviser-sub-intervention/', adviser_subintervention_views.adviser_sub_intervention, name='adviser-sub-intervention'),
+    # ===== SUBJECT TEACHER INTERVENTION SYSTEM ENDPOINTS =====
+    path('api/intervention/students/', adviser_subintervention_views.get_intervention_students, name='api-intervention-students'),
+    path('api/intervention/student/<int:student_id>/details/', adviser_subintervention_views.get_student_intervention_details, name='api-student-intervention-details'),
+    path('api/intervention/action/create/', adviser_subintervention_views.create_intervention_action, name='api-create-intervention-action'),
+    path('api/intervention/action/<int:action_id>/', adviser_subintervention_views.get_intervention_action, name='api-get-intervention-action'),
+    path('api/intervention/action/<int:action_id>/update/', adviser_subintervention_views.update_intervention_action, name='api-update-intervention-action'),
+    path('api/intervention/action/<int:action_id>/delete/', adviser_subintervention_views.delete_intervention_action, name='api-delete-intervention-action'),
+    path('api/intervention/note/add/', adviser_subintervention_views.add_intervention_note, name='api-add-intervention-note'),
+    path('api/intervention/<int:intervention_id>/resolve/', adviser_subintervention_views.resolve_intervention, name='api-resolve-intervention'),
+    path('api/intervention/<int:intervention_id>/reactivate/', adviser_subintervention_views.reactivate_intervention, name='api-reactivate-intervention'),
+    path('api/intervention/<int:intervention_id>/escalate/', adviser_subintervention_views.escalate_to_tier_3, name='api-escalate-intervention'),
+
+    # ===== CLASSRECORD ENDPOINTS =====
+
     # INTERVENTION API ENDPOINTS
     path('api/interventions/', adviser_view_views.get_interventions, name='api-get-interventions'),
     path('api/interventions/create/', adviser_view_views.create_intervention, name='api-create-intervention'),

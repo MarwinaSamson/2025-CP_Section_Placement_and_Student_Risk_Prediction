@@ -72,6 +72,16 @@ class Intervention(models.Model):
         help_text="Leave blank for general/behavioral interventions."
     )
     
+    related_subject_intervention = models.ForeignKey(
+        'InterventionPlan',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='adviser_interventions',
+        verbose_name="Related Subject Intervention",
+        help_text="Link to the subject teacher's Tier 3 intervention that triggered this"
+    )
+    
     # Plan Details
     quarter = models.CharField(
         max_length=2, 
