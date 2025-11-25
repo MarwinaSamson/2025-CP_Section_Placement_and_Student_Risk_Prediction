@@ -1,22 +1,17 @@
+{% load static %}
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>E-Class Record</title>
+  <title>E-Class Record - {{ teacher.full_name }}</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
 
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  
-  <!-- jsPDF Libraries -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf-autotable.umd.min.js"></script>
   
   <style>
-    /* ===== TEMPLATE LOADER STYLES ===== */
     .loader { 
       border: 5px solid #f3f3f3; 
       border-radius: 50%; 
@@ -25,6 +20,11 @@
       height: 40px; 
       animation: spin 1s linear infinite; 
       display:none; 
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 9999;
     }
     @keyframes spin { 
       0% { transform: rotate(0deg);} 
@@ -37,7 +37,6 @@
       border-color: #60a5fa; 
     }
 
-    /* ===== E-CLASS RECORD ORIGINAL STYLES ===== */
     .page-wrapper {
       display: flex;
       flex-wrap: nowrap;
@@ -133,6 +132,10 @@
       background-color: #28a745;
       color: white;
     }
+    #excel-btn {
+      background-color: #17a2b8;
+      color: white;
+    }
     #print-btn {
       background-color: #dc3545;
       color: white;
@@ -164,17 +167,7 @@
       color: #007bff;
     }
     
-    #subject-name[contenteditable="true"] {
-      padding: 2px 4px;
-      border-radius: 4px;
-    }
-    #subject-name[contenteditable="true"]:focus {
-      outline: 2px solid #007bff;
-      background: #f0f8ff;
-      box-shadow: 0 0 5px rgba(0,123,255,0.5);
-    }
-
-    #section-select {
+    .subject-info select, .subject-info input {
       font-weight: bold;
       border: 1px solid #ccc;
       border-radius: 4px;
@@ -385,7 +378,6 @@
       font-weight: bold;
     }
 
-    /* Modal Styles */
     .modal {
       display: none;
       position: fixed;
@@ -438,6 +430,15 @@
     @keyframes fadeIn {
       from {opacity: 0}
       to {opacity: 1}
+    }
+    
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+      from { transform: translateX(0); opacity: 1; }
+      to { transform: translateX(100%); opacity: 0; }
     }
     
     .footer-prepared {
@@ -542,12 +543,10 @@
         font-size: 10pt;
       }
       
-      /* Hide template sidebar on print */
       #sidebar-root {
         display: none !important;
       }
       
-      /* Remove margin for print */
       .main-content-wrapper {
         margin-left: 0 !important;
       }
@@ -654,19 +653,98 @@
         display: none;
       }
     }
+
+    /* Additional styles for warning modal */
+  #warningModal .modal-header {
+    background-color: #ffc107; /* Yellow for "at risk" */
+    color: #000;
+  }
+
+  #warningModal.failed-warning .modal-header {
+    background-color: #dc3545; /* Red for "failed" */
+    color: white;
+  }
+
+  #warningModal #warning-requirements-list li {
+    padding: 10px;
+    margin-bottom: 8px;
+    background: white;
+    border-left: 4px solid #007bff;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+
+  #warningModal #warning-requirements-list li i {
+    color: #007bff;
+    margin-right: 8px;
+  }
+
+  /* Highlighting styles for at-risk students */
+  .student-name.at-risk-highlight {
+    background-color: #fee !important; /* Light red */
+    font-weight: bold !important;
+    cursor: pointer !important;
+    position: relative;
+  }
+
+  .student-name.failed-highlight {
+    background-color: #fdd !important; /* Dark red */
+    font-weight: bold !important;
+    cursor: pointer !important;
+    position: relative;
+  }
+
+  .student-name.at-risk-highlight:hover,
+  .student-name.failed-highlight:hover {
+    opacity: 0.9;
+  }
+
+  /* Warning icon badge */
+  .warning-badge {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+  }
+
+  .at-risk-highlight .warning-badge {
+    color: #ffc107;
+  }
+
+  .failed-highlight .warning-badge {
+    color: #dc3545;
+  }
+
+  #save-btn.unsaved {
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
+  }
   </style>
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased">
 
-<!-- ===== TEMPLATE SIDEBAR ===== -->
-<div id="sidebar-root">
-    {% include 'teacher/adviser/sidebar.html' %}
-  </div>
+{% csrf_token %}
 
-<!-- ===== MAIN CONTENT WRAPPER (Adjusted for sidebar) ===== -->
+<div class="loader" id="main-loader"></div>
+
+{% if error %}
+<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative m-4" role="alert">
+  <strong class="font-bold">Error!</strong>
+  <span class="block sm:inline">{{ error }}</span>
+</div>
+{% endif %}
+
+<div id="sidebar-root">
+  {% include 'teacher/adviser/sidebar.html' %}
+</div>
+
 <div class="main-content-wrapper ml-0 lg:ml-64 transition-all duration-300 min-h-screen">
 
-<!-- Print-only letterhead -->
 <div class="print-only">
   <div class="letterhead" id="letterhead">
     <div class="flex-left">
@@ -689,7 +767,6 @@
   </div>
 </div>
 
-<!-- Page Wrapper -->
 <div class="page-wrapper">
 
   <div class="main-container">
@@ -699,32 +776,51 @@
       <div class="header-buttons">
         <button id="save-btn" title="Save Progress"><i class="fa-solid fa-save"></i> Save</button>
         <button id="pdf-btn" title="Download as PDF"><i class="fa-solid fa-file-arrow-down"></i> Download PDF</button>
+        <button id="excel-btn" title="Download as Excel"><i class="fa-solid fa-file-excel"></i> Excel</button>
         <button id="print-btn" title="Print"><i class="fa-solid fa-print"></i> Print</button>
       </div>
     </div>
 
     <div class="sub-header">
       <div class="subject-info">
-        <span><i class="fa-solid fa-book"></i>Subject: <strong id="subject-name" contenteditable="true">English</strong></span>
         <span>
           <i class="fa-solid fa-users"></i>Section: 
           <select id="section-select" class="no-print">
-            <option value="Section-A">Section A</option>
-            <option value="Section-B">Section B</option>
-            <option value="Section-C">Section C</option>
+            <option value="">Select Section</option>
+            {% for section in all_sections %}
+            <option value="{{ section.id }}">{{ section.name }}</option>
+            {% endfor %}
           </select>
         </span>
-        <span><i class="fa-solid fa-calendar-days"></i>S.Y. <strong>2025-2026</strong></span>
+
+        <span>
+          <i class="fa-solid fa-book"></i>Subject: 
+          <select id="subject-select" class="no-print">
+            <option value="">Select Subject</option>
+            {% for subject in all_subjects %}
+            <option value="{{ subject.id }}">{{ subject.subject_name }}</option>
+            {% endfor %}
+          </select>
+        </span>
+
+        <span>
+          <i class="fa-solid fa-calendar-days"></i>S.Y. 
+          <select id="school-year-select" class="no-print">
+            {% for sy in school_year_choices %}
+            <option value="{{ sy.name }}" {% if sy.is_current %}selected{% endif %}>{{ sy.name }}</option>
+            {% endfor %}
+          </select>
+        </span>
       </div>
-      <button class="back-btn no-print" title="Go Back"><i class="fa-solid fa-arrow-left"></i> Back</button>
+      <button class="back-btn no-print" onclick="history.back()" title="Go Back"><i class="fa-solid fa-arrow-left"></i> Back</button>
     </div>
 
     <nav class="tabs no-print">
-      <button class="tab-link active" onclick="openTab(event, 'Q1')">Quarter 1</button>
-      <button class="tab-link" onclick="openTab(event, 'Q2')">Quarter 2</button>
-      <button class="tab-link" onclick="openTab(event, 'Q3')">Quarter 3</button>
-      <button class="tab-link" onclick="openTab(event, 'Q4')">Quarter 4</button>
-      <button class="tab-link" onclick="openTab(event, 'Summary')">Summary</button>
+      <button class="tab-link active" data-quarter="Q1" onclick="openTab(event, 'Q1')">Quarter 1</button>
+      <button class="tab-link" data-quarter="Q2" onclick="openTab(event, 'Q2')">Quarter 2</button>
+      <button class="tab-link" data-quarter="Q3" onclick="openTab(event, 'Q3')">Quarter 3</button>
+      <button class="tab-link" data-quarter="Q4" onclick="openTab(event, 'Q4')">Quarter 4</button>
+      <button class="tab-link" data-quarter="Summary" onclick="openTab(event, 'Summary')">Summary</button>
     </nav>
 
     <div id="Q1" class="tab-content" style="display: block;">
@@ -764,29 +860,29 @@
             <th class="hps-label"></th>
             <th class="hps-label student-name">Highest Possible Score</th>
             <th class="hps-label student-sex"></th>
-            <td><input type="number" class="hps" id="q1-ww-hps-1" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-ww-hps-2" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-ww-hps-3" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-ww-hps-4" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-ww-hps-5" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-ww-hps-6" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-ww-hps-7" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-ww-hps-8" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-ww-hps-9" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-ww-hps-10" data-quarter="1" value="10"></td>
+            <td><input type="number" class="hps" id="q1-ww-hps-1" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-ww-hps-2" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-ww-hps-3" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-ww-hps-4" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-ww-hps-5" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-ww-hps-6" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-ww-hps-7" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-ww-hps-8" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-ww-hps-9" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-ww-hps-10" data-quarter="1" value="0"></td>
             <td class="hps-total" id="q1-ww-hps-total">100</td>
             <td class="locked">100</td><td class="locked" id="q1-ww-hps-ws">30.00</td>
             
-            <td><input type="number" class="hps" id="q1-pt-hps-1" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-pt-hps-2" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-pt-hps-3" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-pt-hps-4" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-pt-hps-5" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-pt-hps-6" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-pt-hps-7" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-pt-hps-8" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-pt-hps-9" data-quarter="1" value="10"></td>
-            <td><input type="number" class="hps" id="q1-pt-hps-10" data-quarter="1" value="10"></td>
+            <td><input type="number" class="hps" id="q1-pt-hps-1" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-pt-hps-2" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-pt-hps-3" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-pt-hps-4" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-pt-hps-5" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-pt-hps-6" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-pt-hps-7" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-pt-hps-8" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-pt-hps-9" data-quarter="1" value="0"></td>
+            <td><input type="number" class="hps" id="q1-pt-hps-10" data-quarter="1" value="0"></td>
             <td class="hps-total" id="q1-pt-hps-total">100</td>
             <td class="locked">100</td><td class="locked" id="q1-pt-hps-ws">50.00</td>
             
@@ -796,7 +892,11 @@
           </tr>
         </thead>
         <tbody id="q1-body">
-          <!-- Student rows will be injected here by JS -->
+          <tr>
+            <td colspan="32" style="text-align: center; padding: 20px; color: #888;">
+              <i class="fa-solid fa-info-circle"></i> Please select a section and subject to load students
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -870,7 +970,11 @@
           </tr>
         </thead>
         <tbody id="q2-body">
-          <!-- Student rows will be injected here by JS -->
+          <tr>
+            <td colspan="32" style="text-align: center; padding: 20px; color: #888;">
+              <i class="fa-solid fa-info-circle"></i> Please select a section and subject to load students
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -944,7 +1048,11 @@
           </tr>
         </thead>
         <tbody id="q3-body">
-          <!-- Student rows will be injected here by JS -->
+          <tr>
+            <td colspan="32" style="text-align: center; padding: 20px; color: #888;">
+              <i class="fa-solid fa-info-circle"></i> Please select a section and subject to load students
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -1018,13 +1126,17 @@
           </tr>
         </thead>
         <tbody id="q4-body">
-          <!-- Student rows will be injected here by JS -->
+          <tr>
+            <td colspan="32" style="text-align: center; padding: 20px; color: #888;">
+              <i class="fa-solid fa-info-circle"></i> Please select a section and subject to load students
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
 
     <div id="Summary" class="tab-content">
-      <h2>Summary of Quarterly Grades for <span id="summary-section-name">Section A</span></h2>
+      <h2>Summary of Quarterly Grades for <span id="summary-section-name">Select a Section</span></h2>
       <table id="summary-table">
         <thead>
           <tr>
@@ -1040,7 +1152,11 @@
           </tr>
         </thead>
         <tbody id="summary-body">
-          <!-- Summary rows will be injected here by JS -->
+          <tr>
+            <td colspan="9" style="text-align: center; padding: 20px; color: #888;">
+              <i class="fa-solid fa-info-circle"></i> Summary will be auto-generated from quarterly data
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -1048,14 +1164,13 @@
     <div class="footer-prepared">
       <p>Prepared by:</p>
       <div class="signature">
-        <span class="name" contenteditable="true">Juana D. Cruz</span>
-        <span class="position">Teacher I</span>
+        <span class="name">{{ teacher.full_name }}</span>
+        <span class="position">{{ teacher.position }}</span>
       </div>
     </div>
 
-  </div> <!-- End .main-container -->
+  </div>
 
-  <!-- History Sidebar -->
   <div class="history-sidebar no-print">
     <h2><i class="fa-solid fa-clock-rotate-left"></i> Saved History</h2>
     <div id="history-list">
@@ -1063,9 +1178,9 @@
     </div>
   </div>
 
-</div> <!-- End .page-wrapper -->
+</div>
 
-</div> <!-- End .main-content-wrapper -->
+</div>
 
 <div class="print-only">
   <footer class="footer">
@@ -1073,7 +1188,6 @@
   </footer>
 </div>
 
-<!-- Save Modal -->
 <div id="saveModal" class="modal no-print">
   <div class="modal-content">
     <div class="modal-header">
@@ -1086,156 +1200,822 @@
   </div>
 </div>
 
+<!-- ============================================================================ -->
+<!-- EARLY WARNING MODAL -->
+<!-- ============================================================================ -->
+<div id="warningModal" class="modal no-print">
+  <div class="modal-content">
+    <div class="modal-header" id="warning-modal-header">
+      <span class="close-btn" onclick="closeWarningModal()">&times;</span>
+      <h2 id="warning-modal-title"><i class="fa-solid fa-triangle-exclamation"></i> Student At Risk</h2>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom: 20px;">
+        <p style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">
+          <span id="warning-student-name">Student Name</span> 
+          <span id="warning-status-text">is at risk of failing</span>
+        </p>
+        <p style="color: #666; font-size: 14px;">
+          <strong>Subject:</strong> <span id="warning-subject"></span> • 
+          <strong>Quarter:</strong> <span id="warning-quarter"></span>
+        </p>
+      </div>
+
+      <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <span style="color: #666; font-size: 14px;">Current Quarterly Grade:</span>
+            <div style="font-size: 32px; font-weight: bold;" id="warning-current-grade">72</div>
+          </div>
+          <div style="text-align: center; font-size: 24px; color: #999;">→</div>
+          <div style="text-align: right;">
+            <span style="color: #666; font-size: 14px;">Needs to reach:</span>
+            <div style="font-size: 32px; font-weight: bold; color: #28a745;">75</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AT-RISK CONTENT (Quarter In Progress) -->
+      <div id="warning-at-risk-content" style="display: none;">
+        <h4 style="margin-bottom: 15px; color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+          <i class="fa-solid fa-chart-line" style="color: #007bff;"></i> 
+          Current Performance
+        </h4>
+        <div id="warning-current-performance" style="margin-bottom: 20px;">
+          <!-- Dynamically filled -->
+        </div>
+
+        <h4 style="margin-bottom: 15px; color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+          <i class="fa-solid fa-target" style="color: #ffc107;"></i> 
+          What This Student Needs
+        </h4>
+        <div id="warning-requirements" style="margin-bottom: 20px;">
+          <!-- Dynamically filled -->
+        </div>
+
+        <div style="background: #e3f2fd; padding: 12px; border-radius: 5px; border-left: 4px solid #2196f3;">
+          <p style="margin: 0; color: #1565c0; font-size: 14px;">
+            <i class="fa-solid fa-info-circle"></i> 
+            <strong>Note:</strong> These are projections based on current performance. Student can still improve.
+          </p>
+        </div>
+      </div>
+
+      <!-- FAILED CONTENT (Quarter Complete) -->
+      <div id="warning-failed-content" style="display: none;">
+        <div style="background: #fff3cd; padding: 15px; border-radius: 5px; border-left: 4px solid #ffc107; margin-bottom: 20px;">
+          <p style="margin: 0; color: #856404;">
+            <i class="fa-solid fa-calendar-check"></i> 
+            <strong>Quarter Complete:</strong> All assessments have been submitted.
+          </p>
+        </div>
+
+        <h4 style="margin-bottom: 15px; color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+          <i class="fa-solid fa-chart-pie" style="color: #dc3545;"></i> 
+          Final Performance Breakdown
+        </h4>
+        <div id="warning-breakdown" style="margin-bottom: 20px;">
+          <!-- Dynamically filled -->
+        </div>
+
+        <div style="background: #f8d7da; padding: 15px; border-radius: 5px; border-left: 4px solid #dc3545;">
+          <p style="margin: 0; color: #721c24; font-weight: bold;">
+            <i class="fa-solid fa-exclamation-triangle"></i> 
+            IMMEDIATE ACTION REQUIRED
+          </p>
+          <p style="margin: 8px 0 0 0; color: #721c24; font-size: 14px;">
+            An intervention plan must be created to support this student in the next quarter.
+          </p>
+        </div>
+      </div>
+
+      <div style="margin-top: 25px; display: flex; gap: 10px; justify-content: flex-end;">
+        <button id="btn-dismiss-warning" onclick="dismissWarning()" 
+                style="padding: 10px 20px; border: 1px solid #ddd; border-radius: 5px; background: white; cursor: pointer; font-size: 14px; font-weight: 500;">
+          Dismiss
+        </button>
+        <button id="btn-create-intervention" onclick="createInterventionFromWarning()" 
+                style="padding: 10px 20px; border: none; border-radius: 5px; background: #007bff; color: white; cursor: pointer; font-size: 14px; font-weight: 500;"
+                disabled>
+          <i class="fa-solid fa-plus-circle"></i> Create Intervention
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <script>
-// --- Tab Navigation ---
-function openTab(event, tabName) {
-    let tabContent = document.getElementsByClassName("tab-content");
-    for (let i = 0; i < tabContent.length; i++) {
-        tabContent[i].style.display = "none";
+console.log('=== Starting Class Record Initialization ===');
+
+// ============================================================================
+// GLOBAL VARIABLES & CONFIGURATION
+// ============================================================================
+
+window.SECTIONS_WITH_SUBJECTS = {};
+try {
+    const sectionsData = '{{ sections_with_subjects|escapejs }}';
+    console.log('Raw sections data from Django:', sectionsData);
+    
+    if (sectionsData && sectionsData !== '{}') {
+        window.SECTIONS_WITH_SUBJECTS = JSON.parse(sectionsData);
+        console.log('✓ Successfully parsed sections data:', window.SECTIONS_WITH_SUBJECTS);
+    } else {
+        console.warn('⚠ No sections data received from Django');
     }
-    let tabLinks = document.getElementsByClassName("tab-link");
-    for (let i = 0; i < tabLinks.length; i++) {
-        tabLinks[i].className = tabLinks[i].className.replace(" active", "");
-    }
-    document.getElementById(tabName).style.display = "block";
-    event.currentTarget.className += " active";
+} catch(e) {
+    console.error('✗ Error parsing sections data:', e);
 }
 
-// --- Student Management ---
-let studentCount = 0;
+// Global configuration
+window.CURRENT_TEACHER_ID = {{ teacher.id }};
+window.CURRENT_SCHOOL_YEAR = "{{ current_school_year.name }}";
+window.API_GET_CLASSRECORD = "{% url 'teacher:api-get-classrecord' %}";
+window.API_SAVE_CLASSRECORD = "{% url 'teacher:api-save-classrecord' %}";
+window.API_EXPORT_PDF = "{% url 'teacher:api-export-pdf' 0 %}".replace('/0/', '/{id}/');
+window.API_EXPORT_EXCEL = "{% url 'teacher:api-export-excel' 0 %}".replace('/0/', '/{id}/');
+window.API_CLASSRECORD_HISTORY = "{% url 'teacher:api-classrecord-history' %}";
 
-const studentDataBySection = {
-    "Section-A": [
-        { name: "Aguilar, Juan D.", gender: "M" },
-        { name: "Bautista, Maria L.", gender: "F" },
-        { name: "Cruz, Jose P.", gender: "M" },
-        { name: "Dela Cruz, Ana S.", gender: "F" },
-        { name: "Garcia, Pedro M.", gender: "M" },
-    ],
-    "Section-B": [
-        { name: "Mendoza, Luis R.", gender: "M" },
-        { name: "Reyes, Sofia T.", gender: "F" },
-        { name: "Santos, Miguel A.", gender: "M" },
-    ],
-    "Section-C": [
-        { name: "Gonzales, Bianca N.", gender: "F" },
-        { name: "Lim, David K.", gender: "M" },
-        { name: "Tan, Chloe J.", gender: "F" },
-        { name: "Villanueva, Marco P.", gender: "M" }
-    ]
-};
+// Application state
+let currentClassRecordId = null;
+let unsavedChanges = false;
+let autoSaveTimeout = null;
 
-function loadSection(sectionName) {
-    const studentList = studentDataBySection[sectionName] || [];
-    
-    document.querySelectorAll('tbody[id$="-body"]').forEach(tbody => {
-        tbody.innerHTML = '';
-    });
-    
-    studentCount = 0;
-    populateStudents(studentList);
-    document.getElementById('summary-section-name').textContent = sectionName;
-    
-    for (let q = 1; q <= 4; q++) {
-        calculateQuarterGrades(q);
+// Early Warning System state
+let activeWarnings = {};
+let currentWarningData = null;
+
+// Debug all the data
+console.log('Teacher ID:', window.CURRENT_TEACHER_ID);
+console.log('School Year:', window.CURRENT_SCHOOL_YEAR);
+console.log('Total sections in dropdown:', {{ all_sections|length }});
+console.log('Total subjects available:', {{ all_subjects|length }});
+
+console.log('=== Initialization Complete ===\n');
+
+
+// ============================================================================
+// HELPER FUNCTIONS - Utilities
+// ============================================================================
+
+function getCsrfToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+}
+
+function showLoader(message) {
+    const loader = document.getElementById('main-loader');
+    if (loader) {
+        loader.style.display = 'block';
     }
 }
 
-function populateStudents(studentList) {
-    studentList.forEach((student) => {
-        addStudentRow(student);
-    });
+function hideLoader() {
+    const loader = document.getElementById('main-loader');
+    if (loader) {
+        loader.style.display = 'none';
+    }
 }
 
-function generateStudentRowHTML(qNum, studentId, student) {
-    return `
-        <td>${studentId}</td>
-        <td class="student-name">${student.name}</td>
-        <td class="student-sex">${student.gender}</td>
-        
-        <td><input type="number" class="score q${qNum}-ww" data-item="ww-1"></td>
-        <td><input type="number" class="score q${qNum}-ww" data-item="ww-2"></td>
-        <td><input type="number" class="score q${qNum}-ww" data-item="ww-3"></td>
-        <td><input type="number" class="score q${qNum}-ww" data-item="ww-4"></td>
-        <td><input type="number" class="score q${qNum}-ww" data-item="ww-5"></td>
-        <td><input type="number" class="score q${qNum}-ww" data-item="ww-6"></td>
-        <td><input type="number" class="score q${qNum}-ww" data-item="ww-7"></td>
-        <td><input type="number" class="score q${qNum}-ww" data-item="ww-8"></td>
-        <td><input type="number" class="score q${qNum}-ww" data-item="ww-9"></td>
-        <td><input type="number" class="score q${qNum}-ww" data-item="ww-10"></td>
-        <td class="locked q${qNum}-ww-total">0</td>
-        <td class="locked q${qNum}-ww-ps">0.00</td>
-        <td class="locked q${qNum}-ww-ws">0.00</td>
-        
-        <td><input type="number" class="score q${qNum}-pt" data-item="pt-1"></td>
-        <td><input type="number" class="score q${qNum}-pt" data-item="pt-2"></td>
-        <td><input type="number" class="score q${qNum}-pt" data-item="pt-3"></td>
-        <td><input type="number" class="score q${qNum}-pt" data-item="pt-4"></td>
-        <td><input type="number" class="score q${qNum}-pt" data-item="pt-5"></td>
-        <td><input type="number" class="score q${qNum}-pt" data-item="pt-6"></td>
-        <td><input type="number" class="score q${qNum}-pt" data-item="pt-7"></td>
-        <td><input type="number" class="score q${qNum}-pt" data-item="pt-8"></td>
-        <td><input type="number" class="score q${qNum}-pt" data-item="pt-9"></td>
-        <td><input type="number" class="score q${qNum}-pt" data-item="pt-10"></td>
-        <td class="locked q${qNum}-pt-total">0</td>
-        <td class="locked q${qNum}-pt-ps">0.00</td>
-        <td class="locked q${qNum}-pt-ws">0.00</td>
-        
-        <td><input type="number" class="score q${qNum}-qa" data-item="qa-1"></td>
-        <td class="locked q${qNum}-qa-ps">0.00</td>
-        <td class="locked q${qNum}-qa-ws">0.00</td>
-        
-        <td class="locked q${qNum}-initial-grade">0.00</td>
-        <td class="locked q${qNum}-quarterly-grade">0</td>
+function showNotification(message, type = 'info') {
+    console.log(`[${type.toUpperCase()}] ${message}`);
+    
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 8px;
+        color: white;
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        font-weight: 500;
+        ${type === 'success' ? 'background: #10b981;' : ''}
+        ${type === 'error' ? 'background: #ef4444;' : ''}
+        ${type === 'warning' ? 'background: #f59e0b;' : ''}
+        ${type === 'info' ? 'background: #3b82f6;' : ''}
     `;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
 }
 
-function addStudentRow(student) {
-    studentCount++;
+/**
+ * Update cell value only if changed (prevents unnecessary reflows)
+ */
+function updateCellValue(cell, newValue) {
+    if (!cell) return;
+    const currentValue = cell.innerText || cell.textContent;
+    if (currentValue !== String(newValue)) {
+        cell.innerText = newValue;
+        highlightChangedCell(cell);
+    }
+}
 
+/**
+ * Add visual feedback when a grade changes
+ */
+function highlightChangedCell(cell) {
+    if (!cell) return;
+    
+    cell.style.transition = 'background-color 0.3s ease';
+    cell.style.backgroundColor = '#d4edda'; // Light green
+    
+    setTimeout(() => {
+        cell.style.backgroundColor = '';
+    }, 1000);
+}
+
+/**
+ * Mark as unsaved (visual indicator)
+ */
+function markUnsaved() {
+    unsavedChanges = true;
+    
+    const saveBtn = document.getElementById('save-btn');
+    if (saveBtn && !saveBtn.classList.contains('unsaved')) {
+        saveBtn.classList.add('unsaved');
+        saveBtn.innerHTML = '<i class="fa-solid fa-save"></i> Save*';
+        saveBtn.style.backgroundColor = '#ffc107';
+    }
+}
+
+/**
+ * Clear unsaved indicator after successful save
+ */
+function clearUnsavedIndicator() {
+    unsavedChanges = false;
+    
+    const saveBtn = document.getElementById('save-btn');
+    if (saveBtn) {
+        saveBtn.classList.remove('unsaved');
+        saveBtn.innerHTML = '<i class="fa-solid fa-save"></i> Save';
+        saveBtn.style.backgroundColor = '#007bff';
+    }
+}
+
+/**
+ * Debounce helper - delays function execution
+ */
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+
+// ============================================================================
+// EVENT LISTENERS - Setup on DOM Ready
+// ============================================================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM Ready - Attaching event listeners');
+    
+    // Section selection - Auto-populate subjects
+    const sectionSelect = document.getElementById('section-select');
+    if (sectionSelect) {
+        sectionSelect.addEventListener('change', function(e) {
+            const sectionId = e.target.value;
+            const subjectSelect = document.getElementById('subject-select');
+            
+            console.log('Section changed to:', sectionId);
+            
+            if (!sectionId || !subjectSelect) {
+                console.warn('No section selected or subject select not found');
+                return;
+            }
+            
+            subjectSelect.innerHTML = '<option value="">Select Subject</option>';
+            const sectionData = window.SECTIONS_WITH_SUBJECTS[sectionId];
+            
+            if (sectionData && sectionData.subjects && sectionData.subjects.length > 0) {
+                console.log('Found subjects for section:', sectionData.subjects);
+                
+                sectionData.subjects.forEach(subject => {
+                    const option = document.createElement('option');
+                    option.value = subject.code;
+                    option.textContent = subject.name;
+                    option.dataset.assignmentId = subject.assignment_id;
+                    subjectSelect.appendChild(option);
+                });
+                
+                subjectSelect.disabled = false;
+                
+                if (sectionData.subjects.length === 1) {
+                    subjectSelect.value = sectionData.subjects[0].code;
+                    subjectSelect.dispatchEvent(new Event('change'));
+                }
+                
+                console.log('✓ Populated', sectionData.subjects.length, 'subjects');
+            } else {
+                console.warn('No subjects found for section ID:', sectionId);
+                subjectSelect.innerHTML = '<option value="">No subjects assigned</option>';
+                subjectSelect.disabled = true;
+            }
+        });
+    }
+    
+    // Subject selection - Load class record
+    const subjectSelect = document.getElementById('subject-select');
+    if (subjectSelect) {
+        subjectSelect.addEventListener('change', function(e) {
+            const sectionId = document.getElementById('section-select')?.value;
+            const subjectCode = e.target.value;
+            const activeTab = document.querySelector('.tab-link.active');
+            const quarter = activeTab?.getAttribute('data-quarter') || 'Q1';
+            
+            console.log('Subject changed to:', subjectCode);
+            console.log('Current quarter:', quarter);
+            
+            if (sectionId && subjectCode) {
+                loadClassRecord(sectionId, subjectCode, quarter);
+            }
+        });
+    }
+    
+    // Save button
+    const saveBtn = document.getElementById('save-btn');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', saveClassRecord);
+    }
+    
+    // Export buttons
+    const pdfBtn = document.getElementById('pdf-btn');
+    if (pdfBtn) {
+        pdfBtn.addEventListener('click', exportToPdf);
+    }
+    
+    const excelBtn = document.getElementById('excel-btn');
+    if (excelBtn) {
+        excelBtn.addEventListener('click', exportToExcel);
+    }
+    
+    const printBtn = document.getElementById('print-btn');
+    if (printBtn) {
+        printBtn.addEventListener('click', () => window.print());
+    }
+    
+    // ========================================================================
+    // REAL-TIME INPUT HANDLERS - INSTANT CALCULATIONS
+    // ========================================================================
+    const mainContainer = document.querySelector('.main-container');
+    if (mainContainer) {
+        mainContainer.addEventListener('input', (e) => {
+            const target = e.target;
+            
+            // Case 1: Student score input changed - CALCULATE IMMEDIATELY
+            if (target.classList.contains('score')) {
+                const activeTab = document.querySelector('.tab-content[style*="display: block"]');
+                if (activeTab) {
+                    const qNum = activeTab.id.replace('Q', '');
+                    
+                    // ✅ INSTANT CALCULATION (no delay)
+                    requestAnimationFrame(() => {
+                        calculateQuarterGrades(qNum);
+                    });
+                }
+                markUnsaved();
+            }
+            // Case 2: HPS changed - CALCULATE IMMEDIATELY
+            else if (target.classList.contains('hps')) {
+                const qNum = target.dataset.quarter;
+                
+                // ✅ INSTANT CALCULATION
+                requestAnimationFrame(() => {
+                    calculateQuarterHPS(qNum);
+                    calculateQuarterGrades(qNum);
+                });
+                markUnsaved();
+            }
+            // Case 3: Weight changed - CALCULATE IMMEDIATELY
+            else if (target.classList.contains('weight-input')) {
+                const qNum = target.dataset.quarter;
+                
+                // ✅ INSTANT CALCULATION
+                requestAnimationFrame(() => {
+                    updateQuarterWeights(qNum);
+                    calculateQuarterGrades(qNum);
+                });
+                markUnsaved();
+            }
+        });
+        
+        // ====================================================================
+        // DEBOUNCED AUTO-SAVE (Separate from calculations)
+        // Only saves to server, doesn't trigger calculations
+        // ====================================================================
+        const debouncedSave = debounce(() => {
+            if (unsavedChanges && currentClassRecordId) {
+                console.log('🔄 Auto-saving after 5 seconds of inactivity...');
+                saveClassRecord();
+            }
+        }, 5000);
+        
+        mainContainer.addEventListener('input', (e) => {
+            const target = e.target;
+            if (target.classList.contains('score') || 
+                target.classList.contains('hps') || 
+                target.classList.contains('weight-input')) {
+                debouncedSave();
+            }
+        });
+    }
+    
+    // Modal close button
+    const modal = document.getElementById('saveModal');
+    const closeBtn = document.querySelector('.close-btn');
+    
+    if (closeBtn) {
+        closeBtn.onclick = () => {
+            if (modal) modal.style.display = "none";
+        };
+    }
+    
+    window.onclick = (event) => {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    };
+    
+    // Initialize calculations for all quarters
     for (let q = 1; q <= 4; q++) {
-        const tableBody = document.getElementById(`q${q}-body`);
-        if (tableBody) {
-            let row = tableBody.insertRow();
-            row.id = `q${q}-student-${studentCount}`;
-            row.dataset.studentId = studentCount;
-            row.innerHTML = generateStudentRowHTML(q, studentCount, student);
+        updateQuarterWeights(q);
+        calculateQuarterHPS(q);
+    }
+    
+    // Load history sidebar
+    loadHistory();
+    
+    // Initialize early warning system
+    setTimeout(() => {
+        initializeEarlyWarningSystem();
+    }, 1000);
+    
+    // Auto-select section from session
+    const selectedSectionId = {{ selected_section_id|default:'null' }};
+    if (selectedSectionId) {
+        console.log('📌 Auto-selecting section from session:', selectedSectionId);
+        
+        const sectionSelect = document.getElementById('section-select');
+        if (sectionSelect) {
+            sectionSelect.value = selectedSectionId;
+            const event = new Event('change', { bubbles: true });
+            sectionSelect.dispatchEvent(event);
+            console.log('✅ Section auto-selected and change event triggered');
         }
     }
     
-    const summaryTable = document.getElementById("summary-body");
-    let summaryRow = summaryTable.insertRow();
-    summaryRow.id = `summary-student-${studentCount}`;
-    summaryRow.dataset.studentId = studentCount;
-    summaryRow.innerHTML = `
-        <td>${studentCount}</td>
-        <td class="student-name">${student.name}</td>
-        <td class="student-sex">${student.gender}</td>
-        <td class="locked q1-grade">0</td>
-        <td class="locked q2-grade">0</td>
-        <td class="locked q3-grade">0</td>
-        <td class="locked q4-grade">0</td>
-        <td class="locked final-grade">0</td>
-        <td class="locked remarks">---</td>
-    `;
+    // Warn before leaving with unsaved changes
+    window.addEventListener('beforeunload', (e) => {
+        if (unsavedChanges) {
+            e.preventDefault();
+            e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+            return e.returnValue;
+        }
+    });
+    
+    console.log('✓ All event listeners attached');
+});
+
+
+// ============================================================================
+// LOAD CLASS RECORD FROM API
+// ============================================================================
+
+async function loadClassRecord(sectionId, subjectCode, quarter) {
+    showLoader('Loading class record...');
+    
+    try {
+        const schoolYear = document.getElementById('school-year-select')?.value || window.CURRENT_SCHOOL_YEAR;
+        
+        const url = `${window.API_GET_CLASSRECORD}?section_id=${sectionId}&subject_code=${subjectCode}&quarter=${quarter}&school_year=${schoolYear}`;
+        
+        console.log('Fetching from:', url);
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            }
+        });
+        
+        const data = await response.json();
+        console.log('API Response:', data);
+        
+        if (data.success) {
+            currentClassRecordId = data.class_record.id;
+            populateClassRecord(data.class_record, data.students, quarter);
+            
+            if (data.created) {
+                showNotification('New class record created!', 'success');
+            } else {
+                showNotification('Class record loaded successfully', 'info');
+            }
+            
+            clearUnsavedIndicator();
+        } else {
+            showNotification(data.error || 'Failed to load class record', 'error');
+            console.error('Error:', data.error);
+        }
+    } catch (error) {
+        console.error('Error loading class record:', error);
+        showNotification('Error loading class record. Please try again.', 'error');
+    } finally {
+        hideLoader();
+    }
 }
 
-// --- Calculation Logic ---
-function updateQuarterWeights(qNum) {
-    let ww = Number(document.getElementById(`q${qNum}-ww-weight`).value) || 0;
-    let pt = Number(document.getElementById(`q${qNum}-pt-weight`).value) || 0;
-    let qa = Number(document.getElementById(`q${qNum}-qa-weight`).value) || 0;
 
-    document.getElementById(`q${qNum}-ww-header`).innerText = `Written Works (${ww}%)`;
-    document.getElementById(`q${qNum}-pt-header`).innerText = `Performance Tasks (${pt}%)`;
-    document.getElementById(`q${qNum}-qa-header`).innerText = `Quarterly Assessment (${qa}%)`;
+// ============================================================================
+// POPULATE CLASS RECORD WITH DATA
+// ============================================================================
 
-    document.getElementById(`q${qNum}-ww-hps-ws`).innerText = (ww).toFixed(2);
-    document.getElementById(`q${qNum}-pt-hps-ws`).innerText = (pt).toFixed(2);
-    document.getElementById(`q${qNum}-qa-hps-ws`).innerText = (qa).toFixed(2);
-
+function populateClassRecord(classRecord, students, quarter) {
+    console.log('=== POPULATING CLASS RECORD ===');
+    console.log('Quarter:', quarter);
+    console.log('Students count:', students.length);
+    
+    const qNum = quarter.replace('Q', '');
+    const qLower = `q${qNum}`;
+    
+    // Update weights
+    const wwWeightInput = document.getElementById(`${qLower}-ww-weight`);
+    const ptWeightInput = document.getElementById(`${qLower}-pt-weight`);
+    const qaWeightInput = document.getElementById(`${qLower}-qa-weight`);
+    
+    if (wwWeightInput) wwWeightInput.value = classRecord.weights.ww;
+    if (ptWeightInput) ptWeightInput.value = classRecord.weights.pt;
+    if (qaWeightInput) qaWeightInput.value = classRecord.weights.qa;
+    
+    // Update HPS values
+    classRecord.hps.ww.forEach((hps, idx) => {
+        const input = document.getElementById(`${qLower}-ww-hps-${idx + 1}`);
+        if (input) input.value = hps || 10;
+    });
+    
+    classRecord.hps.pt.forEach((hps, idx) => {
+        const input = document.getElementById(`${qLower}-pt-hps-${idx + 1}`);
+        if (input) input.value = hps || 10;
+    });
+    
+    const qaHpsInput = document.getElementById(`${qLower}-qa-hps-1`);
+    if (qaHpsInput) qaHpsInput.value = classRecord.hps.qa[0] || 50;
+    
+    // Populate student rows
+    const tbody = document.getElementById(`${qLower}-body`);
+    
+    if (!tbody) {
+        console.error('❌ Table body not found:', `${qLower}-body`);
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    
+    if (students.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="32" style="text-align: center; padding: 20px; color: #888;">
+                    <i class="fa-solid fa-info-circle"></i> No students found in this section
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    students.forEach((student, idx) => {
+        const row = createStudentRow(qLower, student, idx + 1);
+        tbody.appendChild(row);
+    });
+    
+    console.log(`✅ Successfully added ${students.length} student rows`);
+    
+    // Update summary section name
+    const summaryName = document.getElementById('summary-section-name');
+    if (summaryName) {
+        summaryName.textContent = classRecord.section;
+    }
+    
+    // Recalculate everything
+    updateQuarterWeights(qNum);
+    calculateQuarterHPS(qNum);
     calculateQuarterGrades(qNum);
 }
+
+
+function createStudentRow(quarter, student, number) {
+    const row = document.createElement('tr');
+    row.id = `${quarter}-student-${student.id}`;
+    row.dataset.studentId = student.id;
+    row.dataset.gradeId = student.grade_id;
+    
+    let rowHTML = `
+        <td>${number}</td>
+        <td class="student-name">${student.name}</td>
+        <td class="student-sex">${student.gender}</td>
+    `;
+    
+    student.scores.ww.forEach((score) => {
+        rowHTML += `<td><input type="number" class="score ${quarter}-ww" value="${score || 0}" step="0.01"></td>`;
+    });
+    rowHTML += `
+        <td class="locked ${quarter}-ww-total">${(student.computed.ww_total || 0).toFixed(2)}</td>
+        <td class="locked ${quarter}-ww-ps">${(student.computed.ww_percentage || 0).toFixed(2)}</td>
+        <td class="locked ${quarter}-ww-ws">${(student.computed.ww_weighted_score || 0).toFixed(2)}</td>
+    `;
+    
+    student.scores.pt.forEach((score) => {
+        rowHTML += `<td><input type="number" class="score ${quarter}-pt" value="${score || 0}" step="0.01"></td>`;
+    });
+    rowHTML += `
+        <td class="locked ${quarter}-pt-total">${(student.computed.pt_total || 0).toFixed(2)}</td>
+        <td class="locked ${quarter}-pt-ps">${(student.computed.pt_percentage || 0).toFixed(2)}</td>
+        <td class="locked ${quarter}-pt-ws">${(student.computed.pt_weighted_score || 0).toFixed(2)}</td>
+    `;
+    
+    rowHTML += `
+        <td><input type="number" class="score ${quarter}-qa" value="${student.scores.qa[0] || 0}" step="0.01"></td>
+        <td class="locked ${quarter}-qa-ps">${(student.computed.qa_percentage || 0).toFixed(2)}</td>
+        <td class="locked ${quarter}-qa-ws">${(student.computed.qa_weighted_score || 0).toFixed(2)}</td>
+    `;
+    
+    rowHTML += `
+        <td class="locked ${quarter}-initial-grade">${(student.computed.initial_grade || 0).toFixed(2)}</td>
+        <td class="locked ${quarter}-quarterly-grade">${student.computed.quarterly_grade || 0}</td>
+    `;
+    
+    row.innerHTML = rowHTML;
+    return row;
+}
+
+
+// ============================================================================
+// CALCULATION FUNCTIONS - OPTIMIZED FOR REAL-TIME
+// ============================================================================
+
+function updateQuarterWeights(qNum) {
+    let ww = Number(document.getElementById(`q${qNum}-ww-weight`)?.value) || 0;
+    let pt = Number(document.getElementById(`q${qNum}-pt-weight`)?.value) || 0;
+    let qa = Number(document.getElementById(`q${qNum}-qa-weight`)?.value) || 0;
+
+    const wwHeader = document.getElementById(`q${qNum}-ww-header`);
+    const ptHeader = document.getElementById(`q${qNum}-pt-header`);
+    const qaHeader = document.getElementById(`q${qNum}-qa-header`);
+    
+    if (wwHeader) wwHeader.innerText = `Written Works (${ww}%)`;
+    if (ptHeader) ptHeader.innerText = `Performance Tasks (${pt}%)`;
+    if (qaHeader) qaHeader.innerText = `Quarterly Assessment (${qa}%)`;
+
+    updateCellValue(document.getElementById(`q${qNum}-ww-hps-ws`), ww.toFixed(2));
+    updateCellValue(document.getElementById(`q${qNum}-pt-hps-ws`), pt.toFixed(2));
+    updateCellValue(document.getElementById(`q${qNum}-qa-hps-ws`), qa.toFixed(2));
+}
+
+
+function calculateQuarterHPS(qNum) {
+    let wwHpsTotal = 0;
+    document.querySelectorAll(`#q${qNum}-table .hps-row .hps[id^="q${qNum}-ww-hps-"]`).forEach(input => {
+        wwHpsTotal += Number(input.value) || 0;
+    });
+    updateCellValue(document.getElementById(`q${qNum}-ww-hps-total`), wwHpsTotal);
+
+    let ptHpsTotal = 0;
+    document.querySelectorAll(`#q${qNum}-table .hps-row .hps[id^="q${qNum}-pt-hps-"]`).forEach(input => {
+        ptHpsTotal += Number(input.value) || 0;
+    });
+    updateCellValue(document.getElementById(`q${qNum}-pt-hps-total`), ptHpsTotal);
+    
+    let qaHpsTotal = Number(document.getElementById(`q${qNum}-qa-hps-1`)?.value) || 0;
+    updateCellValue(document.getElementById(`q${qNum}-qa-hps-total`), qaHpsTotal);
+}
+
+
+function calculateQuarterGrades(qNum) {
+    console.log(`⚡ Calculating grades for Q${qNum} (INSTANT)`);
+    
+    const WW_WEIGHT = (Number(document.getElementById(`q${qNum}-ww-weight`)?.value) || 0) / 100;
+    const PT_WEIGHT = (Number(document.getElementById(`q${qNum}-pt-weight`)?.value) || 0) / 100;
+    const QA_WEIGHT = (Number(document.getElementById(`q${qNum}-qa-weight`)?.value) || 0) / 100;
+
+    const wwHpsTotal = Number(document.getElementById(`q${qNum}-ww-hps-total`)?.innerText) || 1;
+    const ptHpsTotal = Number(document.getElementById(`q${qNum}-pt-hps-total`)?.innerText) || 1;
+    const qaHpsTotal = Number(document.getElementById(`q${qNum}-qa-hps-total`)?.innerText) || 1;
+
+    const tbody = document.getElementById(`q${qNum}-body`);
+    if (!tbody) return;
+    
+    tbody.querySelectorAll('tr[data-student-id]').forEach((row) => {
+        // Calculate Written Works
+        let wwTotal = 0;
+        row.querySelectorAll(`.q${qNum}-ww`).forEach(input => {
+            wwTotal += Number(input.value) || 0;
+        });
+        const wwPS = (wwTotal / wwHpsTotal) * 100;
+        const wwWS = wwPS * WW_WEIGHT;
+        
+        updateCellValue(row.querySelector(`.q${qNum}-ww-total`), wwTotal.toFixed(2));
+        updateCellValue(row.querySelector(`.q${qNum}-ww-ps`), wwPS.toFixed(2));
+        updateCellValue(row.querySelector(`.q${qNum}-ww-ws`), wwWS.toFixed(2));
+
+        // Calculate Performance Tasks
+        let ptTotal = 0;
+        row.querySelectorAll(`.q${qNum}-pt`).forEach(input => {
+            ptTotal += Number(input.value) || 0;
+        });
+        const ptPS = (ptTotal / ptHpsTotal) * 100;
+        const ptWS = ptPS * PT_WEIGHT;
+        
+        updateCellValue(row.querySelector(`.q${qNum}-pt-total`), ptTotal.toFixed(2));
+        updateCellValue(row.querySelector(`.q${qNum}-pt-ps`), ptPS.toFixed(2));
+        updateCellValue(row.querySelector(`.q${qNum}-pt-ws`), ptWS.toFixed(2));
+
+        // Calculate Quarterly Assessment
+        let qaTotal = 0;
+        row.querySelectorAll(`.q${qNum}-qa`).forEach(input => {
+            qaTotal += Number(input.value) || 0;
+        });
+        const qaPS = (qaTotal / qaHpsTotal) * 100;
+        const qaWS = qaPS * QA_WEIGHT;
+        
+        updateCellValue(row.querySelector(`.q${qNum}-qa-ps`), qaPS.toFixed(2));
+        updateCellValue(row.querySelector(`.q${qNum}-qa-ws`), qaWS.toFixed(2));
+
+        // Calculate Final Grades
+        const initialGrade = wwWS + ptWS + qaWS;
+        const quarterlyGrade = transmute(initialGrade);
+        
+        updateCellValue(row.querySelector(`.q${qNum}-initial-grade`), initialGrade.toFixed(2));
+        updateCellValue(row.querySelector(`.q${qNum}-quarterly-grade`), quarterlyGrade);
+        
+        calculateSummary(row.dataset.studentId);
+    });
+    
+    // Check warnings after calculation
+    setTimeout(() => checkEarlyWarnings(qNum), 100);
+}
+
+
+function calculateSummary(studentId) {
+    const summaryRow = document.getElementById(`summary-student-${studentId}`);
+    if (!summaryRow) return;
+
+    let q1Grade = 0, q2Grade = 0, q3Grade = 0, q4Grade = 0;
+
+    const q1Row = document.getElementById(`q1-student-${studentId}`);
+    if (q1Row) {
+        const q1Cell = q1Row.querySelector('.q1-quarterly-grade');
+        q1Grade = Number(q1Cell?.innerText) || 0;
+    }
+    
+    const q2Row = document.getElementById(`q2-student-${studentId}`);
+    if (q2Row) {
+        const q2Cell = q2Row.querySelector('.q2-quarterly-grade');
+        q2Grade = Number(q2Cell?.innerText) || 0;
+    }
+    
+    const q3Row = document.getElementById(`q3-student-${studentId}`);
+    if (q3Row) {
+        const q3Cell = q3Row.querySelector('.q3-quarterly-grade');
+        q3Grade = Number(q3Cell?.innerText) || 0;
+    }
+
+    const q4Row = document.getElementById(`q4-student-${studentId}`);
+    if (q4Row) {
+        const q4Cell = q4Row.querySelector('.q4-quarterly-grade');
+        q4Grade = Number(q4Cell?.innerText) || 0;
+    }
+    
+    const q1GradeCell = summaryRow.querySelector('.q1-grade');
+    const q2GradeCell = summaryRow.querySelector('.q2-grade');
+    const q3GradeCell = summaryRow.querySelector('.q3-grade');
+    const q4GradeCell = summaryRow.querySelector('.q4-grade');
+    
+    if (q1GradeCell) q1GradeCell.innerText = q1Grade;
+    if (q2GradeCell) q2GradeCell.innerText = q2Grade;
+    if (q3GradeCell) q3GradeCell.innerText = q3Grade;
+    if (q4GradeCell) q4GradeCell.innerText = q4Grade;
+
+    const finalGrade = Math.round((q1Grade + q2Grade + q3Grade + q4Grade) / 4);
+    
+    const finalGradeCell = summaryRow.querySelector('.final-grade');
+    if (finalGradeCell) finalGradeCell.innerText = finalGrade > 0 ? finalGrade : 0;
+    
+    const remarks = finalGrade >= 75 ? "PASSED" : (finalGrade > 0 ? "FAILED" : "---");
+    const remarksCell = summaryRow.querySelector('.remarks');
+    if (remarksCell) remarksCell.innerText = remarks;
+}
+
 
 function transmute(initialGrade) {
     if (initialGrade >= 100) return 100;
@@ -1282,466 +2062,535 @@ function transmute(initialGrade) {
     return 0;
 }
 
-function calculateQuarterHPS(qNum) {
-    let wwHpsTotal = 0;
-    document.querySelectorAll(`#q${qNum}-table .hps-row .hps[id^="q${qNum}-ww-hps-"]`).forEach(input => {
-        wwHpsTotal += Number(input.value) || 0;
-    });
-    document.getElementById(`q${qNum}-ww-hps-total`).innerText = wwHpsTotal;
 
-    let ptHpsTotal = 0;
-    document.querySelectorAll(`#q${qNum}-table .hps-row .hps[id^="q${qNum}-pt-hps-"]`).forEach(input => {
-        ptHpsTotal += Number(input.value) || 0;
-    });
-    document.getElementById(`q${qNum}-pt-hps-total`).innerText = ptHpsTotal;
-    
-    let qaHpsTotal = Number(document.getElementById(`q${qNum}-qa-hps-1`).value) || 0;
-    document.getElementById(`q${qNum}-qa-hps-total`).innerText = qaHpsTotal;
-    
-    calculateQuarterGrades(qNum);
-}
+// ============================================================================
+// SAVE CLASS RECORD TO API
+// ============================================================================
 
-function calculateQuarterGrades(qNum) {
-    const WW_WEIGHT = (Number(document.getElementById(`q${qNum}-ww-weight`).value) || 0) / 100;
-    const PT_WEIGHT = (Number(document.getElementById(`q${qNum}-pt-weight`).value) || 0) / 100;
-    const QA_WEIGHT = (Number(document.getElementById(`q${qNum}-qa-weight`).value) || 0) / 100;
-
-    const wwHpsTotal = Number(document.getElementById(`q${qNum}-ww-hps-total`).innerText) || 1;
-    const ptHpsTotal = Number(document.getElementById(`q${qNum}-pt-hps-total`).innerText) || 1;
-    const qaHpsTotal = Number(document.getElementById(`q${qNum}-qa-hps-total`).innerText) || 1;
-
-    for (let i = 1; i <= studentCount; i++) {
-        const row = document.getElementById(`q${qNum}-student-${i}`);
-        if (!row) continue;
-
-        let wwTotal = 0;
-        row.querySelectorAll(`.q${qNum}-ww`).forEach(input => {
-            wwTotal += Number(input.value) || 0;
-        });
-        const wwPS = (wwTotal / wwHpsTotal) * 100;
-        const wwWS = wwPS * WW_WEIGHT;
-        
-        row.querySelector(`.q${qNum}-ww-total`).innerText = wwTotal;
-        row.querySelector(`.q${qNum}-ww-ps`).innerText = wwPS.toFixed(2);
-        row.querySelector(`.q${qNum}-ww-ws`).innerText = wwWS.toFixed(2);
-
-        let ptTotal = 0;
-        row.querySelectorAll(`.q${qNum}-pt`).forEach(input => {
-            ptTotal += Number(input.value) || 0;
-        });
-        const ptPS = (ptTotal / ptHpsTotal) * 100;
-        const ptWS = ptPS * PT_WEIGHT;
-        
-        row.querySelector(`.q${qNum}-pt-total`).innerText = ptTotal;
-        row.querySelector(`.q${qNum}-pt-ps`).innerText = ptPS.toFixed(2);
-        row.querySelector(`.q${qNum}-pt-ws`).innerText = ptWS.toFixed(2);
-
-        let qaTotal = 0;
-        row.querySelectorAll(`.q${qNum}-qa`).forEach(input => {
-            qaTotal += Number(input.value) || 0;
-        });
-        const qaPS = (qaTotal / qaHpsTotal) * 100;
-        const qaWS = qaPS * QA_WEIGHT;
-        
-        row.querySelector(`.q${qNum}-qa-ps`).innerText = qaPS.toFixed(2);
-        row.querySelector(`.q${qNum}-qa-ws`).innerText = qaWS.toFixed(2);
-
-        const initialGrade = wwWS + ptWS + qaWS;
-        const quarterlyGrade = transmute(initialGrade);
-        
-        row.querySelector(`.q${qNum}-initial-grade`).innerText = initialGrade.toFixed(2);
-        row.querySelector(`.q${qNum}-quarterly-grade`).innerText = quarterlyGrade;
-        
-        calculateSummary(i);
-    }
-}
-
-function calculateSummary(studentId) {
-    const summaryRow = document.getElementById(`summary-student-${studentId}`);
-    if (!summaryRow) return;
-
-    let q1Grade = 0;
-    let q2Grade = 0;
-    let q3Grade = 0;
-    let q4Grade = 0;
-
-    const q1Row = document.getElementById(`q1-student-${studentId}`);
-    if (q1Row) q1Grade = Number(q1Row.querySelector('.q1-quarterly-grade').innerText) || 0;
-    
-    const q2Row = document.getElementById(`q2-student-${studentId}`);
-    if (q2Row) q2Grade = Number(q2Row.querySelector('.q2-quarterly-grade').innerText) || 0;
-    
-    const q3Row = document.getElementById(`q3-student-${studentId}`);
-    if (q3Row) q3Grade = Number(q3Row.querySelector('.q3-quarterly-grade').innerText) || 0;
-
-    const q4Row = document.getElementById(`q4-student-${studentId}`);
-    if (q4Row) q4Grade = Number(q4Row.querySelector('.q4-quarterly-grade').innerText) || 0;
-    
-    summaryRow.querySelector('.q1-grade').innerText = q1Grade;
-    summaryRow.querySelector('.q2-grade').innerText = q2Grade;
-    summaryRow.querySelector('.q3-grade').innerText = q3Grade;
-    summaryRow.querySelector('.q4-grade').innerText = q4Grade;
-
-    const finalGrade = Math.round((q1Grade + q2Grade + q3Grade + q4Grade) / 4);
-    
-    summaryRow.querySelector('.final-grade').innerText = finalGrade > 0 ? finalGrade : 0;
-    
-    const remarks = finalGrade >= 75 ? "PASSED" : (finalGrade > 0 ? "FAILED" : "---");
-    summaryRow.querySelector('.remarks').innerText = remarks;
-}
-
-// --- PDF Generation Helper Functions ---
-const loadImage = (src) => new Promise((resolve, reject) => {
-    const img = new Image();
-    img.src = src;
-    img.crossOrigin = "anonymous";
-    img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        resolve(canvas.toDataURL('image/png'));
-    };
-    img.onerror = (e) => reject(new Error(`Failed to load image: ${src}`));
-});
-
-async function addPdfHeaderFooter(doc, pageNum) {
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    
-    doc.setFillColor(161, 15, 15);
-    doc.rect(0, 0, pageWidth, 100, "F");
-
-    try {
-        const [logo1, logo2, logo3, logo4] = await Promise.all([
-            loadImage(document.getElementById('logo1').src),
-            loadImage(document.getElementById('logo2').src),
-            loadImage(document.getElementById('logo3').src),
-            loadImage(document.getElementById('logo4').src)
-        ]);
-        doc.addImage(logo1, 'PNG', 40, 15, 55, 55);
-        doc.addImage(logo2, 'PNG', 105, 15, 55, 55);
-        doc.addImage(logo3, 'PNG', pageWidth - 165, 15, 55, 55);
-        doc.addImage(logo4, 'PNG', pageWidth - 100, 15, 85, 55);
-    } catch (e) {
-        console.warn("Some logos failed to load for PDF. Continuing without them.", e);
-    }
-
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(9);
-    doc.text("Republic of the Philippines", pageWidth / 2, 20, { align: "center" });
-    doc.text("Department of Education", pageWidth / 2, 32, { align: "center" });
-    doc.text("REGION IX – ZAMBOANGA PENINSULA", pageWidth / 2, 44, { align: "center" });
-    doc.text("Schools Division Office of Zamboanga City", pageWidth / 2, 56, { align: "center" });
-    doc.setFontSize(11);
-    doc.setFont(undefined, "bold");
-    doc.text("Zamboanga National High School West", pageWidth / 2, 72, { align: "center" });
-    doc.setFontSize(9);
-    doc.setFont(undefined, "normal");
-    doc.text("R.T. Lim Boulevard, Zamboanga City, Philippines", pageWidth / 2, 84, { align: "center" });
-    doc.text("School ID: 303942", pageWidth / 2, 96, { align: "center" });
-
-    const footerHeight = 30;
-    doc.setFillColor(161, 15, 15);
-    doc.rect(0, pageHeight - footerHeight, pageWidth, footerHeight, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(8);
-    doc.text("Page " + pageNum, pageWidth - 40, pageHeight - 14, { align: "right" });
-}
-
-// --- History Save/Load Functions ---
-const HISTORY_KEY = 'classRecordHistory';
-
-function getActiveQuarterInfo() {
-    const activeTab = document.querySelector('.tab-link.active');
-    const activeContent = document.querySelector('.tab-content[style*="display: block"]');
-    
-    if (!activeTab || !activeContent || !activeContent.id.startsWith('Q')) {
-        return null;
-    }
-    
-    return {
-        qId: activeContent.id,
-        qNum: activeContent.id.replace('Q', ''),
-        qName: activeTab.textContent
-    };
-}
-
-function serializeQuarterData(qNum) {
-    const data = {
-        hps: {},
-        scores: {}
-    };
-
-    document.querySelectorAll(`#q${qNum}-table .hps-row .hps`).forEach(input => {
-        data.hps[input.id] = input.value;
-    });
-
-    for (let i = 1; i <= studentCount; i++) {
-        const studentId = i;
-        data.scores[studentId] = {};
-        document.querySelectorAll(`#q${qNum}-student-${studentId} .score`).forEach(input => {
-            data.scores[studentId][input.dataset.item] = input.value;
-        });
-    }
-    return data;
-}
-
-function loadQuarterData(qNum, data) {
-    if (!data) return;
-
-    if (data.hps) {
-        for (const [id, value] of Object.entries(data.hps)) {
-            const input = document.getElementById(id);
-            if (input) input.value = value;
-        }
-    }
-
-    if (data.scores) {
-        for (const [studentId, scores] of Object.entries(data.scores)) {
-            const row = document.getElementById(`q${qNum}-student-${studentId}`);
-            if (row) {
-                for (const [item, value] of Object.entries(scores)) {
-                    const input = row.querySelector(`.score[data-item="${item}"]`);
-                    if (input) input.value = value;
-                }
-            }
-        }
-    }
-    
-    calculateQuarterHPS(qNum);
-}
-
-function renderHistoryList() {
-    const historyList = document.getElementById('history-list');
-    const emptyMsg = document.getElementById('history-list-empty');
-    let history = [];
-    try {
-        history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
-    } catch (e) {
-        console.error("Could not parse history:", e);
-        localStorage.removeItem(HISTORY_KEY);
-    }
-    
-    historyList.innerHTML = '';
-    
-    if (history.length === 0) {
-        historyList.appendChild(emptyMsg);
-        emptyMsg.style.display = 'block';
-        return;
-    }
-
-    emptyMsg.style.display = 'none';
-    
-    history.slice().reverse().forEach((entry, index) => {
-        const historyItem = document.createElement('div');
-        historyItem.className = 'history-item';
-        historyItem.dataset.index = history.length - 1 - index; 
-        
-        historyItem.innerHTML = `
-            <strong>${entry.section} - ${entry.quarterName}</strong>
-            <span>Saved: ${entry.timestamp}</span>
-        `;
-        
-        historyItem.addEventListener('click', loadHistoryEntry);
-        historyList.appendChild(historyItem);
-    });
-}
-
-function loadHistoryEntry(event) {
-    const index = event.currentTarget.dataset.index;
-    let history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
-    const entry = history[index];
-    
-    if (!entry) {
-        alert("Error: Could not find history entry.");
+async function saveClassRecord() {
+    if (!currentClassRecordId) {
+        showNotification('No class record loaded', 'warning');
         return;
     }
     
-    document.getElementById('section-select').value = entry.section;
-    loadSection(entry.section);
+    showLoader('Saving class record...');
     
-    const tabLinks = document.getElementsByClassName("tab-link");
-    for (let tab of tabLinks) {
-        if (tab.textContent === entry.quarterName) {
-            tab.click();
-            break;
-        }
-    }
-    
-    setTimeout(() => {
-        loadQuarterData(entry.qNum, entry.data);
-    }, 100);
-}
-
-// --- Event Listeners ---
-function addEventListeners() {
-    const mainContainer = document.querySelector('.main-container');
-    
-    mainContainer.addEventListener('input', (e) => {
-        const target = e.target;
+    try {
+        const activeTab = document.querySelector('.tab-content[style*="display: block"]');
+        const qNum = activeTab?.id.replace('Q', '') || '1';
+        const q = `q${qNum}`;
         
-        if (target.classList.contains('score')) {
-            const qNum = target.closest('.tab-content').id.replace('Q', '');
-            calculateQuarterGrades(qNum);
-        }
-        else if (target.classList.contains('hps')) {
-            const qNum = target.dataset.quarter;
-            calculateQuarterHPS(qNum);
-        }
-        else if (target.classList.contains('weight-input')) {
-            const qNum = target.dataset.quarter;
-            updateQuarterWeights(qNum);
-        }
-    });
-
-    const modal = document.getElementById('saveModal');
-    const saveBtn = document.getElementById('save-btn');
-    const closeBtn = document.querySelector('.close-btn');
-    
-    saveBtn.onclick = () => {
-        const activeQuarter = getActiveQuarterInfo();
-        if (!activeQuarter) {
-            alert("Please select a Quarter (1-4) to save.");
-            return;
-        }
-        
-        const currentSection = document.getElementById('section-select').value;
-        const historyEntry = {
-            section: currentSection,
-            qId: activeQuarter.qId,
-            qNum: activeQuarter.qNum,
-            quarterName: activeQuarter.qName,
-            timestamp: new Date().toLocaleString(),
-            data: serializeQuarterData(activeQuarter.qNum)
+        // Collect weights
+        const weights = {
+            ww: parseInt(document.getElementById(`${q}-ww-weight`)?.value) || 30,
+            pt: parseInt(document.getElementById(`${q}-pt-weight`)?.value) || 50,
+            qa: parseInt(document.getElementById(`${q}-qa-weight`)?.value) || 20
         };
         
-        let history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
-        history.push(historyEntry);
-        localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+        // Collect HPS
+        const hps = {
+            ww: [],
+            pt: [],
+            qa: []
+        };
         
-        renderHistoryList();
-        modal.style.display = "block";
-    };
-    
-    closeBtn.onclick = () => modal.style.display = "none";
-    window.onclick = (event) => {
-        if (event.target == modal) {
-            modal.style.display = "none";
-        }
-    }
-
-    document.getElementById('print-btn').addEventListener('click', () => {
-        document.getElementById("page-number").textContent = "Page 1";
-        window.print();
-    });
-    
-    document.getElementById('pdf-btn').addEventListener('click', async () => {
-        const { jsPDF } = window.jspdf;
-        const pdfBtn = document.getElementById('pdf-btn');
-        
-        const activeTab = document.querySelector('.tab-content[style*="display: block"]');
-        if (!activeTab) {
-            alert("Could not find active tab to download.");
-            return;
-        }
-
-        const activeTable = activeTab.querySelector('table');
-        if (!activeTable) {
-            alert("Could not find table in active tab.");
-            return;
+        for (let i = 1; i <= 10; i++) {
+            const wwHps = document.getElementById(`${q}-ww-hps-${i}`);
+            const ptHps = document.getElementById(`${q}-pt-hps-${i}`);
+            if (wwHps) hps.ww.push(parseInt(wwHps.value) || 10);
+            if (ptHps) hps.pt.push(parseInt(ptHps.value) || 10);
         }
         
-        const originalBtnText = pdfBtn.innerHTML;
-        pdfBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Generating...`;
-        pdfBtn.disabled = true;
-
-        try {
-            const doc = new jsPDF({ unit: 'pt', format: 'letter' });
-            
-            await addPdfHeaderFooter(doc, 1);
-            
-            const subject = document.getElementById('subject-name').textContent;
-            const section = document.getElementById('section-select').value;
-            
-            doc.setFontSize(10);
-            doc.setFont(undefined, "bold");
-            doc.setTextColor(0, 0, 0);
-            doc.text(`Subject: ${subject}`, 40, 120);
-            doc.text(`Section: ${section}`, 40, 135);
-            doc.text("S.Y. 2025-2026", 40, 150);
-
-            doc.autoTable({
-                html: activeTable,
-                startY: 165,
-                margin: { top: 110, right: 40, bottom: 40, left: 40 },
-                theme: 'grid',
-                styles: {
-                    fontSize: 7,
-                    cellPadding: 2,
-                },
-                headStyles: {
-                    fillColor: [242, 242, 242],
-                    textColor: [33, 33, 33],
-                    fontStyle: 'bold',
-                },
-                didDrawPage: (data) => {
-                    if (data.pageNumber > 1) {
-                        addPdfHeaderFooter(doc, data.pageNumber);
-                    }
-                }
+        const qaHps = document.getElementById(`${q}-qa-hps-1`);
+        if (qaHps) hps.qa.push(parseInt(qaHps.value) || 50);
+        
+        // Collect student scores
+        const students = [];
+        const tbody = document.getElementById(`${q}-body`);
+        
+        if (tbody) {
+            tbody.querySelectorAll('tr[data-grade-id]').forEach(row => {
+                const gradeId = row.dataset.gradeId;
+                if (!gradeId) return;
+                
+                const scores = {
+                    ww: [],
+                    pt: [],
+                    qa: []
+                };
+                
+                row.querySelectorAll(`.${q}-ww`).forEach(input => {
+                    scores.ww.push(parseFloat(input.value) || 0);
+                });
+                
+                row.querySelectorAll(`.${q}-pt`).forEach(input => {
+                    scores.pt.push(parseFloat(input.value) || 0);
+                });
+                
+                row.querySelectorAll(`.${q}-qa`).forEach(input => {
+                    scores.qa.push(parseFloat(input.value) || 0);
+                });
+                
+                students.push({
+                    grade_id: parseInt(gradeId),
+                    scores: scores
+                });
             });
-
-            const finalY = doc.lastAutoTable.finalY || 150;
-            const teacherName = document.querySelector('.footer-prepared .name').textContent;
-            const teacherPos = document.querySelector('.footer-prepared .position').textContent;
-            
-            doc.setFontSize(10);
-            doc.setFont(undefined, "normal");
-            doc.setTextColor(0, 0, 0);
-            doc.text("Prepared by:", 40, finalY + 40);
-            
-            doc.setFont(undefined, "bold");
-            doc.text(teacherName, 60, finalY + 80);
-            doc.line(60, finalY + 82, 260, finalY + 82);
-            doc.setFont(undefined, "normal");
-            doc.text(teacherPos, 60, finalY + 95);
-
-            doc.save(`E-Class-Record-${section}-${activeTab.id}.pdf`);
-
-        } catch (err) {
-            console.error("Error generating PDF:", err);
-            alert("Error generating PDF. See console for details.");
-        } finally {
-            pdfBtn.innerHTML = originalBtnText;
-            pdfBtn.disabled = false;
         }
-    });
+        
+        // Send to backend
+        const response = await fetch(window.API_SAVE_CLASSRECORD, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify({
+                class_record_id: currentClassRecordId,
+                weights: weights,
+                hps: hps,
+                students: students
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('Class record saved successfully!', 'success');
+            clearUnsavedIndicator();
+            
+            // Show modal
+            const modal = document.getElementById('saveModal');
+            if (modal) {
+                modal.style.display = 'block';
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                }, 2000);
+            }
+            
+            loadHistory();
+        } else {
+            showNotification(data.error || 'Failed to save class record', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving class record:', error);
+        showNotification('Error saving class record. Please try again.', 'error');
+    } finally {
+        hideLoader();
+    }
+}
 
-    document.querySelector('.back-btn').addEventListener('click', () => {
-        history.back();
-    });
+
+// ============================================================================
+// EXPORT FUNCTIONS
+// ============================================================================
+
+function exportToPdf() {
+    if (!currentClassRecordId) {
+        showNotification('No class record loaded', 'warning');
+        return;
+    }
     
-    document.getElementById('section-select').addEventListener('change', (e) => {
-        loadSection(e.target.value);
+    const url = window.API_EXPORT_PDF.replace('{id}', currentClassRecordId);
+    showLoader('Generating PDF...');
+    
+    try {
+        window.location.href = url;
+        showNotification('PDF download started', 'success');
+    } catch (error) {
+        console.error('Error exporting PDF:', error);
+        showNotification('Error exporting PDF. Please try again.', 'error');
+    } finally {
+        setTimeout(() => hideLoader(), 1000);
+    }
+}
+
+function exportToExcel() {
+    if (!currentClassRecordId) {
+        showNotification('No class record loaded', 'warning');
+        return;
+    }
+    
+    const url = window.API_EXPORT_EXCEL.replace('{id}', currentClassRecordId);
+    showLoader('Generating Excel file...');
+    
+    try {
+        window.location.href = url;
+        showNotification('Excel download started', 'success');
+    } catch (error) {
+        console.error('Error exporting Excel:', error);
+        showNotification('Error exporting Excel. Please try again.', 'error');
+    } finally {
+        setTimeout(() => hideLoader(), 1000);
+    }
+}
+
+
+// ============================================================================
+// HISTORY SIDEBAR
+// ============================================================================
+
+async function loadHistory() {
+    try {
+        const response = await fetch(window.API_CLASSRECORD_HISTORY, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.history) {
+            displayHistory(data.history);
+        }
+    } catch (error) {
+        console.error('Error loading history:', error);
+    }
+}
+
+function displayHistory(history) {
+    const historyList = document.getElementById('history-list');
+    const emptyMsg = document.getElementById('history-list-empty');
+    
+    if (!historyList) return;
+    
+    if (history.length === 0) {
+        if (emptyMsg) emptyMsg.style.display = 'block';
+        return;
+    }
+    
+    if (emptyMsg) emptyMsg.style.display = 'none';
+    historyList.innerHTML = '';
+    
+    history.forEach(log => {
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        item.innerHTML = `
+            <strong>${log.action}</strong>
+            <span>${log.date} at ${log.time}</span>
+        `;
+        historyList.appendChild(item);
     });
 }
 
-// --- Initial Setup ---
-document.addEventListener('DOMContentLoaded', () => {
-    const defaultSection = document.getElementById('section-select').value;
-    loadSection(defaultSection);
 
-    addEventListeners();
-    
-    for (let q = 1; q <= 4; q++) {
-        updateQuarterWeights(q);
-        calculateQuarterHPS(q);
+// ============================================================================
+// TAB SWITCHING
+// ============================================================================
+
+function openTab(event, tabName) {
+    let tabContent = document.getElementsByClassName("tab-content");
+    for (let i = 0; i < tabContent.length; i++) {
+        tabContent[i].style.display = "none";
     }
     
-    renderHistoryList();
-});
+    let tabLinks = document.getElementsByClassName("tab-link");
+    for (let i = 0; i < tabLinks.length; i++) {
+        tabLinks[i].className = tabLinks[i].className.replace(" active", "");
+    }
+    
+    const tab = document.getElementById(tabName);
+    if (tab) tab.style.display = "block";
+    if (event?.currentTarget) event.currentTarget.className += " active";
+    
+    if (tabName !== 'Summary') {
+        const sectionId = document.getElementById('section-select')?.value;
+        const subjectCode = document.getElementById('subject-select')?.value;
+        
+        if (sectionId && subjectCode) {
+            loadClassRecord(sectionId, subjectCode, tabName);
+        }
+    }
+}
+
+
+// ============================================================================
+// EARLY WARNING SYSTEM
+// ============================================================================
+
+async function checkEarlyWarnings(qNum) {
+    if (!currentClassRecordId) return;
+    
+    console.log(`Checking early warnings for Q${qNum}...`);
+    
+    try {
+        const response = await fetch("{% url 'teacher:api-check-warnings' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify({
+                class_record_id: currentClassRecordId,
+                quarter: `Q${qNum}`
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            console.log('Warnings checked:', data.warnings_created);
+            await loadAndApplyWarnings(qNum);
+        }
+    } catch (error) {
+        console.error('Error checking warnings:', error);
+    }
+}
+
+async function loadAndApplyWarnings(qNum) {
+    if (!currentClassRecordId) return;
+    
+    try {
+        const response = await fetch(`{% url 'teacher:api-get-warnings' %}?class_record_id=${currentClassRecordId}`, {
+            headers: {
+                'X-CSRFToken': getCsrfToken()
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            activeWarnings = {};
+            
+            data.warnings.forEach(warning => {
+                activeWarnings[warning.student_id] = warning;
+            });
+            
+            applyWarningHighlights(qNum);
+            console.log(`Applied ${data.warnings.length} warning highlights`);
+        }
+    } catch (error) {
+        console.error('Error loading warnings:', error);
+    }
+}
+
+function applyWarningHighlights(qNum) {
+    const tbody = document.getElementById(`q${qNum}-body`);
+    if (!tbody) return;
+    
+    tbody.querySelectorAll('tr[data-student-id]').forEach((row) => {
+        const studentId = row.dataset.studentId;
+        const nameCell = row.querySelector('.student-name');
+        
+        if (!nameCell) return;
+        
+        nameCell.classList.remove('at-risk-highlight', 'failed-highlight');
+        const existingBadge = nameCell.querySelector('.warning-badge');
+        if (existingBadge) existingBadge.remove();
+        
+        const warning = activeWarnings[studentId];
+        
+        if (warning) {
+            if (warning.warning_type === 'failed') {
+                nameCell.classList.add('failed-highlight');
+                nameCell.innerHTML += ' <i class="fa-solid fa-circle-exclamation warning-badge"></i>';
+            } else if (warning.warning_type === 'at_risk') {
+                nameCell.classList.add('at-risk-highlight');
+                nameCell.innerHTML += ' <i class="fa-solid fa-triangle-exclamation warning-badge"></i>';
+            }
+            
+            nameCell.style.cursor = 'pointer';
+            nameCell.dataset.warningId = warning.id;
+            nameCell.onclick = () => showWarningModal(warning);
+        }
+    });
+}
+
+function showWarningModal(warning) {
+    currentWarningData = warning;
+    
+    const modal = document.getElementById('warningModal');
+    const header = document.getElementById('warning-modal-header');
+    const title = document.getElementById('warning-modal-title');
+    const statusText = document.getElementById('warning-status-text');
+    
+    const atRiskContent = document.getElementById('warning-at-risk-content');
+    const failedContent = document.getElementById('warning-failed-content');
+    
+    if (warning.warning_type === 'failed') {
+        modal.classList.add('failed-warning');
+        header.style.backgroundColor = '#dc3545';
+        header.style.color = 'white';
+        title.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Student Has Failed';
+        statusText.textContent = 'has not achieved the passing grade';
+        
+        atRiskContent.style.display = 'none';
+        failedContent.style.display = 'block';
+        
+        document.getElementById('btn-create-intervention').disabled = false;
+        document.getElementById('btn-create-intervention').style.opacity = '1';
+        
+        const advice = warning.required_performance.advice;
+        if (advice && advice.components) {
+            document.getElementById('warning-breakdown').innerHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div style="background: white; padding: 12px; border-radius: 5px; border: 1px solid #ddd;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Written Works</div>
+                        <div style="font-size: 20px; font-weight: bold;">${advice.components.ww.percentage}%</div>
+                        <div style="font-size: 12px; color: #666; margin-top: 5px;">Weighted: ${advice.components.ww.weighted} pts</div>
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 5px; border: 1px solid #ddd;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Performance Tasks</div>
+                        <div style="font-size: 20px; font-weight: bold;">${advice.components.pt.percentage}%</div>
+                        <div style="font-size: 12px; color: #666; margin-top: 5px;">Weighted: ${advice.components.pt.weighted} pts</div>
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 5px; border: 1px solid #ddd; grid-column: span 2;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Quarterly Assessment</div>
+                        <div style="font-size: 20px; font-weight: bold;">${advice.components.qa.percentage}%</div>
+                        <div style="font-size: 12px; color: #666; margin-top: 5px;">Weighted: ${advice.components.qa.weighted} pts</div>
+                    </div>
+                </div>
+            `;
+        }
+    } else {
+        modal.classList.remove('failed-warning');
+        header.style.backgroundColor = '#ffc107';
+        header.style.color = '#000';
+        title.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Student At Risk';
+        statusText.textContent = 'is at risk of failing';
+        
+        atRiskContent.style.display = 'block';
+        failedContent.style.display = 'none';
+        
+        document.getElementById('btn-create-intervention').disabled = true;
+        document.getElementById('btn-create-intervention').style.opacity = '0.5';
+        
+        const advice = warning.required_performance.advice;
+        if (advice) {
+            document.getElementById('warning-current-performance').innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <div style="background: white; padding: 12px; border-radius: 5px; border-left: 4px solid #007bff;">
+                        <div style="font-weight: bold; margin-bottom: 5px;">📝 Written Works</div>
+                        <div style="color: #666; font-size: 14px;">
+                            Average: ${advice.ww.current_avg}/10 (${advice.ww.current_percentage}%)
+                        </div>
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 5px; border-left: 4px solid #28a745;">
+                        <div style="font-weight: bold; margin-bottom: 5px;">📋 Performance Tasks</div>
+                        <div style="color: #666; font-size: 14px;">
+                            Average: ${advice.pt.current_avg}/10 (${advice.pt.current_percentage}%)
+                        </div>
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 5px; border-left: 4px solid #ffc107;">
+                        <div style="font-weight: bold; margin-bottom: 5px;">📄 Quarterly Assessment</div>
+                        <div style="color: #666; font-size: 14px;">Not yet taken</div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('warning-requirements').innerHTML = `
+                <ul style="list-style: none; padding: 0; margin: 0;">
+                    <li style="padding: 12px; margin-bottom: 10px; background: white; border-left: 4px solid #007bff; border-radius: 4px;">
+                        <i class="fa-solid fa-arrow-trend-up" style="color: #007bff; margin-right: 8px;"></i>
+                        ${advice.ww.message}
+                    </li>
+                    <li style="padding: 12px; margin-bottom: 10px; background: white; border-left: 4px solid #28a745; border-radius: 4px;">
+                        <i class="fa-solid fa-arrow-trend-up" style="color: #28a745; margin-right: 8px;"></i>
+                        ${advice.pt.message}
+                    </li>
+                    <li style="padding: 12px; background: white; border-left: 4px solid #ffc107; border-radius: 4px;">
+                        <i class="fa-solid fa-bullseye" style="color: #ffc107; margin-right: 8px;"></i>
+                        ${advice.qa.message}
+                    </li>
+                </ul>
+            `;
+        }
+    }
+    
+    document.getElementById('warning-student-name').textContent = warning.student_name;
+    document.getElementById('warning-current-grade').textContent = warning.current_grade;
+    
+    const subjectSelect = document.getElementById('subject-select');
+    const subjectText = subjectSelect.options[subjectSelect.selectedIndex]?.text || 'Unknown Subject';
+    const activeTab = document.querySelector('.tab-link.active');
+    const quarterText = activeTab?.textContent || 'Unknown Quarter';
+    
+    document.getElementById('warning-subject').textContent = subjectText;
+    document.getElementById('warning-quarter').textContent = quarterText;
+    
+    modal.style.display = 'block';
+}
+
+function closeWarningModal() {
+    const modal = document.getElementById('warningModal');
+    modal.style.display = 'none';
+    currentWarningData = null;
+}
+
+async function dismissWarning() {
+    if (!currentWarningData) return;
+    
+    try {
+        const response = await fetch("{% url 'teacher:api-dismiss-warning' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify({
+                warning_id: currentWarningData.id,
+                notes: 'Dismissed by teacher'
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('Warning dismissed', 'info');
+            closeWarningModal();
+            
+            const activeTab = document.querySelector('.tab-content[style*="display: block"]');
+            if (activeTab) {
+                const qNum = activeTab.id.replace('Q', '');
+                await loadAndApplyWarnings(qNum);
+            }
+        }
+    } catch (error) {
+        console.error('Error dismissing warning:', error);
+        showNotification('Error dismissing warning', 'error');
+    }
+}
+
+function createInterventionFromWarning() {
+    if (!currentWarningData) return;
+    
+    const sectionSelect = document.getElementById('section-select');
+    const subjectSelect = document.getElementById('subject-select');
+    const activeTab = document.querySelector('.tab-link.active');
+    
+    const sectionName = sectionSelect.options[sectionSelect.selectedIndex]?.text || '';
+    const subjectCode = subjectSelect.value || '';
+    const subjectName = subjectSelect.options[subjectSelect.selectedIndex]?.text || '';
+    const quarter = activeTab?.getAttribute('data-quarter') || 'Q1';
+    
+    const params = new URLSearchParams({
+        student_id: currentWarningData.student_id,
+        student_name: currentWarningData.student_name,
+        subject_code: subjectCode,
+        subject_name: subjectName,
+        quarter: quarter,
+        grade: currentWarningData.current_grade,
+        section: sectionName,
+        reason: 'failing',
+        warning_id: currentWarningData.id
+    });
+    
+    window.location.href = `{% url 'teacher:adviser-intervention' %}?${params.toString()}`;
+}
+
+function initializeEarlyWarningSystem() {
+    console.log('Initializing Early Warning System...');
+    
+    const activeTab = document.querySelector('.tab-content[style*="display: block"]');
+    if (activeTab && currentClassRecordId) {
+        const qNum = activeTab.id.replace('Q', '');
+        loadAndApplyWarnings(qNum);
+    }
+}
+
+console.log('✅ E-Class Record JavaScript fully loaded with real-time calculations');
 </script>
 </body>
 </html>

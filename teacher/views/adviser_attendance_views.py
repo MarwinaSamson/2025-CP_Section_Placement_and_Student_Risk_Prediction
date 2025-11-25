@@ -10,8 +10,9 @@ import json
 
 from teacher.models import AttendanceRecord, StudentAttendance, AttendanceHistory
 from enrollmentprocess.models import Student
-from admin_functionalities.models import Teacher, Section, SchoolYear
+from admin_functionalities.models import Teacher, Section, SchoolYear, SectionSubjectAssignment
 from enrollmentprocess.models import SectionPlacement
+
 
 
 @login_required
@@ -19,25 +20,69 @@ def adviser_attendance(request):
     """
     Main attendance page view.
     Renders the attendance template with necessary context.
+    Now uses session-selected section for auto-loading.
     """
     try:
         # Get logged-in teacher
         teacher = Teacher.objects.get(user=request.user)
         
+        # Get selected section from session
+        selected_section_id = request.session.get('selected_section_id')
+        selected_section = None
+        
         # Get sections where this teacher is adviser
-        sections = Section.objects.filter(
+        adviser_sections = Section.objects.filter(
             adviser=teacher,
             is_active=True
         ).order_by('name')
         
+        # Get sections where teacher has subject assignments (for subject teachers)
+        taught_section_ids = SectionSubjectAssignment.objects.filter(
+            teacher=teacher
+        ).values_list('section_id', flat=True).distinct()
+        
+        taught_sections = Section.objects.filter(
+            id__in=taught_section_ids,
+            is_active=True
+        ).order_by('name')
+        
+        # Combine all accessible sections
+        all_sections = (adviser_sections | taught_sections).distinct().order_by('name')
+        
+        # Get the selected section object if ID exists
+        if selected_section_id:
+            try:
+                selected_section = all_sections.get(id=selected_section_id)
+                print(f"\n✅ Attendance - Session-selected section: {selected_section.name} (ID: {selected_section_id})")
+            except Section.DoesNotExist:
+                print(f"\n⚠️ Attendance - Invalid section ID in session: {selected_section_id}")
+                # Clear invalid session data
+                request.session.pop('selected_section_id', None)
+                request.session.pop('selected_section_name', None)
+                request.session.pop('selected_section_program', None)
+                selected_section_id = None
+        
         # Get current school year
         current_school_year = SchoolYear.get_current()
         
+        # Debug output
+        print("\n" + "="*80)
+        print(f"ATTENDANCE MODULE - Teacher: {teacher.full_name}")
+        print(f"Selected Section: {selected_section.name if selected_section else 'None'}")
+        print(f"Adviser Sections: {adviser_sections.count()}")
+        print(f"Taught Sections: {taught_sections.count()}")
+        print(f"Total Accessible Sections: {all_sections.count()}")
+        print("="*80 + "\n")
+        
         context = {
             'teacher': teacher,
-            'sections': sections,
+            'sections': all_sections,  # All accessible sections
+            'adviser_sections': adviser_sections,
+            'taught_sections': taught_sections,
             'current_school_year': current_school_year,
             'page_title': 'SF2 - Daily Attendance',
+            'selected_section_id': selected_section_id,  # Pass to template
+            'selected_section': selected_section,  # Pass section object
         }
         
         return render(request, 'teacher/adviser/attendance.html', context)
@@ -47,6 +92,9 @@ def adviser_attendance(request):
             'error_message': 'Teacher profile not found. Please contact administrator.'
         })
     except Exception as e:
+        print(f"ERROR in adviser_attendance: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return render(request, 'teacher/error.html', {
             'error_message': f'An error occurred: {str(e)}'
         })

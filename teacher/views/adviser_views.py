@@ -14,9 +14,9 @@ from django.contrib.auth.decorators import login_required
 def adviser_classrecord(request):
     return render(request, 'teacher/adviser/Class_Record.html')
 
-@login_required
-def adviser_intervention(request):
-    return render(request, 'teacher/adviser/subject_Intervention.html')
+# @login_required
+# def adviser_intervention(request):
+#     return render(request, 'teacher/adviser/subject_Intervention.html')
 
 # @login_required
 # def adviser_masterlist(request):
@@ -34,9 +34,9 @@ def adviser_reports(request):
 # def adviser_settings(request):
 #     return render(request, 'teacher/adviser/Setting.html')
 
-@login_required
-def adviser_subview(request):
-    return render(request, 'teacher/adviser/Subject_Teacher_View.html')
+# @login_required
+# def adviser_subview(request):
+#     return render(request, 'teacher/adviser/Subject_Teacher_View.html')
 
 @login_required
 def adviser_adviser_intervention(request):
