@@ -484,13 +484,6 @@ function setupEventListeners() {
         });
     }
 
-    // Close modals on outside click
-    window.addEventListener('click', (event) => {
-        if (event.target.classList.contains('modal')) {
-            closeAllModals();
-        }
-    });
-
     // Form submissions
     document.getElementById('addSectionForm').addEventListener('submit', handleAddSection);
     document.getElementById('updateSectionForm').addEventListener('submit', handleUpdateSection);
@@ -511,12 +504,41 @@ function setupEventListeners() {
             populateRoomSelectById('updateRoom', this.value);
         });
     }
+
+    // FIX: Add close button event listeners
+    document.querySelectorAll('.close-btn, [onclick*="close"]').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeAllModals();
+        });
+    });
+
+    // FIX: Close modals when clicking outside
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('modal')) {
+            closeAllModals();
+        }
+    });
+
+    // FIX: Close modals with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeAllModals();
+        }
+    });
 }
 
 function updateActiveTab(program) {
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active', 'bg-red-700', 'text-white', 'border-red-700');
+        btn.classList.add('bg-white', 'text-gray-600', 'border-gray-300');
+    });
     const targetTab = document.querySelector(`[data-program="${program}"]`);
-    if (targetTab) targetTab.classList.add('active');
+    if (targetTab) {
+        targetTab.classList.add('active', 'bg-red-700', 'text-white', 'border-red-700');
+        targetTab.classList.remove('bg-white', 'text-gray-600', 'border-gray-300');
+    }
 }
 
 function switchProgram(program) {
@@ -558,7 +580,7 @@ function fetchAdvisers() {
 }
 
 function fetchBuildingsRooms() {
-    return fetch(`${BASE_URL}api/buildings-rooms/`)  // FIXED: Updated to new API path
+    return fetch(`${BASE_URL}api/buildings-rooms/`)
         .then(response => {
             if (!response.ok) throw new Error('Network response was not ok');
             return response.json();
@@ -599,7 +621,6 @@ function populateAdviserSelects(currentAdviserId = null) {
     });
 }
 
-
 function populateSubjectTeacherSelects() {
     console.log('Populating subject teacher selects with department filtering:', subjectTeachers);
 
@@ -619,8 +640,7 @@ function populateSubjectTeacherSelects() {
         if (select) {
             select.innerHTML = '<option value="">Select Teacher</option>';
 
-            const filteredTeachers = subjectTeachers.filter(t =>t.department && t.department.toLowerCase().includes(department.toLowerCase()));
-
+            const filteredTeachers = subjectTeachers.filter(t => t.department && t.department.toLowerCase().includes(department.toLowerCase()));
 
             if (filteredTeachers.length === 0) {
                 const opt = document.createElement('option');
@@ -638,7 +658,6 @@ function populateSubjectTeacherSelects() {
         }
     });
 }
-
 
 function populateBuildingSelects() {
     console.log('Populating building selects with:', buildingsRooms);
@@ -686,45 +705,102 @@ function loadSections(program) {
             
             if (data.sections.length === 0) {
                 sectionsGrid.innerHTML = `
-                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #666;">
-                        <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 15px; display: block;"></i>
-                        <p>No sections found for ${program} program.</p>
-                        <p>Click "Add Section" to create a new section.</p>
+                    <div class="col-span-full text-center py-16">
+                        <div class="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <i class="fas fa-inbox text-3xl text-gray-400"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-600 mb-2">No Sections Found</h3>
+                        <p class="text-gray-500 mb-4">No sections available for ${program} program.</p>
+                        <button class="gradient-bg text-white px-6 py-3 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-semibold" onclick="openAddSectionModal()">
+                            <i class="fas fa-plus-circle mr-2"></i>Create First Section
+                        </button>
                     </div>
                 `;
                 return;
             }
             
             sectionsGrid.innerHTML = data.sections.map(section => `
-                <div class="section-card" >
-                    <div class="section-header" onclick="openSectionMasterlist(${section.id})">
-                        <div class="section-avatar">
-                            <img src="${section.avatar}" alt="${section.name}">
-                        </div>
-                        <div class="section-info">
-                            <h3>Section: ${section.name}</h3>
-                            <p>Adviser: ${section.adviser}</p>
-                            <p>Location: ${section.location}</p>
-                        </div>
-                    </div>
-                    <div class="section-footer">
-                        <div class="student-count">${section.students}/${section.maxStudents}</div>
-                        <div class="section-menu">
-                            <button class="menu-btn" onclick="toggleDropdown(${section.id})">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                            <div class="dropdown-menu" id="dropdown-${section.id}" style="display: none;">
-                                <button class="dropdown-item" onclick="assignTeacher(${section.id})">
-                                    <i class="fas fa-user-plus"></i> Assign Teacher
+                <div class="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                    <div class="p-6">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-center gap-4">
+                                <div class="w-14 h-14 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
+                                    <i class="fas fa-users text-white text-lg"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="text-xl font-bold text-gray-800">${section.name}</h3>
+                                    <p class="text-sm text-gray-600 flex items-center gap-1 mt-1">
+                                        <i class="fas fa-user-graduate text-red-500"></i>
+                                        ${section.adviser}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="relative">
+                                <button class="menu-btn w-10 h-10 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-300" onclick="event.stopPropagation(); toggleDropdown(${section.id})">
+                                    <i class="fas fa-ellipsis-v text-lg"></i>
                                 </button>
-                                <button class="dropdown-item" onclick="updateSection(${section.id})">
-                                    <i class="fas fa-edit"></i> Update
-                                </button>
-                                <button class="dropdown-item" onclick="deleteSection(${section.id})">
-                                    <i class="fas fa-trash"></i> Delete
-                                </button>
+                                <div class="dropdown-menu absolute top-12 right-0 bg-white rounded-xl shadow-2xl border border-gray-200 z-20 min-w-48 py-2 hidden animate-fade-in" id="dropdown-${section.id}">
+                                    <button class="dropdown-item w-full text-left px-4 py-3 hover:bg-blue-50 transition-all duration-200 flex items-center gap-3 group" onclick="assignTeacher(${section.id}, event)">
+                                        <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                                            <i class="fas fa-user-plus text-blue-600 text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <div class="font-semibold text-gray-700">Assign Teacher</div>
+                                            <div class="text-xs text-gray-500">Assign subject teachers</div>
+                                        </div>
+                                    </button>
+                                    <button class="dropdown-item w-full text-left px-4 py-3 hover:bg-green-50 transition-all duration-200 flex items-center gap-3 group" onclick="updateSection(${section.id}, event)">
+                                        <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                                            <i class="fas fa-edit text-green-600 text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <div class="font-semibold text-gray-700">Update</div>
+                                            <div class="text-xs text-gray-500">Edit section details</div>
+                                        </div>
+                                    </button>
+                                    <div class="border-t border-gray-100 my-1"></div>
+                                    <button class="dropdown-item w-full text-left px-4 py-3 hover:bg-red-50 transition-all duration-200 flex items-center gap-3 group text-red-600" onclick="deleteSection(${section.id}, event)">
+                                        <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center group-hover:bg-red-200 transition-colors">
+                                            <i class="fas fa-trash text-red-600 text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <div class="font-semibold">Delete</div>
+                                            <div class="text-xs text-red-500">Remove this section</div>
+                                        </div>
+                                    </button>
+                                </div>
                             </div>
                         </div>
+                        
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-map-marker-alt text-gray-400"></i>
+                                    <span class="text-sm font-medium text-gray-600">Location</span>
+                                </div>
+                                <span class="text-sm font-semibold text-gray-800">${section.location}</span>
+                            </div>
+                            
+                            <div class="flex items-center justify-between p-3 bg-gradient-to-r from-red-50 to-pink-50 rounded-lg border border-red-100">
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-users text-red-400"></i>
+                                    <span class="text-sm font-medium text-red-600">Students</span>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-lg font-bold text-red-600">${section.students}/${section.maxStudents}</div>
+                                    <div class="w-24 h-2 bg-red-200 rounded-full overflow-hidden">
+                                        <div class="h-full bg-red-500 rounded-full" style="width: ${(section.students / section.maxStudents) * 100}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 px-6 py-3 border-t border-gray-200">
+                        <button class="w-full text-center text-sm font-semibold text-gray-600 hover:text-red-600 transition-colors duration-300 flex items-center justify-center gap-2" onclick="openSectionMasterlist(${section.id})">
+                            <i class="fas fa-list-alt"></i>
+                            View Masterlist
+                        </button>
                     </div>
                 </div>
             `).join('');
@@ -732,15 +808,20 @@ function loadSections(program) {
         .catch(error => console.error('Error loading sections:', error));
 }
 
+// FIXED MODAL FUNCTIONS
 function openAddSectionModal() {
     console.log('Opening Add Section Modal');
-    document.getElementById('addSectionModal').style.display = 'block';
+    const modal = document.getElementById('addSectionModal');
+    modal.style.display = 'flex';
+    document.body.classList.add('modal-open');
     populateAdviserSelects();
     populateBuildingSelects();
 }
 
 function closeAddSectionModal() {
-    document.getElementById('addSectionModal').style.display = 'none';
+    const modal = document.getElementById('addSectionModal');
+    modal.style.display = 'none';
+    document.body.classList.remove('modal-open');
     document.getElementById('addSectionForm').reset();
 }
 
@@ -751,12 +832,17 @@ function openSubjectTeacherModal(sectionId) {
         document.getElementById('currentSection').textContent = section.name;
         document.getElementById('currentAdviser').textContent = section.adviser;
     }
-    document.getElementById('addSubjectTeacherModal').style.display = 'block';
+    
+    const modal = document.getElementById('addSubjectTeacherModal');
+    modal.style.display = 'flex';
+    document.body.classList.add('modal-open');
     populateSubjectTeacherSelects();
 }
 
 function closeSubjectTeacherModal() {
-    document.getElementById('addSubjectTeacherModal').style.display = 'none';
+    const modal = document.getElementById('addSubjectTeacherModal');
+    modal.style.display = 'none';
+    document.body.classList.remove('modal-open');
     document.getElementById('addSubjectTeacherForm').reset();
 }
 
@@ -789,17 +875,24 @@ function openUpdateSectionModal(sectionId) {
     }
 
     // Open modal
-    document.getElementById('updateSectionModal').style.display = 'block';
+    const modal = document.getElementById('updateSectionModal');
+    modal.style.display = 'flex';
+    document.body.classList.add('modal-open');
 }
 
 function closeUpdateSectionModal() {
-    document.getElementById('updateSectionModal').style.display = 'none';
+    const modal = document.getElementById('updateSectionModal');
+    modal.style.display = 'none';
+    document.body.classList.remove('modal-open');
     document.getElementById('updateSectionForm').reset();
     currentSectionForUpdate = null;
 }
 
 function closeAllModals() {
-    document.querySelectorAll('.modal').forEach(modal => modal.style.display = 'none');
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.style.display = 'none';
+    });
+    document.body.classList.remove('modal-open');
 }
 
 function handleAddSection(event) {
@@ -860,42 +953,69 @@ function handleUpdateSection(event) {
     });
 }
 
-function assignTeacher(sectionId) {
-    currentSectionForUpdate = findSectionById(sectionId);
-    openSubjectTeacherModal(sectionId);
-}
-
-function updateSection(sectionId) {
-    openUpdateSectionModal(sectionId);
-}
-
-function deleteSection(sectionId) {
-    if (confirm("Are you sure you want to delete this section? This action cannot be undone.")) {
-        fetch(`${BASE_URL}sections/delete/${sectionId}/`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRFToken': CSRF_TOKEN
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log('Delete section response:', data);
-            if (data.success) {
-                alert(data.message);
-                loadSections(currentProgram);
-            } else {
-                alert(`Error: ${data.message}`);
-            }
-        })
-        .catch(error => {
-            console.error('Error deleting section:', error);
-            alert('An error occurred while deleting the section.');
-        });
+// FIXED: Modal opening functions with proper event handling
+function assignTeacher(sectionId, event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
     }
+    toggleDropdown(sectionId);
+    currentSectionForUpdate = findSectionById(sectionId);
+    setTimeout(() => {
+        openSubjectTeacherModal(sectionId);
+    }, 150);
+}
+
+function updateSection(sectionId, event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    toggleDropdown(sectionId);
+    setTimeout(() => {
+        openUpdateSectionModal(sectionId);
+    }, 150);
+}
+
+function deleteSection(sectionId, event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    toggleDropdown(sectionId);
+    
+    setTimeout(() => {
+        if (confirm("Are you sure you want to delete this section? This action cannot be undone.")) {
+            fetch(`${BASE_URL}sections/delete/${sectionId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': CSRF_TOKEN
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Delete section response:', data);
+                if (data.success) {
+                    showNotification('Section deleted successfully!', 'success');
+                    loadSections(currentProgram);
+                } else {
+                    showNotification(`Error: ${data.message}`, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting section:', error);
+                showNotification('An error occurred while deleting the section.', 'error');
+            });
+        }
+    }, 150);
+}
+
+// Notification function
+function showNotification(message, type = 'info') {
+    alert(message);
 }
 
 function openSectionMasterlist(sectionId) {
-    // Simply redirect to Django-rendered masterlist page
     window.location.href = `${BASE_URL}sections/${sectionId}/masterlist/`;
 }
 
@@ -969,21 +1089,96 @@ function toggleDropdown(sectionId) {
     // Close all other dropdowns first
     document.querySelectorAll('.dropdown-menu').forEach(menu => {
         if (menu.id !== `dropdown-${sectionId}`) {
-            menu.style.display = 'none';
+            menu.classList.add('hidden');
+            menu.classList.remove('animate-fade-in');
         }
     });
     
     // Toggle current dropdown
     const dropdown = document.getElementById(`dropdown-${sectionId}`);
     if (dropdown) {
-        const isHidden = dropdown.style.display === 'none' || dropdown.style.display === '';
-        dropdown.style.display = isHidden ? 'block' : 'none';
+        const isHidden = dropdown.classList.contains('hidden');
+        
+        if (isHidden) {
+            dropdown.classList.remove('hidden');
+            dropdown.classList.add('animate-fade-in');
+        } else {
+            dropdown.classList.add('hidden');
+            dropdown.classList.remove('animate-fade-in');
+        }
     }
 }
 
+// Close dropdowns when clicking elsewhere
+document.addEventListener('click', function(event) {
+    if (!event.target.closest('.relative')) {
+        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+            menu.classList.add('hidden');
+            menu.classList.remove('animate-fade-in');
+        });
+    }
+});
+
+// Add CSS for animations and modal fixes
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+        animation: fadeIn 0.2s ease-out;
+    }
+    
+    /* Modal fixes */
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+    }
+    
+    .modal-content {
+        position: relative;
+        background: white;
+        border-radius: 8px;
+        width: 95%;
+        max-width: 900px;
+        max-height: 90vh;
+        overflow-y: auto;
+        margin: auto;
+        z-index: 10001;
+    }
+    
+    .subject-teacher-modal {
+        max-width: 95% !important;
+        width: 95% !important;
+    }
+    
+    body.modal-open {
+        overflow: hidden;
+    }
+    
+    .dropdown-menu {
+        z-index: 10002;
+    }
+    
+    /* Ensure table is responsive */
+    .overflow-x-auto {
+        overflow-x: auto;
+    }
+`;
+document.head.appendChild(style);
+
 function handleLogout() {
     if (confirm('Are you sure you want to logout?')) {
-        window.location.href = "/logout/";  // Adjust to your logout URL
+        window.location.href = "/logout/";
     }
 }
 
@@ -992,33 +1187,4 @@ function findSectionById(sectionId) {
         return sectionsCache[currentProgram].find(section => section.id == sectionId) || null;
     }
     return null;
-}
-
-// Close dropdowns when clicking outside
-document.addEventListener('click', function(event) {
-    if (!event.target.closest('.section-menu')) {
-        document.querySelectorAll('.dropdown-menu').forEach(menu => {
-            menu.style.display = 'none';
-        });
-    }
-});
-
-// Search functionality (optional enhancement)
-const searchInput = document.querySelector('.search-input');
-if (searchInput) {
-    searchInput.addEventListener('input', function(e) {
-        const searchTerm = e.target.value.toLowerCase();
-        const sectionCards = document.querySelectorAll('.section-card');
-        
-        sectionCards.forEach(card => {
-            const sectionName = card.querySelector('.section-info h3').textContent.toLowerCase();
-            const adviserName = card.querySelector('.section-info p:nth-child(2)').textContent.toLowerCase();
-            
-            if (sectionName.includes(searchTerm) || adviserName.includes(searchTerm)) {
-                card.style.display = '';
-            } else {
-                card.style.display = 'none';
-            }
-        });
-    });
 }

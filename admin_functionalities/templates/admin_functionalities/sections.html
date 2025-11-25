@@ -1,417 +1,3 @@
-{% comment %} <!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    {% load static %}
-    <title>Sections Management - ZNHS West</title>
-    <link rel="stylesheet" href="{% static 'admin_functionalities/css/sections.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
-
-<body>
-    <div class="dashboard-container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo-container">
-                    <img src="{% static 'admin_functionalities/assets/westLogo.png' %}" alt="ZNHS West Logo" class="sidebar-logo">
-                    <span class="sidebar-title">ZNHS WEST</span>
-                </div>
-            </div>
-
-            <nav class="sidebar-nav">
-                <ul>
-                     <li class="nav-item ">
-                        <a href="{% url 'admin_functionalities:admin-dashboard' %}" class="nav-link">
-                            <i class="fas fa-tachometer-alt"></i>
-                            <span>Dashboard</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{% url 'admin_functionalities:sections' %}" class="nav-link">
-                            <i class="fas fa-users"></i>
-                            <span>Sections</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{% url 'admin_functionalities:teachers' %}" class="nav-link">
-                            <i class="fas fa-chalkboard-teacher"></i>
-                            <span>Teachers</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{% url 'admin_functionalities:enrollment' %}" class="nav-link">
-                            <i class="fas fa-clipboard-list"></i>
-                            <span>Enrollment</span>
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a href="{% url 'admin_functionalities:settings' %}" class="nav-link">
-                            <i class="fas fa-cog"></i>
-                            <span>Settings</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-
-            <div class="sidebar-footer">
-                <!-- Logout as link with onclick handler -->
-                <a href="{% url 'enrollmentprocess:logout' %}" class="logout-btn" onclick="handleLogout(); return false;">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
-                </a>
-            </div>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <header class="sections-header">
-                <div class="header-left">
-                    <h1>List of Programs and Sections</h1>
-                    <div class="grade-selector">
-                        <label for="gradeLevel">Grade Level:</label>
-                        <select id="gradeLevel" class="grade-dropdown">
-                            <option value="7">Grade 7</option>
-                            <option value="8">Grade 8</option>
-                            <option value="9">Grade 9</option>
-                            <option value="10">Grade 10</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="header-right">
-                    <div class="search-container">
-                        <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Search sections..." class="search-input">
-                    </div>
-
-                    <button class="add-section-btn" onclick="openAddSectionModal()">
-                        <i class="fas fa-plus"></i>
-                        Add Section
-                    </button>
-
-                    <div class="admin-profile">
-                        <div class="profile-info">
-                            <span class="admin-name">Samson, Marwina D.</span>
-                            <span class="admin-role">Admin</span>
-                        </div>
-                        <div class="profile-avatar">
-                            <img src="{% static 'admin_functionalities/assets/spongebob.jpg' %}" alt="Admin" class="avatar-img">
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <!-- Program Tabs -->
-            <section class="program-tabs">
-                <div class="tabs-container">
-                    <button class="tab-btn active" data-program="STE">STE</button>
-                    <button class="tab-btn" data-program="SPFL">SPFL</button>
-                    <button class="tab-btn" data-program="SPTVE">SPTVE</button>
-                    <button class="tab-btn" data-program="OHSP">OHSP</button>
-                    <button class="tab-btn" data-program="SNED">SNED</button>
-                    <button class="tab-btn" data-program="TOP5">TOP 5</button>
-                    <button class="tab-btn" data-program="REGULAR">REGULAR</button>
-                </div>
-            </section>
-
-
-            <section class="sections-grid" id="sectionsGrid">
-                <!-- Section cards will be dynamically loaded here -->
-            </section>
-        </main>
-    </div>
-
-
-     <div id="addSectionModal" class="modal">
-        <div class="modal-content">
-            <h2>ADD SECTION</h2>
-              <form id="addSectionForm">
-      {% csrf_token %}  <!-- ← ADD FOR POST SECURITY -->
-      <div class="form-group">
-          <label for="sectionName">Section Name:</label>
-          <input type="text" id="sectionName" name="name" required>  <!-- ← name="name" (matches form) -->
-      </div>
-
-      <div class="form-group">
-          <label for="adviserName">Adviser Name:</label>
-          <select id="adviserName" name="adviser" required>  <!-- ← name="adviser" (matches form), value=ID in JS -->
-              <option value="">Select Adviser</option>
-              <!-- Options populated by JS from get_teachers -->
-          </select>
-      </div>
-
-      <div class="form-group">
-          <label>Location:</label>
-          <div class="location-inputs">
-              <div class="location-field">
-                  <label for="buildingNumber">Building Number:</label>
-                  <select id="buildingNumber" name="building" required>  <!-- ← name="building" -->
-                      <option value="">Select Building</option>
-                      <!-- Populated by JS from get_buildings_rooms -->
-                  </select>
-              </div>
-              <div class="location-field">
-                  <label for="roomNumber">Room Number:</label>
-                  <select id="roomNumber" name="room" required>  <!-- ← name="room" -->
-                      <option value="">Select Room</option>
-                      <!-- Populated by JS, depends on building -->
-                  </select>
-              </div>
-          </div>
-      </div>
-
-
-      <div class="modal-buttons">
-          <button type="button" class="btn-back" onclick="closeAddSectionModal()">BACK</button>
-          <button type="submit" class="btn-add">ADD</button>
-      </div>
-  </form>
-  
-        </div>
-    </div> 
-    
-
-    <!-- Add Subject Teacher Modal -->
-    <div id="addSubjectTeacherModal" class="modal">
-        <div class="modal-content subject-teacher-modal">
-            <h2>ADD SUBJECT TEACHER</h2>
-            <div class="section-info">
-                <span>Section: <span id="currentSection">Akatsuki</span> | Adviser: <span
-                        id="currentAdviser">Pain</span></span>
-            </div>
-
-            <div class="subjects-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Subject</th>
-                            <th>Teacher's Name</th>
-                            <th>Day</th>
-                            <th>Time</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Mathematics</td>
-                                <td>
-                                    <select id="mathTeacher" name="mathTeacher">  <!-- ← Add id -->
-                                        <option value="">Select Teacher</option>
-                                        <!-- Populated by JS from subject_teachers -->
-                                    </select>
-                                </td>
-                                <td>
-                                    <select id="mathDay" name="mathDay">  <!-- ← Add id -->
-                                        <option value="DAILY">Daily</option>
-                                        <option value="MWF">MWF</option>
-                                        <option value="TTH">TTH</option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <input type="time" id="mathTime" name="mathTime">  <!-- ← Add id -->
-                                    <span class="time-separator">-</span>
-                                    <input type="time" id="mathTimeEnd" name="mathTimeEnd">  <!-- ← Add id -->
-                                </td>
-                        </tr>
-                        <tr>
-                            <td>English</td>
-                                <td>
-                                    <select id="englishTeacher" name="englishTeacher">  <!-- ← Add id -->
-                                        <option value="">Select Teacher</option>
-                                        <!-- Populated by JS from subject_teachers -->
-                                    </select>
-                                </td>
-                                <td>
-                                    <select id="englishDay" name="englishDay">  <!-- ← Add id -->
-                                        <option value="DAILY">Daily</option>
-                                        <option value="MWF">MWF</option>
-                                        <option value="TTH">TTH</option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <input type="time" id="englishTime" name="englishTime">  <!-- ← Add id -->
-                                    <span class="time-separator">-</span>
-                                    <input type="time" id="englishTimeEnd" name="englihTimeEnd">  <!-- ← Add id -->
-                                </td>
-                        </tr>
-                        <tr>
-                            <td>Science</td>
-                                <td>
-                                    <select id="scienceTeacher" name="scienceTeacher">  <!-- ← Add id -->
-                                        <option value="">Select Teacher</option>
-                                        <!-- Populated by JS from subject_teachers -->
-                                    </select>
-                                </td>
-                                <td>
-                                    <select id="scienceDay" name="scienceDay">  <!-- ← Add id -->
-                                        <option value="DAILY">Daily</option>
-                                        <option value="MWF">MWF</option>
-                                        <option value="TTH">TTH</option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <input type="time" id="scienceTime" name="scienceTime">  <!-- ← Add id -->
-                                    <span class="time-separator">-</span>
-                                    <input type="time" id="scienceTimeEnd" name="scienceTimeEnd">  <!-- ← Add id -->
-                                </td>
-                        </tr>
-                        <tr>
-                            <td>Filipino</td>
-                                <td>
-                                    <select id="filipinoTeacher" name="filipinoTeacher">  <!-- ← Add id -->
-                                        <option value="">Select Teacher</option>
-                                        <!-- Populated by JS from subject_teachers -->
-                                    </select>
-                                </td>
-                                <td>
-                                    <select id="filipinoDay" name="filipinoDay">  <!-- ← Add id -->
-                                        <option value="DAILY">Daily</option>
-                                        <option value="MWF">MWF</option>
-                                        <option value="TTH">TTH</option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <input type="time" id="filipinoTime" name="filipinoTime">  <!-- ← Add id -->
-                                    <span class="time-separator">-</span>
-                                    <input type="time" id="filipinoTimeEnd" name="filipinoTimeEnd">  <!-- ← Add id -->
-                                </td>
-                        </tr>
-                        <tr>
-                            <td>Araling Panlipunan</td>
-                                <td>
-                                    <select id="arpanTeacher" name="arpanTeacher">  <!-- ← Add id -->
-                                        <option value="">Select Teacher</option>
-                                        <!-- Populated by JS from subject_teachers -->
-                                    </select>
-                                </td>
-                                <td>
-                                    <select id="arpanDay" name="arpanDay">  <!-- ← Add id -->
-                                        <option value="DAILY">Daily</option>
-                                        <option value="MWF">MWF</option>
-                                        <option value="TTH">TTH</option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <input type="time" id="arpanTime" name="arpanTime">  <!-- ← Add id -->
-                                    <span class="time-separator">-</span>
-                                    <input type="time" id="arpanTimeEnd" name="arpanTimeEnd">  <!-- ← Add id -->
-                                </td>
-                        </tr>
-                        <tr>
-                            <td>MAPEH</td>
-                                <td>
-                                    <select id="mapehTeacher" name="mapehTeacher">  <!-- ← Add id -->
-                                        <option value="">Select Teacher</option>
-                                        <!-- Populated by JS from subject_teachers -->
-                                    </select>
-                                </td>
-                                <td>
-                                    <select id="mapehDay" name="mapehDay">  <!-- ← Add id -->
-                                        <option value="DAILY">Daily</option>
-                                        <option value="MWF">MWF</option>
-                                        <option value="TTH">TTH</option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <input type="time" id="mapehTime" name="mapehTime">  <!-- ← Add id -->
-                                    <span class="time-separator">-</span>
-                                    <input type="time" id="mapehTimeEnd" name="mapehTimeEnd">  <!-- ← Add id -->
-                                </td>
-                        </tr>
-                        <tr>
-                            <td>Edukasyon sa Pagpapakatao</td>
-                                <td>
-                                    <select id="espTeacher" name="espTeacher">  <!-- ← Add id -->
-                                        <option value="">Select Teacher</option>
-                                        <!-- Populated by JS from subject_teachers -->
-                                    </select>
-                                </td>
-                                <td>
-                                    <select id="espDay" name="espDay">  <!-- ← Add id -->
-                                        <option value="DAILY">Daily</option>
-                                        <option value="MWF">MWF</option>
-                                        <option value="TTH">TTH</option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <input type="time" id="espTime" name="espTime">  <!-- ← Add id -->
-                                    <span class="time-separator">-</span>
-                                    <input type="time" id="espTimeEnd" name="espTimeEnd">  <!-- ← Add id -->
-                                </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="modal-buttons">
-                <button type="button" class="btn-back" onclick="closeSubjectTeacherModal()">BACK</button>
-                <button type="button" class="btn-add" onclick="saveSubjectTeachers()">ADD</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Update Section Modal -->
-    <div id="updateSectionModal" class="modal">
-        <div class="modal-content">
-            <h2>UPDATE SECTION</h2>
-             <form id="updateSectionForm">
-                    {% csrf_token %}  <!-- ← ADD -->
-                    <input type="hidden" name="section_id" id="updateSectionId">  <!-- ← ADD: For JS to set ID -->
-                    <div class="form-group">
-                        <label for="updateSectionName">Section Name:</label>
-                        <input type="text" id="updateSectionName" name="name" required>  <!-- ← name="name" -->
-                    </div>
-
-                    <div class="form-group">
-                        <label for="updateAdviserName">Section Teacher:</label>
-                        <select id="updateAdviserName" name="adviser" required>  <!-- ← name="adviser" -->
-                            <option value="">Select Teacher</option>
-                            <!-- Populated by JS -->
-                        </select>
-                    </div>
-
-                    <div class="form-group">  <!-- ← CHANGE: Split location into building/room for form match -->
-                        <label>Location:</label>
-                        <div class="location-inputs">
-                            <div class="location-field">
-                                <label for="updateBuilding">Building Number:</label>
-                                <select id="updateBuilding" name="building" required>
-                                    <option value="">Select Building</option>
-                                    <!-- Populated by JS -->
-                                </select>
-                            </div>
-                            <div class="location-field">
-                                <label for="updateRoom">Room Number:</label>
-                                <select id="updateRoom" name="room" required>
-                                    <option value="">Select Room</option>
-                                    <!-- Populated by JS -->
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="updateMaxStudents">Max Students:</label>
-                        <input type="number" id="updateMaxStudents" name="max_students" value="40" min="1" class="form-control">
-                    </div>
-
-                    <div class="modal-buttons">
-                        <button type="button" class="btn-back" onclick="closeUpdateSectionModal()">BACK</button>
-                        <button type="submit" class="btn-add">UPDATE</button>
-                    </div>
-                </form>
-        </div>
-    </div>
-
-    <script src="{% static 'admin_functionalities/js/sections.js' %}"></script>
-</body>
-
-</html> {% endcomment %}
-
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -420,118 +6,618 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {% load static %}
     <title>Sections Management - ZNHS West</title>
-    <link rel="stylesheet" href="{% static 'admin_functionalities/css/sections.css' %}">
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Beautiful Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            position: relative;
+            background: white;
+            border-radius: 20px;
+            width: 95%;
+            max-width: 600px;
+            max-height: 85vh;
+            overflow-y: auto;
+            margin: auto;
+            z-index: 10001;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .subject-teacher-modal {
+            max-width: 95% !important;
+            width: 95% !important;
+            max-width: 1200px !important;
+        }
+
+        /* Modal Header */
+        .modal-header {
+            padding: 25px 30px 0;
+            text-align: center;
+        }
+
+        .modal-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #c41e3a 0%, #a01729 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 10px 25px rgba(196, 30, 58, 0.3);
+        }
+
+        .modal-icon i {
+            font-size: 32px;
+            color: white;
+        }
+
+        .modal-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .modal-subtitle {
+            font-size: 16px;
+            color: #6b7280;
+            margin-bottom: 25px;
+        }
+
+        /* Modal Body */
+        .modal-body {
+            padding: 0 30px 25px;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: #c41e3a;
+            box-shadow: 0 0 0 3px rgba(196, 30, 58, 0.1);
+        }
+
+        /* Location Grid */
+        .location-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .location-field label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        /* Subject Teacher Table */
+        .subject-table-container {
+            background: #f8fafc;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            margin-bottom: 25px;
+        }
+
+        .subject-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .subject-table thead {
+            background: linear-gradient(135deg, #c41e3a 0%, #a01729 100%);
+        }
+
+        .subject-table th {
+            padding: 16px 20px;
+            text-align: left;
+            font-weight: 600;
+            color: white;
+            font-size: 14px;
+            border: none;
+        }
+
+        .subject-table tbody tr {
+            border-bottom: 1px solid #e2e8f0;
+            transition: background-color 0.2s ease;
+        }
+
+        .subject-table tbody tr:hover {
+            background-color: #f1f5f9;
+        }
+
+        .subject-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .subject-table td {
+            padding: 16px 20px;
+            vertical-align: middle;
+        }
+
+        .subject-name {
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 14px;
+            min-width: 180px;
+        }
+
+        /* Time Inputs */
+        .time-inputs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .time-inputs input {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .time-separator {
+            color: #6b7280;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* Modal Footer */
+        .modal-footer {
+            padding: 20px 30px 30px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 30px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-back {
+            background: white;
+            color: #6b7280;
+            border: 2px solid #e5e7eb;
+        }
+
+        .btn-back:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #c41e3a 0%, #a01729 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(196, 30, 58, 0.3);
+        }
+
+        /* Section Info Banner */
+        .section-info-banner {
+            background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
+            border: 1px solid #fecaca;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .section-info-text {
+            font-weight: 600;
+            color: #7f1d1d;
+            font-size: 15px;
+        }
+
+        .section-info-text span {
+            color: #c41e3a;
+        }
+
+        /* 3-dots Dropdown Menu */
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border: 1px solid #e5e7eb;
+            z-index: 10002;
+            min-width: 280px;
+            padding: 8px;
+            margin-top: 8px;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .dropdown-item:hover {
+            background: #f8fafc;
+            transform: translateX(4px);
+        }
+
+        .dropdown-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .dropdown-icon.blue {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .dropdown-icon.green {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .dropdown-icon.red {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .dropdown-content h4 {
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .dropdown-content p {
+            color: #6b7280;
+            font-size: 12px;
+            margin: 2px 0 0 0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 98%;
+                max-height: 90vh;
+                margin: 10px;
+            }
+
+            .subject-teacher-modal {
+                width: 98% !important;
+            }
+
+            .location-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-footer {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .subject-table-container {
+                overflow-x: auto;
+            }
+
+            .subject-table {
+                min-width: 700px;
+            }
+        }
+
+        /* Scrollbar Styling */
+        .modal-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .modal-content::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 3px;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Custom scrollbar for sidebar */
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar-scroll::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Smooth transitions */
+        .smooth-transition {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Glass morphism effect */
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Gradient backgrounds */
+        .gradient-bg {
+            background: linear-gradient(135deg, #c41e3a 0%, #a01729 100%);
+        }
+
+        .gradient-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        }
+
+        /* Animation for dropdown */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.2s ease-out;
+        }
+    </style>
 </head>
 
-<body>
-    <div class="dashboard-container">
-        <!-- Sidebar (unchanged) -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo-container">
-                    <img src="{% static 'admin_functionalities/assets/westLogo.png' %}" alt="ZNHS West Logo" class="sidebar-logo">
-                    <span class="sidebar-title">ZNHS WEST</span>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 font-sans">
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 gradient-bg text-white flex flex-col fixed h-full z-40 shadow-2xl">
+            <div class="p-6 border-b border-red-600">
+                <div class="flex items-center gap-3">
+                    <img src="{% static 'admin_functionalities/assets/westLogo.png' %}" alt="ZNHS West Logo"
+                        class="w-12 h-12 rounded-full border-2 border-white shadow-lg">
+                    <div>
+                        <span class="text-xl font-bold block">ZNHS WEST</span>
+                        <span class="text-xs text-red-100 opacity-80">Admin Portal</span>
+                    </div>
                 </div>
             </div>
 
-            <nav class="sidebar-nav">
+            <nav class="flex-1 py-6 sidebar-scroll overflow-y-auto">
                 <ul>
-                     <li class="nav-item ">
-                        <a href="{% url 'admin_functionalities:admin-dashboard' %}" class="nav-link">
-                            <i class="fas fa-tachometer-alt"></i>
-                            <span>Dashboard</span>
+                    <li class="mb-2 mx-4">
+                        <a href="{% url 'admin_functionalities:admin-dashboard' %}"
+                            class="flex items-center gap-4 px-4 py-3 text-white hover:bg-red-600 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg">
+                            <i class="fas fa-tachometer-alt w-5 text-center text-lg"></i>
+                            <span class="font-medium">Dashboard</span>
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a href="{% url 'admin_functionalities:sections' %}" class="nav-link">
-                            <i class="fas fa-users"></i>
-                            <span>Sections</span>
+                    <li class="mb-2 mx-4">
+                        <a href="{% url 'admin_functionalities:sections' %}"
+                            class="flex items-center gap-4 px-4 py-3 text-white bg-red-600 rounded-xl shadow-lg transform scale-105 transition-all duration-300">
+                            <i class="fas fa-users w-5 text-center text-lg"></i>
+                            <span class="font-medium">Sections</span>
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a href="{% url 'admin_functionalities:teachers' %}" class="nav-link">
-                            <i class="fas fa-chalkboard-teacher"></i>
-                            <span>Teachers</span>
+                    <li class="mb-2 mx-4">
+                        <a href="{% url 'admin_functionalities:teachers' %}"
+                            class="flex items-center gap-4 px-4 py-3 text-white hover:bg-red-600 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg">
+                            <i class="fas fa-chalkboard-teacher w-5 text-center text-lg"></i>
+                            <span class="font-medium">Teachers</span>
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a href="{% url 'admin_functionalities:enrollment' %}" class="nav-link">
-                            <i class="fas fa-clipboard-list"></i>
-                            <span>Enrollment</span>
+                    <li class="mb-2 mx-4">
+                        <a href="{% url 'admin_functionalities:enrollment' %}"
+                            class="flex items-center gap-4 px-4 py-3 text-white hover:bg-red-600 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg">
+                            <i class="fas fa-clipboard-list w-5 text-center text-lg"></i>
+                            <span class="font-medium">Enrollment</span>
                         </a>
                     </li>
-
-                    <li class="nav-item">
-                        <a href="{% url 'admin_functionalities:settings' %}" class="nav-link">
-                            <i class="fas fa-cog"></i>
-                            <span>Settings</span>
+                    <li class="mb-2 mx-4">
+                        <a href="{% url 'admin_functionalities:settings' %}"
+                            class="flex items-center gap-4 px-4 py-3 text-white hover:bg-red-600 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg">
+                            <i class="fas fa-cog w-5 text-center text-lg"></i>
+                            <span class="font-medium">Settings</span>
                         </a>
                     </li>
                 </ul>
             </nav>
 
-            <div class="sidebar-footer">
-                <a href="{% url 'enrollmentprocess:logout' %}" class="logout-btn" onclick="handleLogout(); return false;">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
+            <div class="p-6 border-t border-red-600">
+                <a href="{% url 'enrollmentprocess:logout' %}"
+                    class="flex items-center gap-4 px-4 py-3 text-white hover:bg-red-600 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                    onclick="handleLogout(); return false;">
+                    <i class="fas fa-sign-out-alt w-5 text-center text-lg"></i>
+                    <span class="font-medium">Logout</span>
                 </a>
             </div>
         </aside>
 
-        <!-- Main Content (unchanged) -->
-        <main class="main-content">
-            <header class="sections-header">
-                <div class="header-left">
-                    <h1>List of Programs and Sections</h1>
-                    <div class="grade-selector">
-                        <label for="gradeLevel">Grade Level:</label>
-                        <select id="gradeLevel" class="grade-dropdown">
-                            <option value="7">Grade 7</option>
-                            <option value="8">Grade 8</option>
-                            <option value="9">Grade 9</option>
-                            <option value="10">Grade 10</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="header-right">
-                    <div class="search-container">
-                        <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Search sections..." class="search-input">
-                    </div>
-
-                    <button class="add-section-btn" onclick="openAddSectionModal()">
-                        <i class="fas fa-plus"></i>
-                        Add Section
-                    </button>
-
-                    <div class="admin-profile">
-                        <div class="profile-info">
-                            <span class="admin-name">Samson, Marwina D.</span>
-                            <span class="admin-role">Admin</span>
+        <!-- Main Content -->
+        <main class="flex-1 ml-64 p-8">
+            <!-- Header -->
+            <header class="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-100">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-800 mb-2">List of Programs and Sections</h1>
+                        <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-xl border border-gray-200">
+                                <label for="gradeLevel" class="text-sm font-semibold text-gray-600">Grade Level:</label>
+                                <select id="gradeLevel"
+                                    class="bg-transparent border-none text-sm font-medium text-gray-700 focus:outline-none focus:ring-0">
+                                    <option value="7">Grade 7</option>
+                                    <option value="8">Grade 8</option>
+                                    <option value="9">Grade 9</option>
+                                    <option value="10">Grade 10</option>
+                                </select>
+                            </div>
+                            <div class="text-sm text-gray-500">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Manage all sections and programs
+                            </div>
                         </div>
-                        <div class="profile-avatar">
-                            <img src="{% static 'admin_functionalities/assets/spongebob.jpg' %}" alt="Admin" class="avatar-img">
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <div class="relative">
+                            <i
+                                class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" placeholder="Search sections..."
+                                class="pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl w-80 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-300">
+                        </div>
+
+                        <button
+                            class="gradient-bg text-white px-6 py-3 rounded-xl flex items-center gap-3 hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-semibold shadow-lg"
+                            onclick="openAddSectionModal()">
+                            <i class="fas fa-plus-circle text-lg"></i>
+                            Add Section
+                        </button>
+
+                        <div class="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-xl border border-gray-200">
+                            <div class="text-right">
+                                <span class="block font-semibold text-gray-800">Samson, Marwina D.</span>
+                                <span
+                                    class="block text-xs text-gray-500 bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium">Admin</span>
+                            </div>
+                            <div class="w-12 h-12 rounded-xl overflow-hidden border-2 border-white shadow-lg">
+                                <img src="{% static 'admin_functionalities/assets/spongebob.jpg' %}" alt="Admin"
+                                    class="w-full h-full object-cover">
+                            </div>
                         </div>
                     </div>
                 </div>
             </header>
 
-            <!-- Program Tabs (unchanged) -->
-            <section class="program-tabs">
-                <div class="tabs-container">
-                    <button class="tab-btn active" data-program="STE">STE</button>
-                    <button class="tab-btn" data-program="SPFL">SPFL</button>
-                    <button class="tab-btn" data-program="SPTVE">SPTVE</button>
-                    <button class="tab-btn" data-program="OHSP">OHSP</button>
-                    <button class="tab-btn" data-program="SNED">SNED</button>
-                    <button class="tab-btn" data-program="TOP5">TOP 5(Regular Class)</button>
-                    <button class="tab-btn" data-program="HETERO">HETERO(Regular Class)</button>
+            <!-- Program Tabs -->
+            <section class="mb-8">
+                <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Programs</h3>
+                    <div class="flex gap-3 flex-wrap">
+                        <button
+                            class="tab-btn px-6 py-3 border-2 border-gray-200 bg-white text-gray-600 rounded-xl cursor-pointer font-semibold transition-all duration-300 active:bg-red-700 active:text-white active:border-red-700 active:shadow-lg hover:bg-red-700 hover:text-white hover:border-red-700 hover:shadow-lg hover:scale-105"
+                            data-program="STE">
+                            <i class="fas fa-flask mr-2"></i>STE
+                        </button>
+                        <button
+                            class="tab-btn px-6 py-3 border-2 border-gray-200 bg-white text-gray-600 rounded-xl cursor-pointer font-semibold transition-all duration-300 hover:bg-red-700 hover:text-white hover:border-red-700 hover:shadow-lg hover:scale-105"
+                            data-program="SPFL">
+                            <i class="fas fa-language mr-2"></i>SPFL
+                        </button>
+                        <button
+                            class="tab-btn px-6 py-3 border-2 border-gray-200 bg-white text-gray-600 rounded-xl cursor-pointer font-semibold transition-all duration-300 hover:bg-red-700 hover:text-white hover:border-red-700 hover:shadow-lg hover:scale-105"
+                            data-program="SPTVE">
+                            <i class="fas fa-tools mr-2"></i>SPTVE
+                        </button>
+                        <button
+                            class="tab-btn px-6 py-3 border-2 border-gray-200 bg-white text-gray-600 rounded-xl cursor-pointer font-semibold transition-all duration-300 hover:bg-red-700 hover:text-white hover:border-red-700 hover:shadow-lg hover:scale-105"
+                            data-program="OHSP">
+                            <i class="fas fa-laptop-house mr-2"></i>OHSP
+                        </button>
+                        <button
+                            class="tab-btn px-6 py-3 border-2 border-gray-200 bg-white text-gray-600 rounded-xl cursor-pointer font-semibold transition-all duration-300 hover:bg-red-700 hover:text-white hover:border-red-700 hover:shadow-lg hover:scale-105"
+                            data-program="SNED">
+                            <i class="fas fa-universal-access mr-2"></i>SNED
+                        </button>
+                        <button
+                            class="tab-btn px-6 py-3 border-2 border-gray-200 bg-white text-gray-600 rounded-xl cursor-pointer font-semibold transition-all duration-300 hover:bg-red-700 hover:text-white hover:border-red-700 hover:shadow-lg hover:scale-105"
+                            data-program="TOP5">
+                            <i class="fas fa-trophy mr-2"></i>TOP 5
+                        </button>
+                        <button
+                            class="tab-btn px-6 py-3 border-2 border-gray-200 bg-white text-gray-600 rounded-xl cursor-pointer font-semibold transition-all duration-300 hover:bg-red-700 hover:text-white hover:border-red-700 hover:shadow-lg hover:scale-105"
+                            data-program="HETERO">
+                            <i class="fas fa-users mr-2"></i>HETERO
+                        </button>
+                    </div>
                 </div>
             </section>
 
-            <section class="sections-grid" id="sectionsGrid">
+            <!-- Sections Grid -->
+            <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" id="sectionsGrid">
                 <!-- Section cards will be dynamically loaded here -->
             </section>
         </main>
@@ -540,299 +626,357 @@
     <!-- Add Section Modal -->
     <div id="addSectionModal" class="modal">
         <div class="modal-content">
-            <h2>ADD SECTION</h2>
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h2 class="modal-title">Add New Section</h2>
+                <p class="modal-subtitle">Create a new section for your program</p>
+            </div>
             <form id="addSectionForm" enctype="multipart/form-data">
                 {% csrf_token %}
-                <div class="form-group">
-                    <label for="sectionName">Section Name:</label>
-                    <input type="text" id="sectionName" name="name" placeholder="e.g., Akatsuki" required>
-                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="sectionName" class="form-label">Section Name</label>
+                        <input type="text" id="sectionName" name="name" placeholder="e.g., Sampaguita" required
+                            class="form-input">
+                    </div>
 
-                <div class="form-group">
-                    <label for="adviserName">Adviser Name:</label>
-                    <select id="adviserName" name="adviser" required>
-                        <option value="">Select Adviser</option>
-                    </select>
-                </div>
+                    <div class="form-group">
+                        <label for="adviserName" class="form-label">Adviser</label>
+                        <select id="adviserName" name="adviser" required class="form-select">
+                            <option value="">Select Adviser</option>
+                        </select>
+                    </div>
 
-                <div class="form-group">
-                    <label>Location:</label>
-                    <div class="location-inputs">
-                        <div class="location-field">
-                            <label for="buildingNumber">Building Number:</label>
-                            <select id="buildingNumber" name="building" required>
-                                <option value="">Select Building</option>
-                                <option value=1>Building 1</option>
-                                <option value=2>Building 2</option>
-                                <option value=3>Building 3</option>
-                                <option value=4>Building 4</option>
-                                <option value=5>Building 5</option>
-                            </select>
+                    <div class="form-group">
+                        <label class="form-label">Location</label>
+                        <div class="location-grid">
+                            <div class="location-field">
+                                <label for="buildingNumber">Building</label>
+                                <select id="buildingNumber" name="building" required class="form-select">
+                                    <option value="">Select Building</option>
+                                    <option value="1">Building 1</option>
+                                    <option value="2">Building 2</option>
+                                    <option value="3">Building 3</option>
+                                    <option value="4">Building 4</option>
+                                    <option value="5">Building 5</option>
+                                </select>
+                            </div>
+                            <div class="location-field">
+                                <label for="roomNumber">Room</label>
+                                <select id="roomNumber" name="room" required class="form-select">
+                                    <option value="">Select Room</option>
+                                    <option value="101">Room 101</option>
+                                    <option value="102">Room 102</option>
+                                    <option value="103">Room 103</option>
+                                    <option value="104">Room 104</option>
+                                    <option value="105">Room 105</option>
+                                    <option value="201">Room 201</option>
+                                    <option value="202">Room 202</option>
+                                    <option value="203">Room 203</option>
+                                    <option value="204">Room 204</option>
+                                    <option value="205">Room 205</option>
+                                    <option value="301">Room 301</option>
+                                    <option value="302">Room 302</option>
+                                    <option value="303">Room 303</option>
+                                    <option value="304">Room 304</option>
+                                    <option value="305">Room 305</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="location-field">
-                            <label for="roomNumber">Room Number:</label>
-                            <select id="roomNumber" name="room" required>
-                                <option value="">Select Room</option>
-                                <option value="101">Room 101</option>
-                                <option value="102">Room 102</option>
-                                <option value="103">Room 103</option>
-                                <option value="104">Room 104</option>
-                                <option value="105">Room 105</option>
-                                <option value="201">Room 201</option>
-                                <option value="202">Room 202</option>
-                                <option value="203">Room 203</option>
-                                <option value="204">Room 204</option>
-                                <option value="205">Room 205</option>
-                                <option value="301">Room 301</option>
-                                <option value="302">Room 302</option>
-                                <option value="303">Room 303</option>
-                                <option value="304">Room 304</option>
-                                <option value="305">Room 305</option>
-                            </select>
-                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="maxStudents" class="form-label">Maximum Students</label>
+                        <input type="number" id="maxStudents" name="max_students" value="40" min="20" max="60"
+                            class="form-input">
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="maxStudents">Max Students:</label>
-                    <input type="number" id="maxStudents" name="max_students" value="40" min="20" max="60" class="form-control">
-                </div>
-
-                <div class="modal-buttons">
-                    <button type="button" class="btn-back" onclick="closeAddSectionModal()">BACK</button>
-                    <button type="submit" class="btn-add">ADD</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-back" onclick="closeAddSectionModal()">
+                        <i class="fas fa-arrow-left"></i>
+                        Back
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus-circle"></i>
+                        Add Section
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Add Subject Teacher Modal (fixed: wrapped in form, fixed typo, button onclick) -->
+    <!-- Add Subject Teacher Modal -->
     <div id="addSubjectTeacherModal" class="modal">
         <div class="modal-content subject-teacher-modal">
-            <h2>ADD SUBJECT TEACHER</h2>
-            <div class="section-info">
-                <span>Section: <span id="currentSection">Akatsuki</span> | Adviser: <span id="currentAdviser">Pain</span></span>
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                </div>
+                <h2 class="modal-title">Assign Subject Teachers</h2>
+                <p class="modal-subtitle">Assign teachers to subjects for this section</p>
+
+                <div class="section-info-banner">
+                    <div class="section-info-text">
+                        Section: <span id="currentSection">Sampaguita</span> | Adviser: <span
+                            id="currentAdviser">Salatan, Juliana</span>
+                    </div>
+                </div>
             </div>
 
-            <form id="addSubjectTeacherForm">  <!-- Wrapped in form for JS -->
-                <div class="subjects-table">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Subject</th>
-                                <th>Teacher's Name</th>
-                                <th>Day</th>
-                                <th>Time</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Mathematics</td>
-                                <td>
-                                    <select id="mathTeacher" name="mathTeacher">
-                                        <option value="">Select Teacher</option>
-                                        <!-- Populated by JS from subject_teachers -->
-                                    </select>
-                                </td>
-                                <td>
-                                    <select id="mathDay" name="mathDay">
-                                        <option value="DAILY">Daily</option>
-                                        <option value="MWF">MWF</option>
-                                        <option value="TTH">TTH</option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <input type="time" id="mathTime" name="mathTime">
-                                    <span class="time-separator">-</span>
-                                    <input type="time" id="mathTimeEnd" name="mathTimeEnd">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>English</td>
-                                <td>
-                                    <select id="englishTeacher" name="englishTeacher">
-                                        <option value="">Select Teacher</option>
-                                        <!-- Populated by JS from subject_teachers -->
-                                    </select>
-                                </td>
-                                <td>
-                                    <select id="englishDay" name="englishDay">
-                                        <option value="DAILY">Daily</option>
-                                        <option value="MWF">MWF</option>
-                                        <option value="TTH">TTH</option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <input type="time" id="englishTime" name="englishTime">
-                                    <span class="time-separator">-</span>
-                                    <input type="time" id="englishTimeEnd" name="englishTimeEnd">  <!-- Fixed typo: englih -> english -->
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Science</td>
-                                <td>
-                                    <select id="scienceTeacher" name="scienceTeacher">
-                                        <option value="">Select Teacher</option>
-                                        <!-- Populated by JS from subject_teachers -->
-                                    </select>
-                                </td>
-                                <td>
-                                    <select id="scienceDay" name="scienceDay">
-                                        <option value="DAILY">Daily</option>
-                                        <option value="MWF">MWF</option>
-                                        <option value="TTH">TTH</option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <input type="time" id="scienceTime" name="scienceTime">
-                                    <span class="time-separator">-</span>
-                                    <input type="time" id="scienceTimeEnd" name="scienceTimeEnd">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Filipino</td>
-                                <td>
-                                    <select id="filipinoTeacher" name="filipinoTeacher">
-                                        <option value="">Select Teacher</option>
-                                        <!-- Populated by JS from subject_teachers -->
-                                    </select>
-                                </td>
-                                <td>
-                                    <select id="filipinoDay" name="filipinoDay">
-                                        <option value="DAILY">Daily</option>
-                                        <option value="MWF">MWF</option>
-                                        <option value="TTH">TTH</option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <input type="time" id="filipinoTime" name="filipinoTime">
-                                    <span class="time-separator">-</span>
-                                    <input type="time" id="filipinoTimeEnd" name="filipinoTimeEnd">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Araling Panlipunan</td>
-                                <td>
-                                    <select id="arpanTeacher" name="arpanTeacher">
-                                        <option value="">Select Teacher</option>
-                                        <!-- Populated by JS from subject_teachers -->
-                                    </select>
-                                </td>
-                                <td>
-                                    <select id="arpanDay" name="arpanDay">
-                                        <option value="DAILY">Daily</option>
-                                        <option value="MWF">MWF</option>
-                                        <option value="TTH">TTH</option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <input type="time" id="arpanTime" name="arpanTime">
-                                    <span class="time-separator">-</span>
-                                    <input type="time" id="arpanTimeEnd" name="arpanTimeEnd">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>MAPEH</td>
-                                <td>
-                                    <select id="mapehTeacher" name="mapehTeacher">
-                                        <option value="">Select Teacher</option>
-                                        <!-- Populated by JS from subject_teachers -->
-                                    </select>
-                                </td>
-                                <td>
-                                    <select id="mapehDay" name="mapehDay">
-                                        <option value="DAILY">Daily</option>
-                                        <option value="MWF">MWF</option>
-                                        <option value="TTH">TTH</option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <input type="time" id="mapehTime" name="mapehTime">
-                                    <span class="time-separator">-</span>
-                                    <input type="time" id="mapehTimeEnd" name="mapehTimeEnd">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Edukasyon sa Pagpapakatao</td>
-                                <td>
-                                    <select id="espTeacher" name="espTeacher">
-                                        <option value="">Select Teacher</option>
-                                        <!-- Populated by JS from subject_teachers -->
-                                    </select>
-                                </td>
-                                <td>
-                                    <select id="espDay" name="espDay">
-                                        <option value="DAILY">Daily</option>
-                                        <option value="MWF">MWF</option>
-                                        <option value="TTH">TTH</option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <input type="time" id="espTime" name="espTime">
-                                    <span class="time-separator">-</span>
-                                    <input type="time" id="espTimeEnd" name="espTimeEnd">
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <form id="addSubjectTeacherForm">
+                <div class="modal-body">
+                    <div class="subject-table-container">
+                        <table class="subject-table">
+                            <thead>
+                                <tr>
+                                    <th>Subject</th>
+                                    <th>Teacher</th>
+                                    <th>Day</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="subject-name">Mathematics</td>
+                                    <td>
+                                        <select id="mathTeacher" name="mathTeacher" class="form-select">
+                                            <option value="">Select Teacher</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select id="mathDay" name="mathDay" class="form-select">
+                                            <option value="DAILY">Daily</option>
+                                            <option value="MWF">MWF</option>
+                                            <option value="TTH">TTH</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <div class="time-inputs">
+                                            <input type="time" id="mathTime" name="mathTime" class="form-input">
+                                            <span class="time-separator">-</span>
+                                            <input type="time" id="mathTimeEnd" name="mathTimeEnd" class="form-input">
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="subject-name">English</td>
+                                    <td>
+                                        <select id="englishTeacher" name="englishTeacher" class="form-select">
+                                            <option value="">Select Teacher</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select id="englishDay" name="englishDay" class="form-select">
+                                            <option value="DAILY">Daily</option>
+                                            <option value="MWF">MWF</option>
+                                            <option value="TTH">TTH</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <div class="time-inputs">
+                                            <input type="time" id="englishTime" name="englishTime" class="form-input">
+                                            <span class="time-separator">-</span>
+                                            <input type="time" id="englishTimeEnd" name="englishTimeEnd"
+                                                class="form-input">
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="subject-name">Science</td>
+                                    <td>
+                                        <select id="scienceTeacher" name="scienceTeacher" class="form-select">
+                                            <option value="">Select Teacher</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select id="scienceDay" name="scienceDay" class="form-select">
+                                            <option value="DAILY">Daily</option>
+                                            <option value="MWF">MWF</option>
+                                            <option value="TTH">TTH</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <div class="time-inputs">
+                                            <input type="time" id="scienceTime" name="scienceTime" class="form-input">
+                                            <span class="time-separator">-</span>
+                                            <input type="time" id="scienceTimeEnd" name="scienceTimeEnd"
+                                                class="form-input">
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="subject-name">Filipino</td>
+                                    <td>
+                                        <select id="filipinoTeacher" name="filipinoTeacher" class="form-select">
+                                            <option value="">Select Teacher</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select id="filipinoDay" name="filipinoDay" class="form-select">
+                                            <option value="DAILY">Daily</option>
+                                            <option value="MWF">MWF</option>
+                                            <option value="TTH">TTH</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <div class="time-inputs">
+                                            <input type="time" id="filipinoTime" name="filipinoTime" class="form-input">
+                                            <span class="time-separator">-</span>
+                                            <input type="time" id="filipinoTimeEnd" name="filipinoTimeEnd"
+                                                class="form-input">
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="subject-name">Araling Panlipunan</td>
+                                    <td>
+                                        <select id="arpanTeacher" name="arpanTeacher" class="form-select">
+                                            <option value="">Select Teacher</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select id="arpanDay" name="arpanDay" class="form-select">
+                                            <option value="DAILY">Daily</option>
+                                            <option value="MWF">MWF</option>
+                                            <option value="TTH">TTH</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <div class="time-inputs">
+                                            <input type="time" id="arpanTime" name="arpanTime" class="form-input">
+                                            <span class="time-separator">-</span>
+                                            <input type="time" id="arpanTimeEnd" name="arpanTimeEnd" class="form-input">
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="subject-name">MAPEH</td>
+                                    <td>
+                                        <select id="mapehTeacher" name="mapehTeacher" class="form-select">
+                                            <option value="">Select Teacher</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select id="mapehDay" name="mapehDay" class="form-select">
+                                            <option value="DAILY">Daily</option>
+                                            <option value="MWF">MWF</option>
+                                            <option value="TTH">TTH</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <div class="time-inputs">
+                                            <input type="time" id="mapehTime" name="mapehTime" class="form-input">
+                                            <span class="time-separator">-</span>
+                                            <input type="time" id="mapehTimeEnd" name="mapehTimeEnd" class="form-input">
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="subject-name">Edukasyon sa Pagpapakatao</td>
+                                    <td>
+                                        <select id="espTeacher" name="espTeacher" class="form-select">
+                                            <option value="">Select Teacher</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select id="espDay" name="espDay" class="form-select">
+                                            <option value="DAILY">Daily</option>
+                                            <option value="MWF">MWF</option>
+                                            <option value="TTH">TTH</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <div class="time-inputs">
+                                            <input type="time" id="espTime" name="espTime" class="form-input">
+                                            <span class="time-separator">-</span>
+                                            <input type="time" id="espTimeEnd" name="espTimeEnd" class="form-input">
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
-                <div class="modal-buttons">
-                    <button type="button" class="btn-back" onclick="closeSubjectTeacherModal()">BACK</button>
-                    <button type="submit" class="btn-add" onclick="handleAssignSubjectTeachers(event)">ADD</button>  <!-- Fixed: Calls JS handler, prevents default -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-back" onclick="closeSubjectTeacherModal()">
+                        <i class="fas fa-arrow-left"></i>
+                        Back
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        Save Assignments
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Update Section Modal (unchanged) -->
+    <!-- Update Section Modal -->
     <div id="updateSectionModal" class="modal">
         <div class="modal-content">
-            <h2>UPDATE SECTION</h2>
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <i class="fas fa-edit"></i>
+                </div>
+                <h2 class="modal-title">Update Section</h2>
+                <p class="modal-subtitle">Modify section details</p>
+            </div>
+
             <form id="updateSectionForm" enctype="multipart/form-data">
                 {% csrf_token %}
                 <input type="hidden" name="section_id" id="updateSectionId">
-                <div class="form-group">
-                    <label for="updateSectionName">Section Name:</label>
-                    <input type="text" id="updateSectionName" name="name" required>
-                </div>
 
-                <div class="form-group">
-                    <label for="updateAdviserName">Section Teacher:</label>
-                    <select id="updateAdviserName" name="adviser" required>
-                        <option value="">Select Teacher</option>
-                        <!-- Populated by JS -->
-                    </select>
-                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="updateSectionName" class="form-label">Section Name</label>
+                        <input type="text" id="updateSectionName" name="name" required class="form-input">
+                    </div>
 
-                <div class="form-group">
-                    <label>Location:</label>
-                    <div class="location-inputs">
-                        <div class="location-field">
-                            <label for="updateBuilding">Building Number:</label>
-                            <select id="updateBuilding" name="building" required>
-                                <option value="">Select Building</option>
-                                <!-- Populated by JS -->
-                            </select>
+                    <div class="form-group">
+                        <label for="updateAdviserName" class="form-label">Section Teacher</label>
+                        <select id="updateAdviserName" name="adviser" required class="form-select">
+                            <option value="">Select Teacher</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Location</label>
+                        <div class="location-grid">
+                            <div class="location-field">
+                                <label for="updateBuilding">Building</label>
+                                <select id="updateBuilding" name="building" required class="form-select">
+                                    <option value="">Select Building</option>
+                                </select>
+                            </div>
+                            <div class="location-field">
+                                <label for="updateRoom">Room</label>
+                                <select id="updateRoom" name="room" required class="form-select">
+                                    <option value="">Select Room</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="location-field">
-                            <label for="updateRoom">Room Number:</label>
-                            <select id="updateRoom" name="room" required>
-                                <option value="">Select Room</option>
-                                <!-- Populated by JS -->
-                            </select>
-                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="updateMaxStudents" class="form-label">Maximum Students</label>
+                        <input type="number" id="updateMaxStudents" name="max_students" value="40" min="1"
+                            class="form-input">
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="updateMaxStudents">Max Students:</label>
-                    <input type="number" id="updateMaxStudents" name="max_students" value="40" min="1" class="form-control">
-                </div>
-
-                <div class="modal-buttons">
-                    <button type="button" class="btn-back" onclick="closeUpdateSectionModal()">BACK</button>
-                    <button type="submit" class="btn-add">UPDATE</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-back" onclick="closeUpdateSectionModal()">
+                        <i class="fas fa-arrow-left"></i>
+                        Back
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        Update Section
+                    </button>
                 </div>
             </form>
         </div>
@@ -840,6 +984,7 @@
 
     <script src="{% static 'admin_functionalities/js/sections.js' %}"></script>
 </body>
+
 <script>
     // Room data by building
     const roomsByBuilding = {
@@ -854,9 +999,9 @@
     const roomSelect = document.getElementById("roomNumber");
 
     // Update rooms when a building is selected
-    buildingSelect.addEventListener("change", function() {
+    buildingSelect.addEventListener("change", function () {
         const selectedBuilding = this.value;
-        roomSelect.innerHTML = '<option value="">Select Room</option>'; // Reset options
+        roomSelect.innerHTML = '<option value="">Select Room</option>';
 
         if (selectedBuilding && roomsByBuilding[selectedBuilding]) {
             roomsByBuilding[selectedBuilding].forEach(room => {
@@ -868,29 +1013,34 @@
         }
     });
 </script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Detect URL params like ?open_add=1&program=STE
-    const params = new URLSearchParams(window.location.search);
-    const shouldOpenAdd = params.get('open_add');
-    const program = params.get('program');
 
-    if (shouldOpenAdd === '1') {
-        // Optionally highlight the related program tab before opening
-        if (program) {
-            const targetTab = document.querySelector(`.tab-btn[data-program="${program.toUpperCase()}"]`);
-            if (targetTab) {
-                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-                targetTab.classList.add('active');
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Detect URL params like ?open_add=1&program=STE
+        const params = new URLSearchParams(window.location.search);
+        const shouldOpenAdd = params.get('open_add');
+        const program = params.get('program');
+
+        if (shouldOpenAdd === '1') {
+            // Optionally highlight the related program tab before opening
+            if (program) {
+                const targetTab = document.querySelector(`.tab-btn[data-program="${program.toUpperCase()}"]`);
+                if (targetTab) {
+                    document.querySelectorAll('.tab-btn').forEach(btn => {
+                        btn.classList.remove('gradient-bg', 'text-white', 'border-red-600', 'shadow-lg');
+                        btn.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
+                    });
+                    targetTab.classList.add('gradient-bg', 'text-white', 'border-red-600', 'shadow-lg');
+                    targetTab.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
+                }
+            }
+
+            // Open the Add Section modal
+            if (typeof openAddSectionModal === 'function') {
+                openAddSectionModal();
             }
         }
-
-        // Open the Add Section modal
-        if (typeof openAddSectionModal === 'function') {
-            openAddSectionModal();
-        }
-    }
-});
+    });
 </script>
 
 </html>
