@@ -6,137 +6,231 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {% load static %}
     <title>Teachers List - ZNHS West</title>
-    <link rel="stylesheet" href="{% static 'admin_functionalities/css/teachers.css' %}">
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- Added libraries for PDF and Excel export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #c41e3a 0%, #a01729 100%);
+        }
+
+        .gradient-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        }
+
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar-scroll::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .smooth-transition {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: #c41e3a;
+            box-shadow: 0 0 0 3px rgba(196, 30, 58, 0.1);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #c41e3a 0%, #a01729 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(196, 30, 58, 0.3);
+        }
+    </style>
 </head>
 
-<body>
-    <div class="dashboard-container">
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 font-sans min-h-screen">
+    <div class="flex min-h-screen">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo-container">
-                    <img src="{% static 'admin_functionalities/assets/westLogo.png' %}" alt="ZNHS West Logo" class="sidebar-logo">
-                    <span class="sidebar-title">ZNHS WEST</span>
+        <aside class="w-64 gradient-bg text-white flex flex-col fixed h-full z-40 shadow-2xl">
+            <div class="p-6 border-b border-red-600">
+                <div class="flex items-center gap-3">
+                    <img src="{% static 'admin_functionalities/assets/westLogo.png' %}" alt="ZNHS West Logo"
+                        class="w-12 h-12 rounded-full border-2 border-white shadow-lg">
+                    <div>
+                        <span class="text-xl font-bold block">ZNHS WEST</span>
+                        <span class="text-xs text-red-100 opacity-80">Admin Portal</span>
+                    </div>
                 </div>
             </div>
 
-            <nav class="sidebar-nav">
+            <nav class="flex-1 py-6 sidebar-scroll overflow-y-auto">
                 <ul>
-                    <li class="nav-item ">
-                        <a href="{% url 'admin_functionalities:admin-dashboard' %}" class="nav-link">
-                            <i class="fas fa-tachometer-alt"></i>
-                            <span>Dashboard</span>
+                    <li class="mb-2 mx-4">
+                        <a href="{% url 'admin_functionalities:admin-dashboard' %}"
+                            class="flex items-center gap-4 px-4 py-3 text-white hover:bg-red-600 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg">
+                            <i class="fas fa-tachometer-alt w-5 text-center text-lg"></i>
+                            <span class="font-medium">Dashboard</span>
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a href="{% url 'admin_functionalities:sections' %}" class="nav-link">
-                            <i class="fas fa-users"></i>
-                            <span>Sections</span>
+                    <li class="mb-2 mx-4">
+                        <a href="{% url 'admin_functionalities:sections' %}"
+                            class="flex items-center gap-4 px-4 py-3 text-white hover:bg-red-600 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg">
+                            <i class="fas fa-users w-5 text-center text-lg"></i>
+                            <span class="font-medium">Sections</span>
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a href="{% url 'admin_functionalities:teachers' %}" class="nav-link">
-                            <i class="fas fa-chalkboard-teacher"></i>
-                            <span>Teachers</span>
+                    <li class="mb-2 mx-4">
+                        <a href="{% url 'admin_functionalities:teachers' %}"
+                            class="flex items-center gap-4 px-4 py-3 text-white bg-red-600 rounded-xl shadow-lg transform scale-105 transition-all duration-300">
+                            <i class="fas fa-chalkboard-teacher w-5 text-center text-lg"></i>
+                            <span class="font-medium">Teachers</span>
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a href="{% url 'admin_functionalities:enrollment' %}" class="nav-link">
-                            <i class="fas fa-clipboard-list"></i>
-                            <span>Enrollment</span>
+                    <li class="mb-2 mx-4">
+                        <a href="{% url 'admin_functionalities:enrollment' %}"
+                            class="flex items-center gap-4 px-4 py-3 text-white hover:bg-red-600 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg">
+                            <i class="fas fa-clipboard-list w-5 text-center text-lg"></i>
+                            <span class="font-medium">Enrollment</span>
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a href="{% url 'admin_functionalities:settings' %}" class="nav-link">
-                            <i class="fas fa-cog"></i>
-                            <span>Settings</span>
+                    <li class="mb-2 mx-4">
+                        <a href="{% url 'admin_functionalities:settings' %}"
+                            class="flex items-center gap-4 px-4 py-3 text-white hover:bg-red-600 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg">
+                            <i class="fas fa-cog w-5 text-center text-lg"></i>
+                            <span class="font-medium">Settings</span>
                         </a>
                     </li>
                 </ul>
             </nav>
 
-            <div class="sidebar-footer">
-                <!-- Logout as link with onclick handler -->
-                <a href="{% url 'enrollmentprocess:logout' %}" class="logout-btn" onclick="handleLogout(); return false;">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
+            <div class="p-6 border-t border-red-600">
+                <a href="{% url 'enrollmentprocess:logout' %}"
+                    class="flex items-center gap-4 px-4 py-3 text-white hover:bg-red-600 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                    onclick="handleLogout(); return false;">
+                    <i class="fas fa-sign-out-alt w-5 text-center text-lg"></i>
+                    <span class="font-medium">Logout</span>
                 </a>
             </div>
         </aside>
 
         <!-- Main Content -->
-        <main class="main-content">
+        <main class="flex-1 ml-64 p-8">
             <!-- Header -->
-            <header class="teachers-header">
-                <div class="header-left">
-                    <h1>TEACHERS LIST</h1>
-                </div>
-
-                <div class="header-right">
-                    <div class="search-container">
-                        <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Search teachers..." class="search-input" id="teacherSearch">
+            <header class="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-100">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-800 mb-2">Teachers List</h1>
+                        <p class="text-gray-600">Manage and view all teaching staff</p>
                     </div>
 
-                    <div class="export-buttons">
-                        <!-- IDs for export buttons -->
-                        <button class="export-btn pdf-btn" id="exportPdf">
-                            <i class="fas fa-file-pdf"></i>
-                            Export as PDF
-                        </button>
-                        <button class="export-btn excel-btn" id="exportExcel">
-                            <i class="fas fa-file-excel"></i>
-                            Export as Excel
-                        </button>
-                    </div>
-
-                    <div class="admin-profile">
-                        <div class="profile-info">
-                            <span class="admin-name">Samson, Marwina D.</span>
-                            <span class="admin-role">Admin</span>
+                    <div class="flex items-center gap-4">
+                        <div class="relative">
+                            <i
+                                class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" placeholder="Search teachers..." id="teacherSearch"
+                                class="pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl w-80 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-300">
                         </div>
-                        <div class="profile-avatar">
-                            <img src="{% static 'admin_functionalities/assets/spongebob.jpg' %}" alt="Admin" class="avatar-img">
+
+                        <div class="flex gap-3">
+                            <button id="exportPdf" class="btn btn-primary">
+                                <i class="fas fa-file-pdf"></i>
+                                Export PDF
+                            </button>
+                            <button id="exportExcel" class="btn bg-green-600 text-white hover:bg-green-700">
+                                <i class="fas fa-file-excel"></i>
+                                Export Excel
+                            </button>
+                        </div>
+
+                        <div class="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-xl border border-gray-200">
+                            <div class="text-right">
+                                <span class="block font-semibold text-gray-800">Samson, Marwina D.</span>
+                                <span
+                                    class="block text-xs text-gray-500 bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium">Admin</span>
+                            </div>
+                            <div class="w-12 h-12 rounded-xl overflow-hidden border-2 border-white shadow-lg">
+                                <img src="{% static 'admin_functionalities/assets/spongebob.jpg' %}" alt="Admin"
+                                    class="w-full h-full object-cover">
+                            </div>
                         </div>
                     </div>
                 </div>
             </header>
 
             <!-- Teachers Table -->
-            <section class="teachers-table-section">
-                <div class="table-container">
-                    <!-- ID to table for export functionality -->
-                    <table class="teachers-table" id="teachersTable">
-                        <thead>
+            <section class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full" id="teachersTable">
+                        <thead class="gradient-bg">
                             <tr>
-                                <th>Full Name</th>
-                                <th>Sex</th>
-                                <th>Age</th>
-                                <th>Position</th>
-                                <th>Profile</th>
+                                <th class="px-6 py-4 text-left font-semibold text-white">Full Name</th>
+                                <th class="px-6 py-4 text-left font-semibold text-white">Sex</th>
+                                <th class="px-6 py-4 text-left font-semibold text-white">Age</th>
+                                <th class="px-6 py-4 text-left font-semibold text-white">Position</th>
+                                <th class="px-6 py-4 text-left font-semibold text-white">Profile</th>
                             </tr>
                         </thead>
-                        <tbody id="teachersTableBody">
+                        <tbody id="teachersTableBody" class="divide-y divide-gray-200">
                             {% for teacher in teachers %}
-                            <tr class="teacher-row" data-teacher-id="{{ teacher.id }}">
-                                <td>{{ teacher.fullName }}</td>
-                                <td>{{ teacher.sex }}</td>
-                                <td>{{ teacher.age }}</td>
-                                <td>{{ teacher.position }}</td>
-                                <td>
-                                    <button class="preview-btn" onclick="viewTeacherProfile({{ teacher.id }})">
+                            <tr class="teacher-row hover:bg-gray-50 transition-colors duration-150 smooth-transition"
+                                data-teacher-id="{{ teacher.id }}">
+                                <td class="px-6 py-4 text-sm text-gray-900 font-medium">{{ teacher.fullName }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-700">{{ teacher.sex }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-700">{{ teacher.age }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-700">{{ teacher.position }}</td>
+                                <td class="px-6 py-4">
+                                    <button class="btn btn-primary text-sm px-4 py-2"
+                                        onclick="viewTeacherProfile('{{ teacher.id }}')">
+                                        <i class="fas fa-eye mr-1"></i>
                                         Preview
                                     </button>
                                 </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="5" style="text-align: center;">No teachers found.</td>
+                                <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                                    <i class="fas fa-users text-3xl text-gray-300 mb-3 block"></i>
+                                    No teachers found in the system
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -147,110 +241,142 @@
     </div>
 
     <!-- Teacher Profile Modal -->
-    <div id="teacherProfileModal" class="modal">
-        <div class="modal-content teacher-profile-modal">
-            <div class="modal-header">
-                <h2>Teacher Profile</h2>
-                <button class="close-btn" onclick="closeTeacherProfile()">
+    <div id="teacherProfileModal"
+        class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4" style="display: none;">
+        <div class="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center p-6 border-b border-gray-200">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800">Teacher Profile</h2>
+                    <p class="text-gray-600">View detailed information about the teacher</p>
+                </div>
+                <button class="text-gray-400 hover:text-gray-600 text-xl" onclick="closeTeacherProfile()">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
 
-            <div class="profile-content">
-                <!-- Teacher Data Section -->
-                <section class="teacher-data-section">
-                    <h3>Teacher Data</h3>
-                    <div class="teacher-info-grid">
-                        <div class="teacher-photo">
-                            <img id="teacherPhoto" src="{% static 'admin_functionalities/assets/kakashi.webp' %}" alt="Teacher Photo">
+            <div class="p-6 space-y-6">
+                <!-- Teacher Basic Info Section -->
+                <section class="gradient-card rounded-xl border border-gray-200 p-6">
+                    <div class="flex items-center gap-6 mb-6">
+                        <div class="flex-shrink-0">
+                            <img id="teacherPhoto" src="{% static 'admin_functionalities/assets/kakashi.webp' %}"
+                                alt="Teacher Photo"
+                                class="w-24 h-24 object-cover rounded-xl border-2 border-gray-200 shadow-lg">
                         </div>
-                        <div class="teacher-details">
-                            <div class="detail-row">
-                                <span class="label">Employee ID:</span>
-                                <span id="employeeId">1234567890</span>
+                        <div class="flex-1">
+                            <h3 id="teacherFullName" class="text-2xl font-bold text-gray-900">-</h3>
+                            <p id="teacherPosition" class="text-gray-600 text-lg">-</p>
+                            <p id="teacherDepartment" class="text-gray-500">-</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="space-y-1">
+                            <span class="block text-sm font-semibold text-gray-500 uppercase tracking-wide">Employee
+                                ID</span>
+                            <span id="employeeId" class="block text-lg text-gray-900 font-medium">-</span>
+                        </div>
+                        <div class="space-y-1">
+                            <span
+                                class="block text-sm font-semibold text-gray-500 uppercase tracking-wide">Gender</span>
+                            <span id="gender" class="block text-lg text-gray-900 font-medium">-</span>
+                        </div>
+                        <div class="space-y-1">
+                            <span class="block text-sm font-semibold text-gray-500 uppercase tracking-wide">Age</span>
+                            <span id="age" class="block text-lg text-gray-900 font-medium">-</span>
+                        </div>
+                        <div class="space-y-1">
+                            <span class="block text-sm font-semibold text-gray-500 uppercase tracking-wide">Date of
+                                Birth</span>
+                            <span id="dateOfBirth" class="block text-lg text-gray-900 font-medium">-</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Personal Details Section -->
+                <section class="gradient-card rounded-xl border border-gray-200 p-6">
+                    <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                        <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-user text-red-600"></i>
+                        </div>
+                        Personal Details
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div class="space-y-1">
+                                <span class="block text-sm font-semibold text-gray-500 uppercase tracking-wide">Last
+                                    Name</span>
+                                <span id="lastName" class="block text-lg text-gray-900 font-medium">-</span>
                             </div>
-                            <div class="detail-row">
-                                <span class="label">Last Name:</span>
-                                <span id="lastName">Ackerman</span>
+                            <div class="space-y-1">
+                                <span class="block text-sm font-semibold text-gray-500 uppercase tracking-wide">First
+                                    Name</span>
+                                <span id="firstName" class="block text-lg text-gray-900 font-medium">-</span>
                             </div>
-                            <div class="detail-row">
-                                <span class="label">First Name:</span>
-                                <span id="firstName">Mikasa</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="label">Middle Name:</span>
-                                <span id="middleName">Armin</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="label">Gender:</span>
-                                <span id="gender">Female</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="label">Date of Birth:</span>
-                                <span id="dateOfBirth">June 30, 2000</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="label">Age:</span>
-                                <span id="age">25</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="label">Position:</span>
-                                <span id="position">Teacher - I</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="label">Department:</span>
-                                <span id="department">Science</span>
+                            <div class="space-y-1">
+                                <span class="block text-sm font-semibold text-gray-500 uppercase tracking-wide">Middle
+                                    Name</span>
+                                <span id="middleName" class="block text-lg text-gray-900 font-medium">-</span>
                             </div>
                         </div>
                     </div>
                 </section>
 
-                <!-- Contact Data Section -->
-                <section class="contact-data-section">
-                    <h3>Contact Data</h3>
-                    <div class="contact-details">
-                        <div class="detail-row">
-                            <span class="label">Email:</span>
-                            <span id="email">mikasa.ackerman@deped.gov.ph</span>
+                <!-- Contact Information Section -->
+                <section class="gradient-card rounded-xl border border-gray-200 p-6">
+                    <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                        <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-address-book text-red-600"></i>
                         </div>
-                        <div class="detail-row">
-                            <span class="label">Phone:</span>
-                            <span id="phone">+63 912 345 6789</span>
+                        Contact Information
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div class="space-y-1">
+                                <span class="block text-sm font-semibold text-gray-500 uppercase tracking-wide">Email
+                                    Address</span>
+                                <span id="email" class="block text-lg text-gray-900 font-medium">-</span>
+                            </div>
+                            <div class="space-y-1">
+                                <span class="block text-sm font-semibold text-gray-500 uppercase tracking-wide">Phone
+                                    Number</span>
+                                <span id="phone" class="block text-lg text-gray-900 font-medium">-</span>
+                            </div>
                         </div>
-                        <div class="detail-row">
-                            <span class="label">Address:</span>
-                            <span id="address">Eden</span>
+                        <div class="space-y-4">
+                            <div class="space-y-1">
+                                <span
+                                    class="block text-sm font-semibold text-gray-500 uppercase tracking-wide">Address</span>
+                                <span id="address" class="block text-lg text-gray-900 font-medium">-</span>
+                            </div>
                         </div>
                     </div>
                 </section>
 
                 <!-- Teaching Load Section -->
-                <section class="teaching-load-section">
-                    <h3>Teaching Load (Handled Classes)</h3>
-                    <div class="table-container">
-                        <table class="teaching-load-table">
-                            <thead>
+                <section class="gradient-card rounded-xl border border-gray-200 p-6">
+                    <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                        <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-book-open text-red-600"></i>
+                        </div>
+                        Teaching Load
+                    </h3>
+                    <div class="overflow-x-auto rounded-xl border border-gray-200">
+                        <table class="w-full">
+                            <thead class="gradient-bg">
                                 <tr>
-                                    <th>Subject</th>
-                                    <th>Grade & Section</th>
-                                    <th>Number of Students</th>
+                                    <th class="px-4 py-3 text-left font-semibold text-white">Subject</th>
+                                    <th class="px-4 py-3 text-left font-semibold text-white">Grade & Section</th>
+                                    <th class="px-4 py-3 text-left font-semibold text-white">Students</th>
                                 </tr>
                             </thead>
-                            <tbody id="teachingLoadBody">
+                            <tbody id="teachingLoadBody" class="divide-y divide-gray-200 bg-white">
                                 <tr>
-                                    <td>Physics</td>
-                                    <td>Grade 9 - St. Anne</td>
-                                    <td>45</td>
-                                </tr>
-                                <tr>
-                                    <td>Science</td>
-                                    <td>Grade 8 - St. John</td>
-                                    <td>50</td>
-                                </tr>
-                                <tr>
-                                    <td>Science</td>
-                                    <td>Grade 8 - St. John</td>
-                                    <td>50</td>
+                                    <td colspan="3" class="px-4 py-8 text-center text-gray-500">
+                                        <i class="fas fa-book-open text-3xl text-gray-300 mb-3 block"></i>
+                                        No teaching load assigned
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
@@ -258,38 +384,61 @@
                 </section>
 
                 <!-- Change History Section -->
-                <section class="change-history-section">
-                    <h3>Change History</h3>
-                    <div class="table-container">
-                        <table class="change-history-table">
-                            <thead>
+                <section class="gradient-card rounded-xl border border-gray-200 p-6">
+                    <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                        <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-history text-red-600"></i>
+                        </div>
+                        Change History
+                    </h3>
+                    <div class="overflow-x-auto rounded-xl border border-gray-200">
+                        <table class="w-full">
+                            <thead class="gradient-bg">
                                 <tr>
-                                    <th>Actions</th>
-                                    <th>Date</th>
-                                    <th>Time</th>
+                                    <th class="px-4 py-3 text-left font-semibold text-white">Action</th>
+                                    <th class="px-4 py-3 text-left font-semibold text-white">Date</th>
+                                    <th class="px-4 py-3 text-left font-semibold text-white">Time</th>
                                 </tr>
                             </thead>
-                            <tbody id="changeHistoryBody">
+                            <tbody id="changeHistoryBody" class="divide-y divide-gray-200 bg-white">
                                 <tr>
-                                    <td>Record Created</td>
-                                    <td>07/09/2025</td>
-                                    <td>10:30 pm</td>
-                                </tr>
-                                <tr>
-                                    <td>Updated Profile</td>
-                                    <td>07/09/2025</td>
-                                    <td>10:30 pm</td>
+                                    <td colspan="3" class="px-4 py-8 text-center text-gray-500">
+                                        <i class="fas fa-history text-3xl text-gray-300 mb-3 block"></i>
+                                        No change history available
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </section>
             </div>
+
+            <!-- Modal Footer -->
+            <div class="flex justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+                <button class="btn bg-gray-500 text-white hover:bg-gray-600" onclick="closeTeacherProfile()">
+                    Close
+                </button>
+            </div>
         </div>
     </div>
-     <script>
-        window.teachersData = {{ teachers|safe }};  // Pass the teachers data as a global variable
+
+    <!-- Teachers Data Storage -->
+    {{ teachers|json_script:"teachers-data" }}
+
+    <script>
+        // Load teachers data from JSON script tag
+        document.addEventListener('DOMContentLoaded', function () {
+            const teachersDataElement = document.getElementById('teachers-data');
+            if (teachersDataElement) {
+                window.teachersData = JSON.parse(teachersDataElement.textContent);
+                console.log('Teachers data loaded:', window.teachersData);
+            } else {
+                console.error('Teachers data element not found');
+                window.teachersData = [];
+            }
+        });
     </script>
+
     <script src="{% static 'admin_functionalities/js/teachers.js' %}"></script>
 </body>
 

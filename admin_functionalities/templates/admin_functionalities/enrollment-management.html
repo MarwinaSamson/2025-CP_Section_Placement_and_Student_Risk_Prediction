@@ -1,678 +1,470 @@
- {% comment %} <!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Admin Dashboard - ZNHS West</title>
-    {% load static %}
-    <!-- Use static tag for CSS -->
-    <link rel="stylesheet" href="{% static 'admin_functionalities/css/admin.css' %}" />
-    <link rel="stylesheet" href="{% static 'admin_functionalities/css/enrollment.css' %}" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    
-</head>
-
-<body>
-    <!-- Notification Container -->
-    <div id="notificationContainer" class="notification-container"></div>
-
-    <div class="dashboard-container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo-container">
-                    <img src="{% static 'admin_functionalities/assets/westLogo.png' %}" alt="ZNHS West Logo" class="sidebar-logo" />
-                    <span class="sidebar-title">ZNHS WEST</span>
-                </div>
-            </div>
-
-            <nav class="sidebar-nav">
-                <ul>
-                    <li class="nav-item active">
-                        <a href="{% url 'admin_functionalities:dashboard' %}" class="nav-link">
-                            <i class="fas fa-tachometer-alt"></i>
-                            <span>Dashboard</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{% url 'admin_functionalities:sections' %}" class="nav-link">
-                            <i class="fas fa-users"></i>
-                            <span>Sections</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{% url 'admin_functionalities:teachers' %}" class="nav-link">
-                            <i class="fas fa-chalkboard-teacher"></i>
-                            <span>Teachers</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{% url 'admin_functionalities:enrollment' %}" class="nav-link">
-                            <i class="fas fa-clipboard-list"></i>
-                            <span>Enrollment</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{% url 'admin_functionalities:settings' %}" class="nav-link">
-                            <i class="fas fa-cog"></i>
-                            <span>Settings</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-
-            <div class="sidebar-footer">
-                <!-- Logout link -->
-                <a href="{% url 'admin_functionalities:logout' %}" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
-                </a>
-            </div>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <h1>Admin Dashboard</h1>
-                    <p id="dashboardDate"></p>
-                </div>
-                <div class="header-right">
-                    <div class="header-filter-container">
-                        <label for="gradeLevelFilter">Grade Level:</label>
-                        <select id="gradeLevelFilter">
-                            <option value="all">All</option>
-                            <option value="grade7">Grade 7</option>
-                            <option value="grade8">Grade 8</option>
-                            <option value="grade9">Grade 9</option>
-                            <option value="grade10">Grade 10</option>
-                        </select>
-                    </div>
-                    <div class="header-filter-container">
-                        <label for="schoolYearFilter">School Year:</label>
-                        <select id="schoolYearFilter">
-                            <option value="2025-2026">2025-2026</option>
-                            <option value="2024-2025">2024-2025</option>
-                        </select>
-                    </div>
-
-                    <!-- admin profile section  -->
-                    <div class="admin-profile">
-                        <div class="profile-info">
-                            <span class="admin-name">Samson, Marwina D.</span>
-                            <span class="admin-role">Admin</span>
-                        </div>
-                        <div class="profile-avatar">
-                            <img src="{% static 'admin_functionalities/assets/spongebob.jpg' %}" alt="Admin" class="avatar-img" />
-                        </div>
-                    </div>
-                </div>
-            </header>
-            <h1 id="programHeader" style="background: #c41e3a; color: #fff; padding: 1rem; text-align: center;">
-            🚀 OHSP – Enrollment Requests
-           </h1>
-
-  <div class="container">
-    <!-- Program Stats -->
-    <div class="stats">
-      <div class="card"><h3>Total Requests</h3><p>28</p></div>
-      <div class="card"><h3>Approved</h3><p>20</p></div>
-      <div class="card"><h3>Pending</h3><p>5</p></div>
-      <div class="card"><h3>Rejected</h3><p>3</p></div>
-    </div>
-
-    <!-- Filter -->
-    <div class="filter-bar">
-      <label for="statusFilter">Filter by:</label>
-      <select id="statusFilter">
-        <option value="pending" selected>All Pending Requests</option>
-        <option value="ste pending" selected>STE Pending Requests</option>
-        <option value="spflpending" selected>SPFL Pending Requests</option>
-        <option value="sptve pending" selected>SPTVE Pending Requests</option>
-        <option value="top5 pending" selected>TOP 5 Pending Requests</option>
-        <option value="hetero pending" selected>HETERO All Pending Requests</option>
-        <option value="approved" disabled>Approved (coming soon)</option>
-        <option value="rejected" disabled>Rejected (coming soon)</option>
-      </select>
-    </div>
-
-    <!-- Requests Table -->
-    <h2>List of Pending Requests</h2>
-    <table id="requestsTable">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>LRN</th>
-          <th>Student</th>
-          <th>Requested Program</th>
-          <th>Date Requested</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr onclick="window.location.href='student_details.html';" data-status="pending">
-          <td>1</td>
-          <td>123456789765</td>
-          <td>Samson, Marwina</td>
-          <td>STE</td>
-          <td>2025-09-24</td>
-          <td class="actions">
-            <button onclick="event.stopPropagation(); window.location.href='student_details.html';">View Details</button>
-          </td>
-        </tr>
-        <tr onclick="window.location.href='student_details.html';" data-status="pending">
-          <td>2</td>
-          <td>90878765432</td>
-          <td>Doe, John</td>
-          <td>STE</td>
-          <td>2025-09-23</td>
-          <td class="actions">
-            <button onclick="event.stopPropagation(); window.location.href='student_details.html';">View Details</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <script>
-    function openNotification(element) {
-        const ids = element.dataset.ids.split(',').filter(id => id);
-        const programSlug = element.dataset.programSlug;  // From data attribute (add below)
-        if (!ids.length) return;
-        
-        fetch("{% url 'admin_functionalities:mark_notification_read' %}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            },
-            body: JSON.stringify({ ids: ids })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                element.style.opacity = '0';
-                setTimeout(() => element.remove(), 300);
-                
-                // Redirect to enrollment with program filter
-                if (programSlug) {
-                    window.location.href = `/admin-functionalities/enrollment/?program=${programSlug}`;
-                } else {
-                    window.location.href = `/admin-functionalities/enrollment/`;  // Fallback to all
-                }
-                
-                // Update badge (existing)
-                const badge = document.querySelector('.notification-badge');
-                if (badge) {
-                    let count = parseInt(badge.textContent) - data.marked;
-                    if (count <= 0) badge.remove(); else badge.textContent = count;
-                }
-            } else {
-                alert('Error marking as read: ' + (data.error || 'Unknown'));
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    }
-    
-    // ... getCookie (existing) ...
-</script>
-        </main>
-    </div>
-
-    <script src="{% static 'admin_functionalities/js/admin.js' %}"></script>
-</body>
-
-</html>
-
- 
- 
-  {% endcomment %}
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Admin Dashboard - ZNHS West</title>
+    <title>Enrollment Management - ZNHS West</title>
     {% load static %}
-    <!-- Use static tag for CSS -->
-    <link rel="stylesheet" href="{% static 'admin_functionalities/css/admin.css' %}" />
-    <link rel="stylesheet" href="{% static 'admin_functionalities/css/enrollment.css' %}" />
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+
     <style>
-        .container {
-        max-width: 1200px;
-        margin: auto;
-        padding: 20px;
+        .gradient-bg {
+            background: linear-gradient(135deg, #c41e3a 0%, #a01729 100%);
         }
-        
-        /* Stats cards */
-        .stats {
-        display: flex;
-        gap: 20px;
-        margin-bottom: 20px;
+
+        .gradient-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
         }
-        
-        .stats .card {
-        flex: 1;
-        padding: 20px;
-        background: #fff;
-        border-radius: 10px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        text-align: center;
+
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 6px;
         }
-        
-        .stats .card h3 {
-        margin: 0;
-        font-size: 1.2rem;
-        color: #c41e3a;
+
+        .sidebar-scroll::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
         }
-        
-        .stats .card p {
-        font-size: 1.5rem;
-        font-weight: bold;
-        margin: 5px 0 0;
-        color: #333;
+
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
         }
-        
-        /* Filter */
-        .filter-bar {
-        margin: 20px 0;
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 10px;
+
+        .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
         }
-        
-        .filter-bar label {
-        font-weight: bold;
-        color: #333;
+
+        .smooth-transition {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
-        .filter-bar select {
-        padding: 8px 12px;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-        background: white;
+
+        .form-input,
+        .form-select {
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
         }
-        
-        /* Table */
-        #requestsTable {
-        width: 100%;
-        border-collapse: collapse;
-        background: #fff;
-        border-radius: 10px;
-        overflow: hidden;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: #c41e3a;
+            box-shadow: 0 0 0 3px rgba(196, 30, 58, 0.1);
         }
-        
-        #requestsTable th,
-        #requestsTable td {
-        padding: 15px;
-        text-align: left;
-        border-bottom: 1px solid #eee;
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
-        
-        #requestsTable th {
-        background: #c41e3a;
-        color: white;
-        font-weight: 600;
+
+        .btn-primary {
+            background: linear-gradient(135deg, #c41e3a 0%, #a01729 100%);
+            color: white;
         }
-        
-        #requestsTable tr:hover {
-        background: #f8f9fa;
-        cursor: pointer;
-        }
-        
-        .view-details-btn {
-        padding: 8px 16px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        background: #c41e3a;
-        color: #fff;
-        text-decoration: none;
-        display: inline-block;
-        }
-        
-        .view-details-btn:hover {
-        background: #a3192e;
-        }
-        
-        /* Program Header */
-        #programHeader {
-        background: #c41e3a !important;
-        color: #fff;
-        padding: 1rem;
-        text-align: center;
-        border-radius: 10px;
-        margin: 20px 0;
-        }
-        
-        /* modal */
-        .modal-overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-        }
-        
-        .modal-content {
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        }
-        
-        .close-modal:hover {
-        color: #dc3545;
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(196, 30, 58, 0.3);
         }
     </style>
-
 </head>
 
-<body>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 font-sans min-h-screen">
     <!-- Notification Container -->
-    <div id="notificationContainer" class="notification-container"></div>
+    <div id="notificationContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2"></div>
 
-    <div class="dashboard-container">
+    <div class="flex min-h-screen">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo-container">
-                    <img src="{% static 'admin_functionalities/assets/westLogo.png' %}" alt="ZNHS West Logo" class="sidebar-logo" />
-                    <span class="sidebar-title">ZNHS WEST</span>
+        <aside class="w-64 gradient-bg text-white flex flex-col fixed h-full z-40 shadow-2xl">
+            <div class="p-6 border-b border-red-600">
+                <div class="flex items-center gap-3">
+                    <img src="{% static 'admin_functionalities/assets/westLogo.png' %}" alt="ZNHS West Logo"
+                        class="w-12 h-12 rounded-full border-2 border-white shadow-lg">
+                    <div>
+                        <span class="text-xl font-bold block">ZNHS WEST</span>
+                        <span class="text-xs text-red-100 opacity-80">Admin Portal</span>
+                    </div>
                 </div>
             </div>
 
-            <nav class="sidebar-nav">
+            <nav class="flex-1 py-6 sidebar-scroll overflow-y-auto">
                 <ul>
-                    <li class="nav-item {% if request.resolver_match.url_name == 'admin-dashboard' %}active{% endif %}">
-                        <a href="{% url 'admin_functionalities:admin-dashboard' %}" class="nav-link">
-                            <i class="fas fa-tachometer-alt"></i>
-                            <span>Dashboard</span>
+                    <li class="mb-2 mx-4">
+                        <a href="{% url 'admin_functionalities:admin-dashboard' %}"
+                            class="flex items-center gap-4 px-4 py-3 text-white hover:bg-red-600 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg">
+                            <i class="fas fa-tachometer-alt w-5 text-center text-lg"></i>
+                            <span class="font-medium">Dashboard</span>
                         </a>
                     </li>
-                    <li class="nav-item {% if request.resolver_match.url_name == 'sections' %}active{% endif %}">
-                        <a href="{% url 'admin_functionalities:sections' %}" class="nav-link">
-                            <i class="fas fa-users"></i>
-                            <span>Sections</span>
+                    <li class="mb-2 mx-4">
+                        <a href="{% url 'admin_functionalities:sections' %}"
+                            class="flex items-center gap-4 px-4 py-3 text-white hover:bg-red-600 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg">
+                            <i class="fas fa-users w-5 text-center text-lg"></i>
+                            <span class="font-medium">Sections</span>
                         </a>
                     </li>
-                    <li class="nav-item {% if request.resolver_match.url_name == 'teachers' %}active{% endif %}">
-                        <a href="{% url 'admin_functionalities:teachers' %}" class="nav-link">
-                            <i class="fas fa-chalkboard-teacher"></i>
-                            <span>Teachers</span>
+                    <li class="mb-2 mx-4">
+                        <a href="{% url 'admin_functionalities:teachers' %}"
+                            class="flex items-center gap-4 px-4 py-3 text-white hover:bg-red-600 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg">
+                            <i class="fas fa-chalkboard-teacher w-5 text-center text-lg"></i>
+                            <span class="font-medium">Teachers</span>
                         </a>
                     </li>
-                    <li class="nav-item {% if request.resolver_match.url_name == 'enrollment' %}active{% endif %}">
-                        <a href="{% url 'admin_functionalities:enrollment' %}" class="nav-link">
-                            <i class="fas fa-clipboard-list"></i>
-                            <span>Enrollment</span>
+                    <li class="mb-2 mx-4">
+                        <a href="{% url 'admin_functionalities:enrollment' %}"
+                            class="flex items-center gap-4 px-4 py-3 text-white bg-red-600 rounded-xl shadow-lg transform scale-105 transition-all duration-300">
+                            <i class="fas fa-clipboard-list w-5 text-center text-lg"></i>
+                            <span class="font-medium">Enrollment</span>
                         </a>
                     </li>
-                    <li class="nav-item {% if request.resolver_match.url_name == 'settings' %}active{% endif %}">
-                        <a href="{% url 'admin_functionalities:settings' %}" class="nav-link">
-                            <i class="fas fa-cog"></i>
-                            <span>Settings</span>
+                    <li class="mb-2 mx-4">
+                        <a href="{% url 'admin_functionalities:settings' %}"
+                            class="flex items-center gap-4 px-4 py-3 text-white hover:bg-red-600 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg">
+                            <i class="fas fa-cog w-5 text-center text-lg"></i>
+                            <span class="font-medium">Settings</span>
                         </a>
                     </li>
                 </ul>
             </nav>
 
-            <div class="sidebar-footer">
-                <!-- Logout link -->
-                <a href="{% url 'enrollmentprocess:logout' %}" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
+            <div class="p-6 border-t border-red-600">
+                <a href="{% url 'enrollmentprocess:logout' %}"
+                    class="flex items-center gap-4 px-4 py-3 text-white hover:bg-red-600 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg">
+                    <i class="fas fa-sign-out-alt w-5 text-center text-lg"></i>
+                    <span class="font-medium">Logout</span>
                 </a>
             </div>
         </aside>
 
         <!-- Main Content -->
-        <main class="main-content">
-            <header class="dashboard-header">
-                <div class="header-left">
-                    <h1>Admin Dashboard</h1>
-                    <p id="dashboardDate"></p>
-                </div>
-                <div class="header-right">
-                    <div class="header-filter-container">
-                        <label for="gradeLevelFilter">Grade Level:</label>
-                        <select id="gradeLevelFilter">
-                            <option value="all">All</option>
-                            <option value="grade7">Grade 7</option>
-                            <option value="grade8">Grade 8</option>
-                            <option value="grade9">Grade 9</option>
-                            <option value="grade10">Grade 10</option>
-                        </select>
-                    </div>
-                    <div class="header-filter-container">
-                        <label for="schoolYearFilter">School Year:</label>
-                        <select id="schoolYearFilter">
-                            <option value="2025-2026">2025-2026</option>
-                            <option value="2024-2025">2024-2025</option>
-                        </select>
+        <main class="flex-1 ml-64 p-8">
+            <!-- Header -->
+            <header class="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-100">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-800 mb-2">Enrollment Management</h1>
+                        <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-xl border border-gray-200">
+                                <label for="gradeLevelFilter" class="text-sm font-semibold text-gray-600">Grade
+                                    Level:</label>
+                                <select id="gradeLevelFilter"
+                                    class="bg-transparent border-none text-sm font-medium text-gray-700 focus:outline-none focus:ring-0">
+                                    <option value="all">All</option>
+                                    <option value="grade7">Grade 7</option>
+                                    <option value="grade8">Grade 8</option>
+                                    <option value="grade9">Grade 9</option>
+                                    <option value="grade10">Grade 10</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-xl border border-gray-200">
+                                <label for="schoolYearFilter" class="text-sm font-semibold text-gray-600">School
+                                    Year:</label>
+                                <select id="schoolYearFilter"
+                                    class="bg-transparent border-none text-sm font-medium text-gray-700 focus:outline-none focus:ring-0">
+                                    <option value="2025-2026">2025-2026</option>
+                                    <option value="2024-2025">2024-2025</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- admin profile section  -->
-                    <div class="admin-profile">
-                        <div class="profile-info">
-                            <span class="admin-name">Samson, Marwina D.</span>
-                            <span class="admin-role">Admin</span>
+                    <div class="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-xl border border-gray-200">
+                        <div class="text-right">
+                            <span class="block font-semibold text-gray-800">Samson, Marwina D.</span>
+                            <span
+                                class="block text-xs text-gray-500 bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium">Admin</span>
                         </div>
-                        <div class="profile-avatar">
-                            <img src="{% static 'admin_functionalities/assets/spongebob.jpg' %}" alt="Admin" class="avatar-img" />
+                        <div class="w-12 h-12 rounded-xl overflow-hidden border-2 border-white shadow-lg">
+                            <img src="{% static 'admin_functionalities/assets/spongebob.jpg' %}" alt="Admin"
+                                class="w-full h-full object-cover">
                         </div>
                     </div>
                 </div>
             </header>
 
             <!-- Dynamic Program Header -->
-            <h1 id="programHeader" style="background: #2c3e50; color: #fff; padding: 1rem; text-align: center;">
-                🚀 {{ display_name }} – Enrollment Requests
-            </h1>
+            <div class="gradient-bg text-white p-6 rounded-2xl shadow-lg mb-8 text-center">
+                <h1 class="text-2xl font-bold">
+                    🚀 {{ display_name }} – Enrollment Requests
+                </h1>
+                <p class="text-red-100 mt-2">Manage and review enrollment applications</p>
+            </div>
 
-            <div class="container">
+            <div class="container mx-auto pb-8">
                 <!-- Program Stats (Dynamic) -->
-                <div class="stats">
-                    <div class="card"><h3>Total Requests</h3><p>{{ total_requests }}</p></div>
-                    <div class="card"><h3>Approved</h3><p>{{ approved }}</p></div>
-                    <div class="card"><h3>Pending</h3><p>{{ pending }}</p></div>
-                    <div class="card"><h3>Rejected</h3><p>{{ rejected }}</p></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div
+                        class="gradient-card rounded-2xl p-6 border border-gray-200 shadow-lg smooth-transition hover:shadow-xl">
+                        <div class="text-center">
+                            <div class="w-16 h-16 bg-red-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-users text-red-600 text-2xl"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-800">Total Requests</h3>
+                            <p class="text-3xl font-bold text-gray-800 mt-2">{{ total_requests }}</p>
+                        </div>
+                    </div>
+                    <div
+                        class="gradient-card rounded-2xl p-6 border border-gray-200 shadow-lg smooth-transition hover:shadow-xl">
+                        <div class="text-center">
+                            <div
+                                class="w-16 h-16 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-800">Approved</h3>
+                            <p class="text-3xl font-bold text-gray-800 mt-2">{{ approved }}</p>
+                        </div>
+                    </div>
+                    <div
+                        class="gradient-card rounded-2xl p-6 border border-gray-200 shadow-lg smooth-transition hover:shadow-xl">
+                        <div class="text-center">
+                            <div
+                                class="w-16 h-16 bg-yellow-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-clock text-yellow-600 text-2xl"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-800">Pending</h3>
+                            <p class="text-3xl font-bold text-gray-800 mt-2">{{ pending }}</p>
+                        </div>
+                    </div>
+                    <div
+                        class="gradient-card rounded-2xl p-6 border border-gray-200 shadow-lg smooth-transition hover:shadow-xl">
+                        <div class="text-center">
+                            <div class="w-16 h-16 bg-red-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-times-circle text-red-600 text-2xl"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-800">Rejected</h3>
+                            <p class="text-3xl font-bold text-gray-800 mt-2">{{ rejected }}</p>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Filters: Separate Program and Status -->
-                <div class="filter-bar">
-                    <label for="programFilter">Filter by Program:</label>
-                    <select id="programFilter">
-                        <option value="all" {% if program_filter == 'all' %}selected{% endif %}>All Programs</option>
-                        <option value="ste" {% if program_filter == 'ste' %}selected{% endif %}>STE</option>
-                        <option value="spfl" {% if program_filter == 'spfl' %}selected{% endif %}>SPFL</option>
-                        <option value="sptvl" {% if program_filter == 'sptvl' %}selected{% endif %}>SPTVL</option>
-                        <option value="sned" {% if program_filter == 'sned' %}selected{% endif %}>SNED</option>
-                        <option value="top5" {% if program_filter == 'top5' %}selected{% endif %}>TOP 5</option>
-                        <option value="hetero" {% if program_filter == 'hetero' %}selected{% endif %}>HETERO</option>
-                        <option value="ohsp" {% if program_filter == 'ohsp' %}selected{% endif %}>OHSP</option>
-                    </select>
+                <!-- Filters -->
+                <div class="gradient-card rounded-2xl shadow-lg p-6 mb-8 border border-gray-200">
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <h3 class="text-lg font-semibold text-gray-800">Filter Requests</h3>
+                        <div class="flex flex-wrap items-center gap-4">
+                            <div class="flex items-center gap-3">
+                                <label for="programFilter" class="font-medium text-gray-700">Program:</label>
+                                <select id="programFilter" class="form-select">
+                                    <option value="all">All Programs</option>
+                                    <option value="ste">STE</option>
+                                    <option value="spfl">SPFL</option>
+                                    <option value="sptvl">SPTVL</option>
+                                    <option value="sned">SNED</option>
+                                    <option value="top5">TOP 5</option>
+                                    <option value="hetero">HETERO</option>
+                                    <option value="ohsp">OHSP</option>
+                                </select>
+                            </div>
 
-                    <label for="statusFilter" style="margin-left: 20px;">Filter by Status:</label>
-                    <select id="statusFilter">
-                        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending Requests</option>
-                        <option value="approved">Approved Requests</option>
-                        <option value="rejected">Rejected Requests</option>
-                    </select>
+                            <div class="flex items-center gap-3">
+                                <label for="statusFilter" class="font-medium text-gray-700">Status:</label>
+                                <select id="statusFilter" class="form-select">
+                                    <option value="pending">Pending Requests</option>
+                                    <option value="approved">Approved Requests</option>
+                                    <option value="rejected">Rejected Requests</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Requests Table -->
-                <h2>List of Requests</h2>
-                <table id="requestsTable">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>LRN</th>
-                            <th>Student</th>
-                            <th>Requested Program</th>
-                            <th>Date Requested</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for enrollment in enrollments %}
-                            <tr data-status="{{ enrollment.status }}"
-                                data-program="{{ enrollment.selected_program|lower }}">
-                                <td>{{ forloop.counter }}</td>
-                                <td>{{ enrollment.student__lrn|default:'N/A' }}</td>
-                                <td>{{ enrollment.student__last_name }}, {{ enrollment.student__first_name }} {{ enrollment.student__middle_name|default:'' }}</td>
-                                <td>{{ enrollment.selected_program|upper }}</td>
-                               <td>{{ enrollment.placement_date|date:'Y-m-d'|default:"N/A" }}</td>
-                               <td class="actions">
-                                    <a href="{% url 'admin_functionalities:student_edit' enrollment.student__id %}" class="view-details-btn">
-                                        View Details
-                                    </a>
-                                </td>
-                            </tr>
-                        {% empty %}
-                            <tr><td colspan="6">No requests{% if is_filtered %} for {{ display_name }}{% endif %}.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h2 class="text-xl font-bold text-gray-800">List of Requests</h2>
+                        <p class="text-gray-600 text-sm">Manage enrollment applications</p>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table id="requestsTable" class="w-full">
+                            <thead class="gradient-bg">
+                                <tr>
+                                    <th class="px-6 py-4 text-left font-semibold text-white">#</th>
+                                    <th class="px-6 py-4 text-left font-semibold text-white">LRN</th>
+                                    <th class="px-6 py-4 text-left font-semibold text-white">Student</th>
+                                    <th class="px-6 py-4 text-left font-semibold text-white">Requested Program</th>
+                                    <th class="px-6 py-4 text-left font-semibold text-white">Date Requested</th>
+                                    <th class="px-6 py-4 text-left font-semibold text-white">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                {% for enrollment in enrollments %}
+                                <tr class="hover:bg-gray-50 transition-colors cursor-pointer smooth-transition"
+                                    data-status="{{ enrollment.status }}"
+                                    data-program="{{ enrollment.selected_program|lower }}">
+                                    <td class="px-6 py-4 text-sm text-gray-500">{{ forloop.counter }}</td>
+                                    <td class="px-6 py-4 text-sm font-medium text-gray-900">
+                                        {{ enrollment.student__lrn|default:"N/A" }}
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-900">
+                                        {{ enrollment.student__last_name }}, {{ enrollment.student__first_name }}
+                                        {% if enrollment.student__middle_name %}
+                                        {{ enrollment.student__middle_name }}
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-900">
+                                        {{ enrollment.selected_program|upper }}
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-500">
+                                        {% if enrollment.placement_date %}
+                                        {{ enrollment.placement_date|date:"Y-m-d" }}
+                                        {% else %}
+                                        N/A
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <a href="{% url 'admin_functionalities:student_edit' enrollment.student__id %}"
+                                            class="btn btn-primary text-sm px-4 py-2">
+                                            View Details
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                                        <i class="fas fa-inbox text-3xl text-gray-300 mb-3 block"></i>
+                                        No requests found.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
 
-    
+    <script>
+        // Get URL params for auto-filter
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlProgram = urlParams.get('program') || 'all';
+        const urlStatus = urlParams.get('status') || 'pending';
 
-<script>
-    // Get URL params for auto-filter
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlProgram = urlParams.get('program') || 'all';
-    const urlStatus = urlParams.get('status') || 'pending';
+        // Set initial dropdown values from URL
+        if (document.getElementById("programFilter")) {
+            document.getElementById("programFilter").value = urlProgram;
+        }
+        if (document.getElementById("statusFilter")) {
+            document.getElementById("statusFilter").value = urlStatus;
+        }
 
-    // Set initial dropdown values from URL
-    document.getElementById("programFilter").value = urlProgram;
-    document.getElementById("statusFilter").value = urlStatus;
+        /**
+         * Apply filters to table rows
+         * Shows/hides rows based on BOTH program and status filters
+         */
+        function applyFilters(programVal, statusVal) {
+            const rows = document.querySelectorAll("#requestsTable tbody tr");
+            let visibleCount = 0;
 
-    /**
-     * Apply filters to table rows
-     * Shows/hides rows based on BOTH program and status filters
-     */
-    function applyFilters(programVal, statusVal) {
-        const rows = document.querySelectorAll("#requestsTable tbody tr");
-        let visibleCount = 0;
-        
-        rows.forEach(row => {
-            // Skip empty state rows (no data-status attribute)
-            if (!row.dataset.status) {
-                row.style.display = 'none';
-                return;
+            rows.forEach(row => {
+                // Skip empty state rows (no data-status attribute)
+                if (!row.dataset.status) {
+                    row.style.display = 'none';
+                    return;
+                }
+
+                // Check program match (case-insensitive)
+                const rowProgram = (row.dataset.program || '').toLowerCase();
+                const matchesProgram = (programVal === 'all') || (rowProgram === programVal.toLowerCase());
+
+                // Check status match (case-sensitive for status)
+                const rowStatus = row.dataset.status || '';
+                const matchesStatus = (statusVal === 'all') || (rowStatus === statusVal);
+
+                // Show row only if BOTH conditions match
+                if (matchesProgram && matchesStatus) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Update counter or show "No results" message
+            console.log(`Filters applied: Program="${programVal}", Status="${statusVal}", Visible rows: ${visibleCount}`);
+
+            // Optional: Show "no results" message if needed
+            const tbody = document.querySelector("#requestsTable tbody");
+            let noResultsRow = tbody.querySelector('.no-results-row');
+
+            if (visibleCount === 0) {
+                if (!noResultsRow) {
+                    noResultsRow = document.createElement('tr');
+                    noResultsRow.className = 'no-results-row';
+                    noResultsRow.innerHTML = '<td colspan="6" class="px-6 py-8 text-center text-gray-500">No requests match the selected filters.</td>';
+                    tbody.appendChild(noResultsRow);
+                }
+                noResultsRow.style.display = '';
+            } else if (noResultsRow) {
+                noResultsRow.style.display = 'none';
             }
-            
-            // Check program match (case-insensitive)
-            const rowProgram = (row.dataset.program || '').toLowerCase();
-            const matchesProgram = (programVal === 'all') || (rowProgram === programVal.toLowerCase());
-            
-            // Check status match (case-sensitive for status)
-            const rowStatus = row.dataset.status || '';
-            const matchesStatus = (statusVal === 'all') || (rowStatus === statusVal);
-            
-            // Show row only if BOTH conditions match
-            if (matchesProgram && matchesStatus) {
-                row.style.display = '';
-                visibleCount++;
-            } else {
-                row.style.display = 'none';
+        }
+
+        /**
+         * Handle filter changes - triggers full page reload for backend filtering
+         */
+        function handleFilterChange() {
+            const programVal = document.getElementById("programFilter").value;
+            const statusVal = document.getElementById("statusFilter").value;
+
+            // Build new URL with filters
+            const newUrl = new URL(window.location.pathname, window.location.origin);
+
+            if (programVal && programVal !== 'all') {
+                newUrl.searchParams.set('program', programVal);
             }
+
+            if (statusVal && statusVal !== 'all') {
+                newUrl.searchParams.set('status', statusVal);
+            }
+
+            // Reload page with new filters
+            window.location.href = newUrl.toString();
+        }
+
+        // Initial filter application on page load (for any pre-loaded data)
+        if (document.querySelector("#requestsTable")) {
+            applyFilters(urlProgram, urlStatus);
+        }
+
+        // Attach event listeners to both dropdowns
+        if (document.getElementById("programFilter")) {
+            document.getElementById("programFilter").addEventListener("change", handleFilterChange);
+        }
+        if (document.getElementById("statusFilter")) {
+            document.getElementById("statusFilter").addEventListener("change", handleFilterChange);
+        }
+
+        // Set current date in dashboard
+        if (document.getElementById('dashboardDate')) {
+            document.getElementById('dashboardDate').textContent = new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        // Debug: Log initial state
+        console.log('Enrollment filters initialized:', {
+            program: urlProgram,
+            status: urlStatus,
+            totalRows: document.querySelectorAll("#requestsTable tbody tr[data-status]").length
         });
-        
-        // Update counter or show "No results" message
-        console.log(`Filters applied: Program="${programVal}", Status="${statusVal}", Visible rows: ${visibleCount}`);
-        
-        // Optional: Show "no results" message if needed
-        const tbody = document.querySelector("#requestsTable tbody");
-        let noResultsRow = tbody.querySelector('.no-results-row');
-        
-        if (visibleCount === 0) {
-            if (!noResultsRow) {
-                noResultsRow = document.createElement('tr');
-                noResultsRow.className = 'no-results-row';
-                noResultsRow.innerHTML = '<td colspan="6" style="text-align: center; padding: 2rem; color: #666;">No requests match the selected filters.</td>';
-                tbody.appendChild(noResultsRow);
-            }
-            noResultsRow.style.display = '';
-        } else if (noResultsRow) {
-            noResultsRow.style.display = 'none';
-        }
-    }
-
-    /**
-     * Update URL without page reload
-     */
-    function updateURL(programVal, statusVal) {
-        const newUrl = new URL(window.location);
-        
-        // Update or remove program param
-        if (programVal && programVal !== 'all') {
-            newUrl.searchParams.set('program', programVal);
-        } else {
-            newUrl.searchParams.delete('program');
-        }
-        
-        // Update or remove status param
-        if (statusVal && statusVal !== 'all') {
-            newUrl.searchParams.set('status', statusVal);
-        } else {
-            newUrl.searchParams.delete('status');
-        }
-        
-        window.history.replaceState({}, '', newUrl);
-    }
-
-    /**
-     * Handle filter changes - triggers full page reload for backend filtering
-     */
-    function handleFilterChange() {
-        const programVal = document.getElementById("programFilter").value;
-        const statusVal = document.getElementById("statusFilter").value;
-        
-        // Build new URL with filters
-        const newUrl = new URL(window.location.pathname, window.location.origin);
-        
-        if (programVal && programVal !== 'all') {
-            newUrl.searchParams.set('program', programVal);
-        }
-        
-        if (statusVal && statusVal !== 'all') {
-            newUrl.searchParams.set('status', statusVal);
-        }
-        
-        // Reload page with new filters
-        window.location.href = newUrl.toString();
-    }
-
-    // Initial filter application on page load (for any pre-loaded data)
-    applyFilters(urlProgram, urlStatus);
-
-    // Attach event listeners to both dropdowns
-    document.getElementById("programFilter").addEventListener("change", handleFilterChange);
-    document.getElementById("statusFilter").addEventListener("change", handleFilterChange);
-
-    // Debug: Log initial state
-    console.log('Enrollment filters initialized:', {
-        program: urlProgram,
-        status: urlStatus,
-        totalRows: document.querySelectorAll("#requestsTable tbody tr[data-status]").length
-    });
-</script>
-
-    <script src="{% static 'admin_functionalities/js/admin.js' %}"></script>
+    </script>
 </body>
+
 </html>
