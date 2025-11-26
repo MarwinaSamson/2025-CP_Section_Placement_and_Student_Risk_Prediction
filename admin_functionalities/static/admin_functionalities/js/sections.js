@@ -1,421 +1,3 @@
-// // Sample data for sections
-// const sectionsData = {
-//   STE: [
-//     {
-//       id: 1,
-//       name: "AKATSUKI",
-//       adviser: "Pain",
-//       location: "Bldg 1 Room 101",
-//       students: 35,
-//       maxStudents: 40,
-//       avatar: "{% static 'admin_functionalities/assets/kakashi.webp'%}",
-//     },
-//     {
-//       id: 2,
-//       name: "PHANTOM TROUPE",
-//       adviser: "Chrollo",
-//       location: "Bldg 1 Room 102",
-//       students: 38,
-//       maxStudents: 40,
-//       avatar: "{% static 'admin_functionalities/assets/secretary.png'%}",
-//     },
-//   ],
-//   SPFL: [
-//     {
-//       id: 3,
-//       name: "KONOHA",
-//       adviser: "Kakashi",
-//       location: "Bldg 2 Room 201",
-//       students: 30,
-//       maxStudents: 40,
-//       avatar: "../assets/spongebob.jpg",
-//     },
-//   ],
-//   SPTVE: [
-//     {
-//       id: 4,
-//       name: "UCHIHA",
-//       adviser: "Itachi",
-//       location: "Bldg 2 Room 202",
-//       students: 32,
-//       maxStudents: 40,
-//       avatar: "../assets/spongebob.jpg",
-//     },
-//   ],
-//   OHSP: [],
-//   SNED: [
-//     {
-//       id: 7,
-//       name: "SNED ALPHA",
-//       adviser: "Senku",
-//       location: "Bldg 3 Room 302",
-//       students: 25,
-//       maxStudents: 30,
-//       avatar: "../assets/spongebob.jpg",
-//     },
-//   ],
-//   TOP5: [
-//     {
-//       id: 5,
-//       name: "ELITE ALPHA",
-//       adviser: "Madara",
-//       location: "Bldg 3 Room 301",
-//       students: 40,
-//       maxStudents: 40,
-//       avatar: "../assets/spongebob.jpg",
-//     },
-//   ],
-//   REGULAR: [
-//     {
-//       id: 6,
-//       name: "REGULAR A",
-//       adviser: "Naruto",
-//       location: "Bldg 1 Room 103",
-//       students: 35,
-//       maxStudents: 40,
-//       avatar: "../assets/spongebob.jpg",
-//     },
-//   ],
-// }
-
-// let currentProgram = "STE"
-// let currentSectionForUpdate = null
-// let currentGradeLevel = "7"
-
-// // Initialize the page
-// document.addEventListener("DOMContentLoaded", () => {
-//   const urlParams = new URLSearchParams(window.location.search)
-//   const programParam = urlParams.get("program")
-
-//   if (programParam && sectionsData[programParam]) {
-//     currentProgram = programParam
-//     console.log("Switching to program from URL:", programParam)
-
-//     // Update active tab immediately
-//     document.querySelectorAll(".tab-btn").forEach((btn) => {
-//       btn.classList.remove("active")
-//     })
-//     const targetTab = document.querySelector(`[data-program="${programParam}"]`)
-//     if (targetTab) {
-//       targetTab.classList.add("active")
-//     }
-//   }
-
-//   loadSections(currentProgram)
-//   setupEventListeners()
-// })
-
-// function setupEventListeners() {
-//   // Tab switching
-//   document.querySelectorAll(".tab-btn").forEach((btn) => {
-//     btn.addEventListener("click", function () {
-//       const program = this.dataset.program
-//       switchProgram(program)
-//     })
-//   })
-
-//   const gradeLevelSelect = document.getElementById("gradeLevel")
-//   if (gradeLevelSelect) {
-//     gradeLevelSelect.addEventListener("change", function () {
-//       currentGradeLevel = this.value
-//       console.log("Grade level changed to:", currentGradeLevel)
-//       // You can add logic here to filter sections by grade level if needed
-//       // For now, just log the change
-//     })
-//   }
-
-//   // Close modals when clicking outside
-//   window.addEventListener("click", (event) => {
-//     if (event.target.classList.contains("modal")) {
-//       closeAllModals()
-//     }
-//   })
-
-//   // Form submissions
-//   document.getElementById("addSectionForm").addEventListener("submit", handleAddSection)
-//   document.getElementById("updateSectionForm").addEventListener("submit", handleUpdateSection)
-// }
-
-// function switchProgram(program) {
-//   // Update active tab
-//   document.querySelectorAll(".tab-btn").forEach((btn) => {
-//     btn.classList.remove("active")
-//   })
-//   document.querySelector(`[data-program="${program}"]`).classList.add("active")
-
-//   currentProgram = program
-//   loadSections(program)
-
-//   const newUrl = new URL(window.location)
-//   newUrl.searchParams.set("program", program)
-//   window.history.pushState({}, "", newUrl)
-// }
-
-// function loadSections(program) {
-//   const sectionsGrid = document.getElementById("sectionsGrid")
-//   const sections = sectionsData[program] || []
-
-//   if (sections.length === 0) {
-//     sectionsGrid.innerHTML = `
-//             <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #666;">
-//                 <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 15px; display: block;"></i>
-//                 <p>No sections found for ${program} program.</p>
-//                 <p>Click "Add Section" to create a new section.</p>
-//             </div>
-//         `
-//     return
-//   }
-
-//   sectionsGrid.innerHTML = sections
-//     .map(
-//       (section) => `
-//         <div class="section-card">
-//             <div class="section-header">
-//                 <div class="section-avatar">
-//                     <img src="${section.avatar}" alt="${section.name}">
-//                 </div>
-//                 <div class="section-info">
-//                     <h3>Section: ${section.name}</h3>
-//                     <p>Adviser: ${section.adviser}</p>
-//                     <p>Location: ${section.location}</p>
-//                 </div>
-//             </div>
-//             <div class="section-footer">
-//                 <div class="student-count">${section.students}/${section.maxStudents}</div>
-//                 <div class="section-menu">
-//                     <button class="menu-btn" onclick="toggleDropdown(${section.id})">
-//                         <i class="fas fa-ellipsis-v"></i>
-//                     </button>
-//                     <div class="dropdown-menu" id="dropdown-${section.id}">
-//                         <button class="dropdown-item" onclick="assignTeacher(${section.id})">
-//                             <i class="fas fa-user-plus"></i> Assign Teacher
-//                         </button>
-//                         <button class="dropdown-item" onclick="updateSection(${section.id})">
-//                             <i class="fas fa-edit"></i> Update
-//                         </button>
-//                         <button class="dropdown-item" onclick="deleteSection(${section.id})">
-//                             <i class="fas fa-trash"></i> Delete
-//                         </button>
-//                     </div>
-//                 </div>
-//             </div>
-//         </div>
-//     `,
-//     )
-//     .join("")
-// }
-
-// function toggleDropdown(sectionId) {
-//   // Close all other dropdowns
-//   document.querySelectorAll(".dropdown-menu").forEach((menu) => {
-//     if (menu.id !== `dropdown-${sectionId}`) {
-//       menu.classList.remove("show")
-//     }
-//   })
-
-//   // Toggle current dropdown
-//   const dropdown = document.getElementById(`dropdown-${sectionId}`)
-//   dropdown.classList.toggle("show")
-// }
-
-// // Close dropdowns when clicking elsewhere
-// document.addEventListener("click", (event) => {
-//   if (!event.target.closest(".section-menu")) {
-//     document.querySelectorAll(".dropdown-menu").forEach((menu) => {
-//       menu.classList.remove("show")
-//     })
-//   }
-// })
-
-// // Modal functions
-// function openAddSectionModal() {
-//   document.getElementById("addSectionModal").style.display = "block"
-// }
-
-// function closeAddSectionModal() {
-//   document.getElementById("addSectionModal").style.display = "none"
-//   document.getElementById("addSectionForm").reset()
-// }
-
-// function openSubjectTeacherModal(sectionId) {
-//   const section = findSectionById(sectionId)
-//   if (section) {
-//     document.getElementById("currentSection").textContent = section.name
-//     document.getElementById("currentAdviser").textContent = section.adviser
-//   }
-//   document.getElementById("addSubjectTeacherModal").style.display = "block"
-// }
-
-// function closeSubjectTeacherModal() {
-//   document.getElementById("addSubjectTeacherModal").style.display = "none"
-// }
-
-// function openUpdateSectionModal(sectionId) {
-//   const section = findSectionById(sectionId)
-//   if (section) {
-//     currentSectionForUpdate = section
-//     document.getElementById("updateSectionName").value = section.name
-//     document.getElementById("updateAdviserName").value = section.adviser
-//     document.getElementById("updateLocation").value = section.location
-//     document.getElementById("updateSectionModal").style.display = "block"
-//   }
-// }
-
-// function closeUpdateSectionModal() {
-//   document.getElementById("updateSectionModal").style.display = "none"
-//   document.getElementById("updateSectionForm").reset()
-//   currentSectionForUpdate = null
-// }
-
-// function closeAllModals() {
-//   document.querySelectorAll(".modal").forEach((modal) => {
-//     modal.style.display = "none"
-//   })
-// }
-
-// // Action functions
-// function assignTeacher(sectionId) {
-//   toggleDropdown(sectionId) // Close dropdown
-//   openSubjectTeacherModal(sectionId)
-// }
-
-// function updateSection(sectionId) {
-//   toggleDropdown(sectionId) // Close dropdown
-//   openUpdateSectionModal(sectionId)
-// }
-
-// function deleteSection(sectionId) {
-//   toggleDropdown(sectionId) // Close dropdown
-
-//   if (confirm("Are you sure you want to delete this section? This action cannot be undone.")) {
-//     // Remove section from data
-//     for (const program in sectionsData) {
-//       sectionsData[program] = sectionsData[program].filter((section) => section.id !== sectionId)
-//     }
-
-//     // Reload current program sections
-//     loadSections(currentProgram)
-
-//     // Show success message
-//     alert("Section deleted successfully!")
-//   }
-// }
-
-// // Form handlers
-// function handleAddSection(event) {
-//   event.preventDefault()
-
-//   const formData = new FormData(event.target)
-//   const newSection = {
-//     id: Date.now(), // Simple ID generation
-//     name: formData.get("sectionName"),
-//     adviser: formData.get("adviserName"),
-//     location: `Bldg ${formData.get("buildingNumber")} Room ${formData.get("roomNumber")}`,
-//     students: 0,
-//     maxStudents: 40,
-//     avatar: "../assets/spongebob.jpg",
-//   }
-
-//   // Add to current program
-//   if (!sectionsData[currentProgram]) {
-//     sectionsData[currentProgram] = []
-//   }
-//   sectionsData[currentProgram].push(newSection)
-
-//   // Reload sections and close modal
-//   loadSections(currentProgram)
-//   closeAddSectionModal()
-
-//   alert("Section added successfully!")
-// }
-
-// function handleUpdateSection(event) {
-//   event.preventDefault()
-
-//   if (!currentSectionForUpdate) return
-
-//   const formData = new FormData(event.target)
-
-//   // Update section data
-//   currentSectionForUpdate.name = formData.get("sectionName")
-//   currentSectionForUpdate.adviser = formData.get("adviserName")
-//   currentSectionForUpdate.location = formData.get("location")
-
-//   // Reload sections and close modal
-//   loadSections(currentProgram)
-//   closeUpdateSectionModal()
-
-//   alert("Section updated successfully!")
-// }
-
-// function saveSubjectTeachers() {
-//   // Here you would typically save the subject teacher assignments
-//   // For now, just show a success message
-//   alert("Subject teachers assigned successfully!")
-//   closeSubjectTeacherModal()
-// }
-
-// // Utility functions
-// function findSectionById(sectionId) {
-//   for (const program in sectionsData) {
-//     const section = sectionsData[program].find((s) => s.id === sectionId)
-//     if (section) return section
-//   }
-//   return null
-// }
-
-// function setupLogoutHandler() {
-//   const logoutBtn = document.querySelector(".logout-btn")
-//   if (logoutBtn) {
-//     logoutBtn.addEventListener("click", (e) => {
-//       e.preventDefault()
-//       handleLogout()
-//     })
-//   }
-// }
-
-// function handleLogout() {
-//   // Clear all session data
-//   localStorage.removeItem("isLoggedIn")
-//   localStorage.removeItem("username")
-//   localStorage.removeItem("loginTime")
-
-//   // Show notification and redirect
-//   showNotification("Logging out...", "info")
-
-//   setTimeout(() => {
-//     window.location.href = "logout.html"
-//   }, 1000)
-// }
-
-// function showNotification(message, type) {
-//   const container = document.getElementById("notificationContainer")
-
-//   if (!container) return
-
-//   // Create the notification element
-//   const notification = document.createElement("div")
-//   notification.className = `notification ${type}`
-//   notification.innerHTML = `
-//           <span>${message}</span>
-//           <button class="notification-close">&times;</button>
-//       `
-
-//   // Add a click event to the close button
-//   notification.querySelector(".notification-close").addEventListener("click", () => {
-//     notification.remove()
-//   })
-
-//   // Append to the container
-//   container.appendChild(notification)
-
-//   // Automatically remove the notification after 4 seconds
-//   setTimeout(() => {
-//     if (container.contains(notification)) {
-//       notification.remove()
-//     }
-//   }, 4000)
-// }
 
 // Global vars
 let currentProgram = 'STE';
@@ -425,6 +7,12 @@ let advisers = [];
 let subjectTeachers = [];
 let buildingsRooms = {};
 let sectionsCache = {};
+let currentSubjectProgram = 'STE';
+let subjectsByProgram = {};
+let currentEditingSubject = null;
+let programsCache = [];
+let currentEditingProgram = null;
+let schoolYears = [];
 
 // CSRF helper
 function getCookie(name) {
@@ -459,13 +47,734 @@ document.addEventListener('DOMContentLoaded', () => {
     Promise.all([
         fetchAdvisers().then(() => console.log('Advisers fetched')),
         fetchTeachers().then(() => console.log('Teachers fetched')),
-        fetchBuildingsRooms().then(() => console.log('Buildings/rooms fetched'))
+        fetchBuildingsRooms().then(() => console.log('Buildings/rooms fetched')),
+        loadAllProgramSubjects().then(() => console.log('Subjects loaded'))
     ]).then(() => {
         console.log('All data fetched successfully');
         loadSections(currentProgram);
         setupEventListeners();
     });
+     // Load school years for program form
+    loadSchoolYears();
+    
+    // Setup program form submission
+    const programForm = document.getElementById('programForm');
+    if (programForm) {
+        programForm.addEventListener('submit', handleProgramFormSubmit);
+    }
 });
+
+function loadSchoolYears() {
+    fetch(`${BASE_URL}api/school-years/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                schoolYears = data.school_years || [];
+                populateSchoolYearSelect();
+            }
+        })
+        .catch(error => console.error('Error loading school years:', error));
+}
+
+function populateSchoolYearSelect() {
+    const select = document.getElementById('programSchoolYear');
+    if (select) {
+        select.innerHTML = '<option value="">Select School Year</option>';
+        schoolYears.forEach(sy => {
+            const option = document.createElement('option');
+            option.value = sy.id;
+            option.textContent = sy.name;
+            if (sy.is_active) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
+    }
+}
+
+// Open Manage Programs Modal
+function openManageProgramsModal() {
+    console.log('Opening Manage Programs Modal');
+    const modal = document.getElementById('manageProgramsModal');
+    modal.style.display = 'flex';
+    document.body.classList.add('modal-open');
+    
+    loadAllPrograms();
+    cancelProgramForm();
+}
+
+// Close Manage Programs Modal
+function closeManageProgramsModal() {
+    const modal = document.getElementById('manageProgramsModal');
+    modal.style.display = 'none';
+    document.body.classList.remove('modal-open');
+    cancelProgramForm();
+}
+
+// Load All Programs
+function loadAllPrograms() {
+    console.log('Loading all programs');
+    
+    fetch(`${BASE_URL}api/programs/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                programsCache = data.programs || [];
+                renderProgramsTable(data.programs || []);
+            } else {
+                console.error('Failed to load programs:', data.error);
+                renderProgramsTable([]);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading programs:', error);
+            renderProgramsTable([]);
+        });
+}
+
+// Render Programs Table
+function renderProgramsTable(programs) {
+    const tableBody = document.getElementById('programsTableBody');
+    
+    if (programs.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-8">
+                    <div class="flex flex-col items-center gap-3">
+                        <i class="fas fa-inbox text-4xl text-gray-300"></i>
+                        <p class="text-gray-500 font-medium">No programs found</p>
+                        <button class="gradient-bg text-white px-4 py-2 rounded-lg text-sm" onclick="openAddProgramForm()">
+                            <i class="fas fa-plus mr-2"></i>Add First Program
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tableBody.innerHTML = programs.map((program, index) => `
+        <tr>
+            <td class="text-center font-semibold text-gray-600">${index + 1}</td>
+            <td class="subject-name">${program.name}</td>
+            <td class="text-gray-600 text-sm">${program.description || '<em class="text-gray-400">No description</em>'}</td>
+            <td class="font-medium text-gray-700">${program.school_year.name}</td>
+            <td class="text-center">
+                <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
+                    ${program.section_count}
+                </span>
+            </td>
+            <td class="text-center">
+                ${program.is_active 
+                    ? '<span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Active</span>'
+                    : '<span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-semibold">Inactive</span>'
+                }
+            </td>
+            <td>
+                <div class="flex gap-2 justify-center">
+                    <button 
+                        class="px-3 py-2 ${program.is_active ? 'bg-yellow-100 text-yellow-600 hover:bg-yellow-200' : 'bg-green-100 text-green-600 hover:bg-green-200'} rounded-lg transition-all duration-200 flex items-center gap-2"
+                        onclick="toggleProgramStatus(${program.id})"
+                        title="${program.is_active ? 'Deactivate' : 'Activate'} Program">
+                        <i class="fas fa-${program.is_active ? 'ban' : 'check-circle'}"></i>
+                    </button>
+                    <button 
+                        class="px-3 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-all duration-200 flex items-center gap-2"
+                        onclick="editProgram(${program.id})"
+                        title="Edit Program">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button 
+                        class="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-all duration-200 flex items-center gap-2"
+                        onclick="deleteProgram(${program.id})"
+                        title="Delete Program">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Open Add Program Form
+function openAddProgramForm() {
+    console.log('Opening Add Program Form');
+    document.getElementById('programFormContainer').style.display = 'block';
+    document.getElementById('programFormTitle').textContent = 'Add New Program';
+    document.getElementById('programForm').reset();
+    document.getElementById('programId').value = '';
+    document.getElementById('programIsActive').checked = true;
+    currentEditingProgram = null;
+    
+    populateSchoolYearSelect();
+    
+    document.getElementById('programFormContainer').scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'nearest' 
+    });
+}
+
+// Edit Program
+function editProgram(programId) {
+    console.log(`Editing program with ID: ${programId}`);
+    
+    const program = programsCache.find(p => p.id === programId);
+    
+    if (!program) {
+        alert('Program not found!');
+        return;
+    }
+    
+    currentEditingProgram = program;
+    
+    document.getElementById('programFormContainer').style.display = 'block';
+    document.getElementById('programFormTitle').textContent = 'Edit Program';
+    document.getElementById('programId').value = program.id;
+    document.getElementById('programName').value = program.name;
+    document.getElementById('programDescription').value = program.description || '';
+    document.getElementById('programIsActive').checked = program.is_active;
+    
+    populateSchoolYearSelect();
+    setTimeout(() => {
+        document.getElementById('programSchoolYear').value = program.school_year.id;
+    }, 100);
+    
+    document.getElementById('programFormContainer').scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'nearest' 
+    });
+}
+
+// Delete Program
+function deleteProgram(programId) {
+    console.log(`Deleting program with ID: ${programId}`);
+    
+    const program = programsCache.find(p => p.id === programId);
+    
+    if (!program) {
+        alert('Program not found!');
+        return;
+    }
+    
+    if (!confirm(`Are you sure you want to delete the program "${program.name}"? This action cannot be undone.`)) {
+        return;
+    }
+    
+    fetch(`${BASE_URL}api/programs/delete/${programId}/`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': CSRF_TOKEN
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            loadAllPrograms();
+            
+            // Reload program tabs if we're on sections page
+            if (typeof loadSections === 'function') {
+                location.reload(); // Reload page to update program tabs
+            }
+        } else {
+            alert(`Error: ${data.message}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting program:', error);
+        alert('An error occurred while deleting the program.');
+    });
+}
+
+// Toggle Program Status
+function toggleProgramStatus(programId) {
+    console.log(`Toggling status for program ID: ${programId}`);
+    
+    const program = programsCache.find(p => p.id === programId);
+    
+    if (!program) {
+        alert('Program not found!');
+        return;
+    }
+    
+    const action = program.is_active ? 'deactivate' : 'activate';
+    const confirmMsg = program.is_active 
+        ? `Deactivating "${program.name}" will hide it from the system. Continue?`
+        : `Activate program "${program.name}"?`;
+    
+    if (!confirm(confirmMsg)) {
+        return;
+    }
+    
+    fetch(`${BASE_URL}api/programs/toggle/${programId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': CSRF_TOKEN
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            loadAllPrograms();
+            
+            // Reload page to update program tabs
+            location.reload();
+        } else {
+            alert(`Error: ${data.message}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error toggling program status:', error);
+        alert('An error occurred while updating the program status.');
+    });
+}
+
+// Cancel Program Form
+function cancelProgramForm() {
+    document.getElementById('programFormContainer').style.display = 'none';
+    document.getElementById('programForm').reset();
+    currentEditingProgram = null;
+}
+
+// Handle Program Form Submit
+function handleProgramFormSubmit(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const programId = formData.get('program_id');
+    const isUpdate = !!programId;
+    
+    const url = isUpdate 
+        ? `${BASE_URL}api/programs/update/${programId}/`
+        : `${BASE_URL}api/programs/add/`;
+    
+    fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': CSRF_TOKEN
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            loadAllPrograms();
+            cancelProgramForm();
+            
+            // Reload page to update program tabs
+            if (isUpdate || !isUpdate) {
+                location.reload();
+            }
+        } else {
+            alert(`Error: ${data.message}\nDetails: ${JSON.stringify(data.errors)}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error saving program:', error);
+        alert('An error occurred while saving the program.');
+    });
+}
+
+// Initialize mock subjects data
+function loadAllProgramSubjects() {
+    const programs = ['STE', 'SPFL', 'SPTVE', 'OHSP', 'SNED', 'TOP5', 'HETERO'];
+    
+    return Promise.all(
+        programs.map(program => 
+            fetch(`${BASE_URL}api/subjects/${program}/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        subjectsByProgram[program] = data.subjects || [];
+                    }
+                })
+                .catch(error => console.error(`Error loading subjects for ${program}:`, error))
+        )
+    );
+}
+
+// Manage Subjects Modal Functions
+function openManageSubjectsModal() {
+    console.log('Opening Manage Subjects Modal');
+    const modal = document.getElementById('manageSubjectsModal');
+    modal.style.display = 'flex';
+    document.body.classList.add('modal-open');
+    
+    // Set first tab as active
+    currentSubjectProgram = 'STE';
+    updateSubjectProgramTabs('STE');
+    loadSubjectsForProgram('STE');
+}
+
+
+function closeManageSubjectsModal() {
+    const modal = document.getElementById('manageSubjectsModal');
+    modal.style.display = 'none';
+    document.body.classList.remove('modal-open');
+    cancelSubjectForm();
+}
+
+function switchSubjectProgram(program) {
+    console.log(`Switching subject program to: ${program}`);
+    currentSubjectProgram = program;
+    updateSubjectProgramTabs(program);
+    loadSubjectsForProgram(program);
+    cancelSubjectForm();
+}
+
+function updateSubjectProgramTabs(program) {
+    document.querySelectorAll('.subject-tab-btn').forEach(btn => {
+        btn.classList.remove('active', 'gradient-bg', 'text-white', 'border-red-700', 'shadow-lg');
+        btn.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
+    });
+    
+    const targetTab = document.querySelector(`.subject-tab-btn[data-subject-program="${program}"]`);
+    if (targetTab) {
+        targetTab.classList.add('active', 'gradient-bg', 'text-white', 'border-red-700', 'shadow-lg');
+        targetTab.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
+    }
+}
+
+function loadSubjectsForProgram(program) {
+    console.log(`Loading subjects for program: ${program}`);
+    
+    fetch(`${BASE_URL}api/subjects/${program}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                subjectsByProgram[program] = data.subjects || [];
+                renderSubjectsTable(data.subjects || []);
+            } else {
+                console.error('Failed to load subjects:', data.error);
+                renderSubjectsTable([]);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading subjects:', error);
+            renderSubjectsTable([]);
+        });
+}
+
+function renderSubjectsTable(subjects) {
+    const tableBody = document.getElementById('subjectsTableBody');
+    
+    if (subjects.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="4" class="text-center py-8">
+                    <div class="flex flex-col items-center gap-3">
+                        <i class="fas fa-inbox text-4xl text-gray-300"></i>
+                        <p class="text-gray-500 font-medium">No subjects found for ${currentSubjectProgram}</p>
+                        <button class="gradient-bg text-white px-4 py-2 rounded-lg text-sm" onclick="openAddSubjectForm()">
+                            <i class="fas fa-plus mr-2"></i>Add First Subject
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tableBody.innerHTML = subjects.map((subject, index) => `
+        <tr>
+            <td class="text-center font-semibold text-gray-600">${index + 1}</td>
+            <td class="subject-name">${subject.name}</td>
+            <td class="font-medium text-gray-600">${subject.code}</td>
+            <td>
+                <div class="flex gap-2 justify-center">
+                    <button 
+                        class="px-3 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-all duration-200 flex items-center gap-2"
+                        onclick="editSubject(${subject.id})"
+                        title="Edit Subject">
+                        <i class="fas fa-edit"></i>
+                        <span class="text-sm font-medium">Edit</span>
+                    </button>
+                    <button 
+                        class="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-all duration-200 flex items-center gap-2"
+                        onclick="deleteSubject(${subject.id})"
+                        title="Delete Subject">
+                        <i class="fas fa-trash"></i>
+                        <span class="text-sm font-medium">Delete</span>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function openAddSubjectForm() {
+    console.log('Opening Add Subject Form');
+    document.getElementById('subjectFormContainer').style.display = 'block';
+    document.getElementById('subjectFormTitle').textContent = 'Add New Subject';
+    document.getElementById('subjectForm').reset();
+    document.getElementById('subjectId').value = '';
+    document.getElementById('subjectProgramInput').value = currentSubjectProgram;
+    currentEditingSubject = null;
+    
+    document.getElementById('subjectFormContainer').scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'nearest' 
+    });
+}
+
+function editSubject(subjectId) {
+    console.log(`Editing subject with ID: ${subjectId}`);
+    
+    let subject = null;
+    for (const program in subjectsByProgram) {
+        subject = subjectsByProgram[program].find(s => s.id === subjectId);
+        if (subject) break;
+    }
+    
+    if (!subject) {
+        alert('Subject not found!');
+        return;
+    }
+    
+    currentEditingSubject = subject;
+    
+    document.getElementById('subjectFormContainer').style.display = 'block';
+    document.getElementById('subjectFormTitle').textContent = 'Edit Subject';
+    document.getElementById('subjectId').value = subject.id;
+    document.getElementById('subjectProgramInput').value = subject.program;
+    document.getElementById('subjectName').value = subject.name;
+    document.getElementById('subjectCode').value = subject.code;
+    
+    document.getElementById('subjectFormContainer').scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'nearest' 
+    });
+}
+
+function deleteSubject(subjectId) {
+    console.log(`Deleting subject with ID: ${subjectId}`);
+    
+    if (!confirm('Are you sure you want to delete this subject? This action cannot be undone.')) {
+        return;
+    }
+    
+    fetch(`${BASE_URL}api/subjects/delete/${subjectId}/`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': CSRF_TOKEN
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            loadSubjectsForProgram(currentSubjectProgram);
+        } else {
+            alert(`Error: ${data.message}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting subject:', error);
+        alert('An error occurred while deleting the subject.');
+    });
+}
+
+
+function cancelSubjectForm() {
+    document.getElementById('subjectFormContainer').style.display = 'none';
+    document.getElementById('subjectForm').reset();
+    currentEditingSubject = null;
+}
+
+// Add event listener for subject form submission
+document.addEventListener('DOMContentLoaded', () => {
+    const subjectForm = document.getElementById('subjectForm');
+    if (subjectForm) {
+        subjectForm.addEventListener('submit', handleSubjectFormSubmit);
+    }
+});
+
+function handleSubjectFormSubmit(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const subjectId = formData.get('subject_id');
+    const isUpdate = !!subjectId;
+    
+    // FIX: Don't set program in formData - let the backend handle it via URL
+    // Remove this line if it exists:
+    // formData.set('program', currentSubjectProgram);
+    
+    const url = isUpdate 
+        ? `${BASE_URL}api/subjects/update/${subjectId}/`
+        : `${BASE_URL}api/subjects/add/${currentSubjectProgram}/`;
+    
+    fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': CSRF_TOKEN
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            loadSubjectsForProgram(currentSubjectProgram);
+            cancelSubjectForm();
+        } else {
+            alert(`Error: ${data.message}\nDetails: ${JSON.stringify(data.errors)}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error saving subject:', error);
+        alert('An error occurred while saving the subject.');
+    });
+}
+
+
+// Update the openSubjectTeacherModal function to load subjects dynamically
+function openSubjectTeacherModal(sectionId) {
+    console.log('Opening Subject Teacher Modal for section ID:', sectionId);
+    const section = findSectionById(sectionId);
+    
+    if (section) {
+        document.getElementById('currentSection').textContent = section.name;
+        document.getElementById('currentAdviser').textContent = section.adviser;
+        
+        // Fetch and load subjects for this section's program
+        loadSubjectsForSection(sectionId);
+    }
+    
+    const modal = document.getElementById('addSubjectTeacherModal');
+    modal.style.display = 'flex';
+    document.body.classList.add('modal-open');
+}
+
+function loadSubjectsForSection(sectionId) {
+    fetch(`${BASE_URL}api/sections/${sectionId}/subjects/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                renderSectionSubjectsTable(data.subjects);
+                populateSubjectTeacherSelects();
+            } else {
+                console.error('Failed to load subjects:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading subjects:', error);
+        });
+}
+
+function renderSectionSubjectsTable(subjects) {
+    const tableBody = document.querySelector('#addSubjectTeacherModal .subject-table tbody');
+
+    if (subjects.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="4" class="text-center py-8">
+                    <p class="text-gray-500">No subjects available for this program.</p>
+                    <button class="text-red-600 hover:underline mt-2" onclick="closeSubjectTeacherModal(); openManageSubjectsModal();">
+                        <i class="fas fa-plus mr-1"></i>Add subjects first
+                    </button>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tableBody.innerHTML = subjects.map(subject => `
+        <tr>
+            <td class="subject-name">${subject.name}</td>
+            <td>
+                <select id="teacher_${subject.id}" name="teacher_${subject.id}" class="form-select" data-subject-id="${subject.id}">
+                    <option value="">Select Teacher</option>
+                </select>
+            </td>
+            <td>
+                <select id="day_${subject.id}" name="day_${subject.id}" class="form-select">
+                    <option value="DAILY">Daily</option>
+                    <option value="MWF">MWF</option>
+                    <option value="TTH">TTH</option>
+                </select>
+            </td>
+            <td>
+                <div class="time-inputs">
+                    <input type="time" id="time_${subject.id}" name="time_${subject.id}" class="form-input">
+                    <span class="time-separator">-</span>
+                    <input type="time" id="timeEnd_${subject.id}" name="timeEnd_${subject.id}" class="form-input">
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function loadSubjectsInAssignModal(program) {
+    console.log(`Loading subjects in assign modal for program: ${program}`);
+    const subjects = subjectsByProgram[program] || [];
+    const tableBody = document.querySelector('#addSubjectTeacherModal .subject-table tbody');
+    
+    if (subjects.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="4" class="text-center py-8">
+                    <p class="text-gray-500">No subjects available for ${program} program.</p>
+                    <button class="text-red-600 hover:underline mt-2" onclick="closeSubjectTeacherModal(); openManageSubjectsModal();">
+                        <i class="fas fa-plus mr-1"></i>Add subjects first
+                    </button>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    // Generate table rows for each subject
+    tableBody.innerHTML = subjects.map(subject => {
+        const subjectKey = subject.code.toLowerCase().replace(/[^a-z0-9]/g, '');
+        return `
+            <tr>
+                <td class="subject-name">${subject.name}</td>
+                <td>
+                    <select id="${subjectKey}Teacher" name="${subjectKey}Teacher" class="form-select">
+                        <option value="">Select Teacher</option>
+                    </select>
+                </td>
+                <td>
+                    <select id="${subjectKey}Day" name="${subjectKey}Day" class="form-select">
+                        <option value="DAILY">Daily</option>
+                        <option value="MWF">MWF</option>
+                        <option value="TTH">TTH</option>
+                    </select>
+                </td>
+                <td>
+                    <div class="time-inputs">
+                        <input type="time" id="${subjectKey}Time" name="${subjectKey}Time" class="form-input">
+                        <span class="time-separator">-</span>
+                        <input type="time" id="${subjectKey}TimeEnd" name="${subjectKey}TimeEnd" class="form-input">
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+    
+    // Populate teacher dropdowns after creating the rows
+    setTimeout(() => populateSubjectTeacherSelects(), 100);
+}
+
+// Add CSS for the subject tab buttons
+const subjectTabStyle = document.createElement('style');
+subjectTabStyle.textContent = `
+    .subject-tab-btn.active {
+        background: linear-gradient(135deg, #c41e3a 0%, #a01729 100%);
+        color: white;
+        border-color: #c41e3a;
+        box-shadow: 0 4px 12px rgba(196, 30, 58, 0.3);
+    }
+    
+    .subject-program-tabs {
+        border-bottom: 2px solid #f1f5f9;
+        padding-bottom: 20px;
+    }
+`;
+document.head.appendChild(subjectTabStyle);
 
 function setupEventListeners() {
     console.log('Setting up event listeners');
@@ -1021,39 +1330,35 @@ function openSectionMasterlist(sectionId) {
 
 function handleAssignSubjectTeachers(event) {
     event.preventDefault();
-    
+
     if (!currentSectionForUpdate) {
         alert('No section selected. Please try again.');
         return;
     }
-    
+
     const assignments = [];
-    const subjectMapping = {
-        'math': 'MATHEMATICS',
-        'english': 'ENGLISH',
-        'science': 'SCIENCE',
-        'filipino': 'FILIPINO',
-        'arpan': 'ARALING_PANLIPUNAN',
-        'mapeh': 'MAPEH',
-        'esp': 'EDUKASYON_SA_PAGPAPAKATAO'
-    };
-    
-    for (const [prefix, subjectName] of Object.entries(subjectMapping)) {
-        const teacherSelect = document.getElementById(`${prefix}Teacher`);
-        const daySelect = document.getElementById(`${prefix}Day`);
-        const startTime = document.getElementById(`${prefix}Time`);
-        const endTime = document.getElementById(`${prefix}TimeEnd`);
-        
-        if (teacherSelect && daySelect && startTime && endTime && teacherSelect.value) {
-            assignments.push({
-                subject: subjectName,
-                teacher_id: teacherSelect.value,
-                day: daySelect.value,
-                start_time: startTime.value,
-                end_time: endTime.value
-            });
+    const teacherSelects = document.querySelectorAll('[data-subject-id]');
+
+    teacherSelects.forEach(select => {
+        const subjectId = select.dataset.subjectId;
+        const teacherId = select.value;
+
+        if (teacherId) {
+            const day = document.getElementById(`day_${subjectId}`).value;
+            const startTime = document.getElementById(`time_${subjectId}`).value;
+            const endTime = document.getElementById(`timeEnd_${subjectId}`).value;
+
+            if (day && startTime && endTime) {
+                assignments.push({
+                    subject_id: subjectId,
+                    teacher_id: teacherId,
+                    day: day,
+                    start_time: startTime,
+                    end_time: endTime
+                });
+            }
         }
-    }
+    });
 
     if (assignments.length === 0) {
         alert('No assignments to save. Please select at least one teacher.');
@@ -1066,17 +1371,16 @@ function handleAssignSubjectTeachers(event) {
             'Content-Type': 'application/json',
             'X-CSRFToken': CSRF_TOKEN
         },
-        body: JSON.stringify({assignments})
+        body: JSON.stringify({ assignments })
     })
     .then(response => response.json())
     .then(data => {
-        console.log('Assign subject teachers response:', data);
         if (data.success) {
             alert(data.message);
             closeSubjectTeacherModal();
             loadSections(currentProgram);
         } else {
-            alert(`Error: ${data.message}\nDetails: ${JSON.stringify(data.errors)}`);
+            alert(`Error: ${data.message}`);
         }
     })
     .catch(error => {
@@ -1188,3 +1492,5 @@ function findSectionById(sectionId) {
     }
     return null;
 }
+
+

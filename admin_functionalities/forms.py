@@ -1,7 +1,7 @@
 from django import forms
 from .models import StudentRequirements, Section, SectionSubjectAssignment
 from django.contrib.auth import get_user_model
-from .models import Teacher, AddUserLog, ChangeHistory
+from .models import Teacher, AddUserLog, ChangeHistory, Subject, SchoolYear, Program
 from django.core.exceptions import ValidationError
 
 
@@ -113,17 +113,21 @@ class AddUserForm(forms.ModelForm):
             raise ValidationError("Username cannot be the same as the email address.")
         return cleaned_data
 
-    def save(self, commit=True, created_by_user=None):
+    def save(self, commit=True, created_by_user=None): 
         user = super().save(commit=False)
         user.is_superuser = self.cleaned_data.get('admin_access', False)
         user.is_staff_expert = self.cleaned_data.get('staff_expert_access', False)
         user.is_subject_teacher = self.cleaned_data.get('subject_teacher_access', False)
         user.is_adviser = self.cleaned_data.get('adviser_access', False)
         user.set_password(self.cleaned_data['password'])  # Set the temporary password
-        if 'userImage' in self.cleaned_data:  # Handle userImage
-            user.profile_photo = self.cleaned_data['userImage']  # Assuming your model has profile_photo
+
+        if 'userImage' in self.cleaned_data and self.cleaned_data['userImage']:
+            user.profile_photo = self.cleaned_data['userImage']
+
         if commit:
             user.save()
+            
+            # Create a detailed AddUserLog entry to record who created the user
             if created_by_user:
                 AddUserLog.objects.create(
                     user=created_by_user,
@@ -137,30 +141,11 @@ class AddUserForm(forms.ModelForm):
                     is_subject_teacher=user.is_subject_teacher,
                     is_adviser=user.is_adviser
                 )
-        return user
-    def save(self, commit=True, created_by_user=None): 
-        user = super().save(commit=False)
-        user.is_superuser = self.cleaned_data.get('admin_access', False)
-        user.is_staff_expert = self.cleaned_data.get('staff_expert_access', False)
-        user.is_subject_teacher = self.cleaned_data.get('subject_teacher_access', False)
-        user.is_adviser = self.cleaned_data.get('adviser_access', False)
-        user.set_password(self.cleaned_data['password'])  # Set the temporary password
-
-        if 'userImage' in self.cleaned_data:
-            user.profile_photo = self.cleaned_data['userImage']
-
-        if commit:
-            user.save()
-
-        # ✅ Create a simple AddUserLog entry to record who created the user
-            if created_by_user:
-                AddUserLog.objects.create(user=created_by_user)
 
         return user
 
 
 
-User = get_user_model()
 
 User = get_user_model()
 
@@ -246,3 +231,125 @@ class SectionSubjectAssignmentForm(forms.ModelForm):
             self.instance.section = section
         # Limit teachers to subject teachers (CustomUser)
         self.fields['teacher'].queryset = User.objects.filter(is_subject_teacher=True).order_by('last_name', 'first_name')
+        
+class SubjectForm(forms.ModelForm):
+    """Form for creating/updating subjects"""
+    
+    class Meta:
+        model = Subject
+        fields = ['subject_name', 'subject_code', 'description', 'display_order']
+        widgets = {
+            'subject_name': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'e.g., Advanced Mathematics'
+            }),
+            'subject_code': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'e.g., MATH-101'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-input',
+                'rows': 3,
+                'placeholder': 'Optional description'
+            }),
+            'display_order': forms.NumberInput(attrs={
+                'class': 'form-input',
+                'min': 0
+            }),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        # Accept program from the view
+        program = kwargs.pop('program', None)
+        super().__init__(*args, **kwargs)
+
+        # Make order optional
+        self.fields['display_order'].required = False
+
+        # FIX: Set program on instance early, BEFORE validation
+        if program:
+            self.instance.program = program
+
+    def clean_subject_code(self):
+        subject_code = self.cleaned_data.get('subject_code')
+        program = self.instance.program  # Program is always set now
+
+        if not program:
+            raise forms.ValidationError('Program is required.')
+
+        qs = Subject.objects.filter(
+            subject_code=subject_code,
+            program=program
+        )
+
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+
+        if qs.exists():
+            raise forms.ValidationError(
+                f'Subject code "{subject_code}" already exists for this program.'
+            )
+
+        return subject_code
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+
+        # Program is already set properly in __init__
+        if commit:
+            instance.save()
+
+        return instance
+
+    
+class ProgramForm(forms.ModelForm):
+    """Form for creating and updating programs."""
+    
+    class Meta:
+        model = Program
+        fields = ['name', 'description', 'school_year', 'is_active']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'e.g., STE, SPFL, SPTVE'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-input',
+                'placeholder': 'Optional description of the program',
+                'rows': 3
+            }),
+            'school_year': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+            'is_active': forms.CheckboxInput(attrs={
+                'class': 'form-checkbox'
+            })
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Only show active school years in dropdown
+        self.fields['school_year'].queryset = SchoolYear.objects.filter(is_active=True)
+        
+        # Set default to current active school year if creating new
+        if not self.instance.pk:
+            current_sy = SchoolYear.objects.filter(is_active=True).first()
+            if current_sy:
+                self.fields['school_year'].initial = current_sy
+    
+    def clean_name(self):
+        """Validate program name to be uppercase and unique."""
+        name = self.cleaned_data.get('name', '').strip().upper()
+        
+        if not name:
+            raise forms.ValidationError("Program name is required.")
+        
+        # Check for duplicates (excluding current instance if updating)
+        existing = Program.objects.filter(name=name)
+        if self.instance.pk:
+            existing = existing.exclude(pk=self.instance.pk)
+        
+        if existing.exists():
+            raise forms.ValidationError(f"Program '{name}' already exists.")
+        
+        return name

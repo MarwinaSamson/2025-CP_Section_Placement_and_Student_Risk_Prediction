@@ -5,7 +5,6 @@ from django.db import models
 import json
 from django.utils import timezone
 from enrollmentprocess.models import Student
-from admin_functionalities.models import Teacher, Subject, Section, SchoolYear
 from django.core.validators import MinValueValidator, MaxValueValidator
 from datetime import date, datetime
 
@@ -47,7 +46,7 @@ class Intervention(models.Model):
         verbose_name="Student"
     )
     created_by = models.ForeignKey(
-        Teacher,
+        'admin_functionalities.Teacher',
         on_delete=models.CASCADE,
         related_name='created_interventions',
         verbose_name="Created By (Adviser)"
@@ -63,7 +62,7 @@ class Intervention(models.Model):
     )
     
     subject = models.ForeignKey(
-        Subject,
+        'admin_functionalities.Subject',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -205,7 +204,7 @@ class InterventionUpdate(models.Model):
     
     # Metadata
     created_by = models.ForeignKey(
-        Teacher,
+        'admin_functionalities.Teacher',
         on_delete=models.CASCADE,
         related_name='intervention_updates',
         verbose_name="Updated By",
@@ -279,19 +278,19 @@ class InterventionPlan(models.Model):
         verbose_name="Student"
     )
     section = models.ForeignKey(
-        Section,
+        'admin_functionalities.Section',
         on_delete=models.CASCADE,
         related_name='intervention_plans',
         verbose_name="Section"
     )
     subject = models.ForeignKey(
-        Subject,
+        'admin_functionalities.Subject',
         on_delete=models.CASCADE,
         related_name='intervention_plans',
         verbose_name="Subject"
     )
     created_by = models.ForeignKey(
-        Teacher,
+        'admin_functionalities.Teacher',
         on_delete=models.CASCADE,
         related_name='created_intervention_plans',
         verbose_name="Created By"
@@ -304,7 +303,7 @@ class InterventionPlan(models.Model):
         verbose_name="Quarter"
     )
     school_year = models.ForeignKey(
-        SchoolYear,
+        'admin_functionalities.SchoolYear',
         on_delete=models.CASCADE,
         related_name='intervention_plans',
         verbose_name="School Year"
@@ -538,7 +537,7 @@ class InterventionAction(models.Model):
     
     # Who handled this
     handled_by = models.ForeignKey(
-        Teacher,
+        'admin_functionalities.Teacher',
         on_delete=models.CASCADE,
         related_name='handled_intervention_actions',
         verbose_name="Handled By"
@@ -592,7 +591,7 @@ class InterventionNote(models.Model):
     )
     
     created_by = models.ForeignKey(
-        Teacher,
+        'admin_functionalities.Teacher',
         on_delete=models.CASCADE,
         related_name='intervention_notes',
         verbose_name="Created By"
@@ -631,19 +630,19 @@ class ClassRecord(models.Model):
     
     # Core Information
     teacher = models.ForeignKey(
-        Teacher,
+         'admin_functionalities.Teacher',
         on_delete=models.CASCADE,
         related_name='class_records',
         verbose_name="Teacher"
     )
     subject = models.ForeignKey(
-        Subject,
+         'admin_functionalities.Subject',
         on_delete=models.CASCADE,
         related_name='class_records',
         verbose_name="Subject"
     )
     section = models.ForeignKey(
-        Section,
+         'admin_functionalities.Section',
         on_delete=models.CASCADE,
         related_name='class_records',
         verbose_name="Section"
@@ -944,13 +943,13 @@ class GradeSummary(models.Model):
         verbose_name="Student"
     )
     subject = models.ForeignKey(
-        Subject,
+         'admin_functionalities.Subject',
         on_delete=models.CASCADE,
         related_name='grade_summaries',
         verbose_name="Subject"
     )
     section = models.ForeignKey(
-        Section,
+         'admin_functionalities.Section',
         on_delete=models.CASCADE,
         related_name='grade_summaries',
         verbose_name="Section"
@@ -1054,14 +1053,14 @@ class AdviserMasterlist(models.Model):
     
     # Core Information
     adviser = models.ForeignKey(
-        Teacher,
+         'admin_functionalities.Teacher',
         on_delete=models.CASCADE,
         related_name='masterlist_sections',
         limit_choices_to={'is_adviser': True},
         verbose_name="Adviser"
     )
     section = models.ForeignKey(
-        Section,
+         'admin_functionalities.Section',
         on_delete=models.CASCADE,
         related_name='masterlist_records',
         verbose_name="Section"
@@ -1401,7 +1400,7 @@ class MasterlistNote(models.Model):
     
     # Who created the note
     created_by = models.ForeignKey(
-        Teacher,
+         'admin_functionalities.Teacher',
         on_delete=models.SET_NULL,
         null=True,
         related_name='masterlist_notes',
@@ -1435,20 +1434,20 @@ class AttendanceRecord(models.Model):
     
     # Core Information
     section = models.ForeignKey(
-        Section,
+        'admin_functionalities.Section',
         on_delete=models.CASCADE,
         related_name='attendance_records',
         verbose_name="Section"
     )
     teacher = models.ForeignKey(
-        Teacher,
+         'admin_functionalities.Teacher',
         on_delete=models.CASCADE,
         related_name='attendance_records',
         verbose_name="Teacher (Adviser)",
         help_text="Teacher who manages this attendance record"
     )
     school_year = models.ForeignKey(
-        SchoolYear,
+        'admin_functionalities.SchoolYear',
         on_delete=models.CASCADE,
         related_name='attendance_records',
         verbose_name="School Year"
@@ -1854,7 +1853,7 @@ class AttendanceHistory(models.Model):
     
     # Who and When
     modified_by = models.ForeignKey(
-        Teacher,
+        'admin_functionalities.Teacher',
         on_delete=models.SET_NULL,
         null=True,
         related_name='attendance_history',

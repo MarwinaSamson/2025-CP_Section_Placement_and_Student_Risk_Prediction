@@ -17,7 +17,7 @@ else:
             "ENGINE": "django.db.backends.postgresql",
             "NAME": "SPARK_db",        
             "USER": "postgres",        
-            "PASSWORD": "05172003", 
+            "PASSWORD": "011304", 
             "HOST": "localhost",            
             "PORT": "5432",                 
         }

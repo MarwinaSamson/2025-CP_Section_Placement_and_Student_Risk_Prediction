@@ -45,46 +45,199 @@
 # ]
 
     
-# admin_functionalities/urls.py (RECOMMENDED VERSION - No Conflicts)
+# # admin_functionalities/urls.py (RECOMMENDED VERSION - No Conflicts)
+# from django.urls import path
+# from . import views
+
+# app_name = 'admin_functionalities'
+
+# urlpatterns = [
+#     # Dashboard
+#     path('admin-dashboard/', views.admin_dashboard, name='admin-dashboard'),
+    
+#     # Enrollment Management
+#     path('enrollment/', views.enrollment_view, name='enrollment'),
+#     path('enrollment/student/<int:student_id>/edit/', views.student_edit_view, name='student_edit'),
+    
+#     # Notifications
+#     path('mark-read/', views.mark_notification_read, name='mark_notification_read'),
+    
+#     # ============ ALL SETTINGS RELATED PATHS ============
+#     path('settings/', views.settings_view, name='settings'),
+#     path('settings/add-user/', views.AddUserView.as_view(), name='add_user'),
+#     path('settings/get-users/', views.get_users_data, name='get_users_data'),
+#     path('settings/get-logs/', views.get_logs_data, name='get_logs_data'),
+#     path('settings/user/<int:user_id>/profile/', views.get_user_profile, name='get_user_profile'),
+    
+#     # ============ ALL SECTIONS RELATED PATHS ============
+#     path('sections/', views.sections_view, name='sections'),  # Main sections page
+    
+#     # AJAX endpoints for sections
+#     path('api/get-teachers/', views.get_teachers, name='get_teachers'),  # FIXED: Moved to /api/
+#     path('api/buildings-rooms/', views.get_buildings_rooms, name='get_buildings_rooms'),  # FIXED: Moved to /api/
+    
+#     # Section CRUD operations
+#     path('sections/<str:program>/', views.get_sections_by_program, name='get_sections_by_program'),
+#     path('sections/add/<str:program>/', views.add_section, name='add_section'),
+#     path('sections/update/<int:section_id>/', views.update_section, name='update_section'),
+#     path('sections/delete/<int:section_id>/', views.delete_section, name='delete_section'),
+#     path('sections/assign-subjects/<int:section_id>/', views.assign_subject_teachers, name='assign_subject_teachers'),
+#     path('sections/<int:section_id>/masterlist/', views.section_masterlist, name='section_masterlist'),
+#     path('api/get-subject-teachers/', views.get_subject_teachers, name='get_subject_teachers'),
+    
+#     # ============ ALL TEACHERS RELATED PATHS ============
+#     path('teachers/', views.teachers_view, name='teachers'),  # Teachers management page
+# ]
+
+# admin_functionalities/urls.py
+"""
+URL Configuration for Admin Functionalities
+All imports are explicit to show which module each view comes from.
+"""
+
 from django.urls import path
-from . import views
+
+# Dashboard views
+from .views.dashboard_views import admin_dashboard
+
+# Enrollment views
+from .views.enrollment_views import (
+    enrollment_view,
+    mark_notification_read,
+)
+
+# Student views
+from .views.student_views import (
+    student_edit_view,
+    StudentAcademicUpdateView,
+)
+
+# Settings views
+from .views.settings_views import (
+    AddUserView,
+    settings_view,
+    get_users_data,
+    get_logs_data,
+    get_user_profile,
+)
+
+# Section views
+from .views.section_views import (
+    sections_view,
+    get_teachers,
+    get_subject_teachers,
+    get_buildings_rooms,
+    get_sections_by_program,
+    add_section,
+    update_section,
+    delete_section,
+    get_section_students,
+    assign_subject_teachers,
+    section_masterlist,
+    get_section_subjects, 
+    delete_subject, 
+    update_subject,
+    add_subject, 
+    get_subjects_by_program,
+    get_all_programs,
+    add_program,
+    update_program,
+    delete_program,
+    toggle_program_status,
+    get_school_years
+)
+
+# Teacher views
+from .views.teacher_views import teachers_view
 
 app_name = 'admin_functionalities'
 
 urlpatterns = [
-    # Dashboard
-    path('admin-dashboard/', views.admin_dashboard, name='admin-dashboard'),
+    # ============================================================================
+    # DASHBOARD
+    # ============================================================================
+    path('admin-dashboard/', admin_dashboard, name='admin-dashboard'),
     
-    # Enrollment Management
-    path('enrollment/', views.enrollment_view, name='enrollment'),
-    path('enrollment/student/<int:student_id>/edit/', views.student_edit_view, name='student_edit'),
+    # ============================================================================
+    # ENROLLMENT MANAGEMENT
+    # ============================================================================
+    path('enrollment/', enrollment_view, name='enrollment'),
+    path('enrollment/student/<int:student_id>/edit/', student_edit_view, name='student_edit'),
     
-    # Notifications
-    path('mark-read/', views.mark_notification_read, name='mark_notification_read'),
+    # ============================================================================
+    # NOTIFICATIONS
+    # ============================================================================
+    path('mark-read/', mark_notification_read, name='mark_notification_read'),
     
-    # ============ ALL SETTINGS RELATED PATHS ============
-    path('settings/', views.settings_view, name='settings'),
-    path('settings/add-user/', views.AddUserView.as_view(), name='add_user'),
-    path('settings/get-users/', views.get_users_data, name='get_users_data'),
-    path('settings/get-logs/', views.get_logs_data, name='get_logs_data'),
-    path('settings/user/<int:user_id>/profile/', views.get_user_profile, name='get_user_profile'),
+    # ============================================================================
+    # SETTINGS & USER MANAGEMENT
+    # ============================================================================
+    path('settings/', settings_view, name='settings'),
+    path('settings/add-user/', AddUserView.as_view(), name='add_user'),
+    path('settings/get-users/', get_users_data, name='get_users_data'),
+    path('settings/get-logs/', get_logs_data, name='get_logs_data'),
+    path('settings/user/<int:user_id>/profile/', get_user_profile, name='get_user_profile'),
     
-    # ============ ALL SECTIONS RELATED PATHS ============
-    path('sections/', views.sections_view, name='sections'),  # Main sections page
+    # ============================================================================
+    # SECTIONS MANAGEMENT
+    # ============================================================================
+    # Main page
+    path('sections/', sections_view, name='sections'),
     
-    # AJAX endpoints for sections
-    path('api/get-teachers/', views.get_teachers, name='get_teachers'),  # FIXED: Moved to /api/
-    path('api/buildings-rooms/', views.get_buildings_rooms, name='get_buildings_rooms'),  # FIXED: Moved to /api/
+    # AJAX/API endpoints
+    path('api/get-teachers/', get_teachers, name='get_teachers'),
+    path('api/get-subject-teachers/', get_subject_teachers, name='get_subject_teachers'),
+    path('api/buildings-rooms/', get_buildings_rooms, name='get_buildings_rooms'),
     
     # Section CRUD operations
-    path('sections/<str:program>/', views.get_sections_by_program, name='get_sections_by_program'),
-    path('sections/add/<str:program>/', views.add_section, name='add_section'),
-    path('sections/update/<int:section_id>/', views.update_section, name='update_section'),
-    path('sections/delete/<int:section_id>/', views.delete_section, name='delete_section'),
-    path('sections/assign-subjects/<int:section_id>/', views.assign_subject_teachers, name='assign_subject_teachers'),
-    path('sections/<int:section_id>/masterlist/', views.section_masterlist, name='section_masterlist'),
-    path('api/get-subject-teachers/', views.get_subject_teachers, name='get_subject_teachers'),
+    path('sections/<str:program>/', get_sections_by_program, name='get_sections_by_program'),
+    path('sections/add/<str:program>/', add_section, name='add_section'),
+    path('sections/update/<int:section_id>/', update_section, name='update_section'),
+    path('sections/delete/<int:section_id>/', delete_section, name='delete_section'),
+    path('sections/<int:section_id>/students/', get_section_students, name='get_section_students'),
+    path('sections/<int:section_id>/masterlist/', section_masterlist, name='section_masterlist'),
+    path('sections/assign-subjects/<int:section_id>/', assign_subject_teachers, name='assign_subject_teachers'),
     
-    # ============ ALL TEACHERS RELATED PATHS ============
-    path('teachers/', views.teachers_view, name='teachers'),  # Teachers management page
+    # ============================================================================
+    # TEACHERS MANAGEMENT
+    # ============================================================================
+    path('teachers/', teachers_view, name='teachers'),
+    
+    # Subject Management URLs
+    path('api/subjects/<str:program>/', 
+         get_subjects_by_program, 
+         name='get_subjects_by_program'),
+    
+    path('api/subjects/add/<str:program>/', 
+         add_subject, 
+         name='add_subject'),
+    
+    path('api/subjects/update/<int:subject_id>/', 
+         update_subject, 
+         name='update_subject'),
+    
+    path('api/subjects/delete/<int:subject_id>/', 
+         delete_subject, 
+         name='delete_subject'),
+    
+    path('api/sections/<int:section_id>/subjects/', 
+         get_section_subjects, 
+         name='get_section_subjects'),
+    
+    # Program Management URLs
+    path('api/programs/', get_all_programs, name='get_all_programs'),
+    path('api/programs/add/', add_program, name='add_program'),
+    path('api/programs/update/<int:program_id>/', update_program, name='update_program'),
+    path('api/programs/delete/<int:program_id>/', delete_program, name='delete_program'),
+    path('api/programs/toggle/<int:program_id>/', toggle_program_status, name='toggle_program_status'),
+    path('api/school-years/', get_school_years, name='get_school_years'),
+    
+    # ============================================================================
+    # STUDENT ACADEMIC (Class-based view)
+    # ============================================================================
+    path('student/<int:student_id>/academic/update/', 
+         StudentAcademicUpdateView.as_view(), 
+         name='student_academic_update'),
+    
+    
 ]
