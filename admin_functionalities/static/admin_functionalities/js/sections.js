@@ -10,6 +10,9 @@ let sectionsCache = {};
 let currentSubjectProgram = 'STE';
 let subjectsByProgram = {};
 let currentEditingSubject = null;
+let programsCache = [];
+let currentEditingProgram = null;
+let schoolYears = [];
 
 // CSRF helper
 function getCookie(name) {
@@ -51,7 +54,328 @@ document.addEventListener('DOMContentLoaded', () => {
         loadSections(currentProgram);
         setupEventListeners();
     });
+     // Load school years for program form
+    loadSchoolYears();
+    
+    // Setup program form submission
+    const programForm = document.getElementById('programForm');
+    if (programForm) {
+        programForm.addEventListener('submit', handleProgramFormSubmit);
+    }
 });
+
+function loadSchoolYears() {
+    fetch(`${BASE_URL}api/school-years/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                schoolYears = data.school_years || [];
+                populateSchoolYearSelect();
+            }
+        })
+        .catch(error => console.error('Error loading school years:', error));
+}
+
+function populateSchoolYearSelect() {
+    const select = document.getElementById('programSchoolYear');
+    if (select) {
+        select.innerHTML = '<option value="">Select School Year</option>';
+        schoolYears.forEach(sy => {
+            const option = document.createElement('option');
+            option.value = sy.id;
+            option.textContent = sy.name;
+            if (sy.is_active) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
+    }
+}
+
+// Open Manage Programs Modal
+function openManageProgramsModal() {
+    console.log('Opening Manage Programs Modal');
+    const modal = document.getElementById('manageProgramsModal');
+    modal.style.display = 'flex';
+    document.body.classList.add('modal-open');
+    
+    loadAllPrograms();
+    cancelProgramForm();
+}
+
+// Close Manage Programs Modal
+function closeManageProgramsModal() {
+    const modal = document.getElementById('manageProgramsModal');
+    modal.style.display = 'none';
+    document.body.classList.remove('modal-open');
+    cancelProgramForm();
+}
+
+// Load All Programs
+function loadAllPrograms() {
+    console.log('Loading all programs');
+    
+    fetch(`${BASE_URL}api/programs/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                programsCache = data.programs || [];
+                renderProgramsTable(data.programs || []);
+            } else {
+                console.error('Failed to load programs:', data.error);
+                renderProgramsTable([]);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading programs:', error);
+            renderProgramsTable([]);
+        });
+}
+
+// Render Programs Table
+function renderProgramsTable(programs) {
+    const tableBody = document.getElementById('programsTableBody');
+    
+    if (programs.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-8">
+                    <div class="flex flex-col items-center gap-3">
+                        <i class="fas fa-inbox text-4xl text-gray-300"></i>
+                        <p class="text-gray-500 font-medium">No programs found</p>
+                        <button class="gradient-bg text-white px-4 py-2 rounded-lg text-sm" onclick="openAddProgramForm()">
+                            <i class="fas fa-plus mr-2"></i>Add First Program
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tableBody.innerHTML = programs.map((program, index) => `
+        <tr>
+            <td class="text-center font-semibold text-gray-600">${index + 1}</td>
+            <td class="subject-name">${program.name}</td>
+            <td class="text-gray-600 text-sm">${program.description || '<em class="text-gray-400">No description</em>'}</td>
+            <td class="font-medium text-gray-700">${program.school_year.name}</td>
+            <td class="text-center">
+                <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
+                    ${program.section_count}
+                </span>
+            </td>
+            <td class="text-center">
+                ${program.is_active 
+                    ? '<span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Active</span>'
+                    : '<span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-semibold">Inactive</span>'
+                }
+            </td>
+            <td>
+                <div class="flex gap-2 justify-center">
+                    <button 
+                        class="px-3 py-2 ${program.is_active ? 'bg-yellow-100 text-yellow-600 hover:bg-yellow-200' : 'bg-green-100 text-green-600 hover:bg-green-200'} rounded-lg transition-all duration-200 flex items-center gap-2"
+                        onclick="toggleProgramStatus(${program.id})"
+                        title="${program.is_active ? 'Deactivate' : 'Activate'} Program">
+                        <i class="fas fa-${program.is_active ? 'ban' : 'check-circle'}"></i>
+                    </button>
+                    <button 
+                        class="px-3 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-all duration-200 flex items-center gap-2"
+                        onclick="editProgram(${program.id})"
+                        title="Edit Program">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button 
+                        class="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-all duration-200 flex items-center gap-2"
+                        onclick="deleteProgram(${program.id})"
+                        title="Delete Program">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Open Add Program Form
+function openAddProgramForm() {
+    console.log('Opening Add Program Form');
+    document.getElementById('programFormContainer').style.display = 'block';
+    document.getElementById('programFormTitle').textContent = 'Add New Program';
+    document.getElementById('programForm').reset();
+    document.getElementById('programId').value = '';
+    document.getElementById('programIsActive').checked = true;
+    currentEditingProgram = null;
+    
+    populateSchoolYearSelect();
+    
+    document.getElementById('programFormContainer').scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'nearest' 
+    });
+}
+
+// Edit Program
+function editProgram(programId) {
+    console.log(`Editing program with ID: ${programId}`);
+    
+    const program = programsCache.find(p => p.id === programId);
+    
+    if (!program) {
+        alert('Program not found!');
+        return;
+    }
+    
+    currentEditingProgram = program;
+    
+    document.getElementById('programFormContainer').style.display = 'block';
+    document.getElementById('programFormTitle').textContent = 'Edit Program';
+    document.getElementById('programId').value = program.id;
+    document.getElementById('programName').value = program.name;
+    document.getElementById('programDescription').value = program.description || '';
+    document.getElementById('programIsActive').checked = program.is_active;
+    
+    populateSchoolYearSelect();
+    setTimeout(() => {
+        document.getElementById('programSchoolYear').value = program.school_year.id;
+    }, 100);
+    
+    document.getElementById('programFormContainer').scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'nearest' 
+    });
+}
+
+// Delete Program
+function deleteProgram(programId) {
+    console.log(`Deleting program with ID: ${programId}`);
+    
+    const program = programsCache.find(p => p.id === programId);
+    
+    if (!program) {
+        alert('Program not found!');
+        return;
+    }
+    
+    if (!confirm(`Are you sure you want to delete the program "${program.name}"? This action cannot be undone.`)) {
+        return;
+    }
+    
+    fetch(`${BASE_URL}api/programs/delete/${programId}/`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': CSRF_TOKEN
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            loadAllPrograms();
+            
+            // Reload program tabs if we're on sections page
+            if (typeof loadSections === 'function') {
+                location.reload(); // Reload page to update program tabs
+            }
+        } else {
+            alert(`Error: ${data.message}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting program:', error);
+        alert('An error occurred while deleting the program.');
+    });
+}
+
+// Toggle Program Status
+function toggleProgramStatus(programId) {
+    console.log(`Toggling status for program ID: ${programId}`);
+    
+    const program = programsCache.find(p => p.id === programId);
+    
+    if (!program) {
+        alert('Program not found!');
+        return;
+    }
+    
+    const action = program.is_active ? 'deactivate' : 'activate';
+    const confirmMsg = program.is_active 
+        ? `Deactivating "${program.name}" will hide it from the system. Continue?`
+        : `Activate program "${program.name}"?`;
+    
+    if (!confirm(confirmMsg)) {
+        return;
+    }
+    
+    fetch(`${BASE_URL}api/programs/toggle/${programId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': CSRF_TOKEN
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            loadAllPrograms();
+            
+            // Reload page to update program tabs
+            location.reload();
+        } else {
+            alert(`Error: ${data.message}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error toggling program status:', error);
+        alert('An error occurred while updating the program status.');
+    });
+}
+
+// Cancel Program Form
+function cancelProgramForm() {
+    document.getElementById('programFormContainer').style.display = 'none';
+    document.getElementById('programForm').reset();
+    currentEditingProgram = null;
+}
+
+// Handle Program Form Submit
+function handleProgramFormSubmit(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const programId = formData.get('program_id');
+    const isUpdate = !!programId;
+    
+    const url = isUpdate 
+        ? `${BASE_URL}api/programs/update/${programId}/`
+        : `${BASE_URL}api/programs/add/`;
+    
+    fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': CSRF_TOKEN
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            loadAllPrograms();
+            cancelProgramForm();
+            
+            // Reload page to update program tabs
+            if (isUpdate || !isUpdate) {
+                location.reload();
+            }
+        } else {
+            alert(`Error: ${data.message}\nDetails: ${JSON.stringify(data.errors)}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error saving program:', error);
+        alert('An error occurred while saving the program.');
+    });
+}
 
 // Initialize mock subjects data
 function loadAllProgramSubjects() {
@@ -273,6 +597,10 @@ function handleSubjectFormSubmit(event) {
     const formData = new FormData(event.target);
     const subjectId = formData.get('subject_id');
     const isUpdate = !!subjectId;
+    
+    // FIX: Don't set program in formData - let the backend handle it via URL
+    // Remove this line if it exists:
+    // formData.set('program', currentSubjectProgram);
     
     const url = isUpdate 
         ? `${BASE_URL}api/subjects/update/${subjectId}/`

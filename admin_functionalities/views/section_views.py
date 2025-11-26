@@ -10,6 +10,7 @@ from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Count
 from django.http import JsonResponse
 from django.db import models
 
@@ -20,7 +21,7 @@ from admin_functionalities.models import (
     Program,
     Subject
 )
-from admin_functionalities.forms import SectionForm, SubjectForm
+from admin_functionalities.forms import SectionForm, SubjectForm, ProgramForm
 from admin_functionalities.utils import log_activity
 from enrollmentprocess.models import SectionPlacement, Student
 from django.contrib.auth import get_user_model
@@ -521,6 +522,7 @@ def add_subject(request, program):
                 'message': f'Program "{program_name}" does not exist.'
             }, status=400)
         
+        # Pass program instance to form
         form = SubjectForm(request.POST, program=program_instance)
         
         if form.is_valid():
@@ -709,3 +711,282 @@ def get_section_subjects(request, section_id):
             'error': str(e)
         }, status=500)
 
+# Manage program@login_required
+@require_http_methods(["GET"])
+def get_school_years(request):
+    """
+    Fetch all school years for dropdown selections.
+    """
+    try:
+        from admin_functionalities.models import SchoolYear
+        
+        school_years = SchoolYear.objects.all().order_by('-start_date')
+        
+        school_years_data = []
+        for sy in school_years:
+            school_years_data.append({
+                'id': sy.id,
+                'name': str(sy),
+                'start_date': sy.start_date.strftime('%Y-%m-%d'),
+                'end_date': sy.end_date.strftime('%Y-%m-%d'),
+                'is_active': sy.is_active
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'school_years': school_years_data
+        })
+        
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"ERROR in get_school_years: {error_details}")
+        
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+# Program management@login_required
+@require_http_methods(["GET"])
+def get_all_programs(request):
+    """
+    Fetch all programs with section counts.
+    """
+    try:
+        programs = Program.objects.annotate(
+            section_count=Count('sections', distinct=True)
+        ).order_by('name')
+        
+        programs_data = []
+        for program in programs:
+            programs_data.append({
+                'id': program.id,
+                'name': program.name,
+                'description': program.description,
+                'school_year': {
+                    'id': program.school_year.id,
+                    'name': str(program.school_year)
+                },
+                'is_active': program.is_active,
+                'section_count': program.section_count,
+                'created_at': program.created_at.strftime('%Y-%m-%d'),
+                'updated_at': program.updated_at.strftime('%Y-%m-%d')
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'programs': programs_data
+        })
+        
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"ERROR in get_all_programs: {error_details}")
+        
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def add_program(request):
+    """
+    Add a new program.
+    """
+    try:
+        form = ProgramForm(request.POST)
+        
+        if form.is_valid():
+            program = form.save()
+            
+            log_activity(
+                request.user,
+                "Programs",
+                f"Added new program: {program.name}"
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Program "{program.name}" added successfully!',
+                'program': {
+                    'id': program.id,
+                    'name': program.name,
+                    'description': program.description,
+                    'school_year': {
+                        'id': program.school_year.id,
+                        'name': str(program.school_year)
+                    },
+                    'is_active': program.is_active,
+                    'section_count': 0
+                }
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'message': 'Validation failed. Please check the form fields.',
+                'errors': form.errors
+            }, status=400)
+            
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"ERROR in add_program: {error_details}")
+        
+        return JsonResponse({
+            'success': False,
+            'message': f'Error adding program: {str(e)}'
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def update_program(request, program_id):
+    """
+    Update an existing program.
+    """
+    try:
+        program = get_object_or_404(Program, id=program_id)
+        
+        form = ProgramForm(request.POST, instance=program)
+        
+        if form.is_valid():
+            updated_program = form.save()
+            
+            log_activity(
+                request.user,
+                "Programs",
+                f"Updated program: {updated_program.name}"
+            )
+            
+            # Get section count
+            section_count = Section.objects.filter(program=updated_program).count()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Program "{updated_program.name}" updated successfully!',
+                'program': {
+                    'id': updated_program.id,
+                    'name': updated_program.name,
+                    'description': updated_program.description,
+                    'school_year': {
+                        'id': updated_program.school_year.id,
+                        'name': str(updated_program.school_year)
+                    },
+                    'is_active': updated_program.is_active,
+                    'section_count': section_count
+                }
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'message': 'Validation failed',
+                'errors': form.errors
+            }, status=400)
+            
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"ERROR in update_program: {error_details}")
+        
+        return JsonResponse({
+            'success': False,
+            'message': f'Error updating program: {str(e)}'
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["DELETE"])
+def delete_program(request, program_id):
+    """
+    Delete a program.
+    Checks if program has active sections before deleting.
+    """
+    try:
+        program = get_object_or_404(Program, id=program_id)
+        program_name = program.name
+        
+        # Check if program has active sections
+        sections = Section.objects.filter(program=program, is_active=True)
+        
+        if sections.exists():
+            section_names = [s.name for s in sections[:5]]
+            section_list = ", ".join(section_names)
+            more_text = f" and {sections.count() - 5} more" if sections.count() > 5 else ""
+            
+            return JsonResponse({
+                'success': False,
+                'message': f'Cannot delete "{program_name}". It has active sections: {section_list}{more_text}. Please remove or deactivate these sections first.'
+            }, status=400)
+        
+        # Check if program has any sections (active or inactive)
+        all_sections = Section.objects.filter(program=program)
+        if all_sections.exists():
+            return JsonResponse({
+                'success': False,
+                'message': f'Cannot delete "{program_name}". It has {all_sections.count()} section(s) in the database. Please remove all sections first or contact the system administrator.'
+            }, status=400)
+        
+        program.delete()
+        
+        log_activity(
+            request.user,
+            "Programs",
+            f"Deleted program: {program_name}"
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Program "{program_name}" deleted successfully!'
+        })
+        
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"ERROR in delete_program: {error_details}")
+        
+        return JsonResponse({
+            'success': False,
+            'message': f'Error deleting program: {str(e)}'
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def toggle_program_status(request, program_id):
+    """
+    Toggle program active status (activate/deactivate).
+    """
+    try:
+        program = get_object_or_404(Program, id=program_id)
+        
+        if program.is_active:
+            program.deactivate()
+            status = "deactivated"
+        else:
+            program.activate()
+            status = "activated"
+        
+        log_activity(
+            request.user,
+            "Programs",
+            f"{status.capitalize()} program: {program.name}"
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Program "{program.name}" {status} successfully!',
+            'program': {
+                'id': program.id,
+                'name': program.name,
+                'is_active': program.is_active
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error toggling program status: {str(e)}'
+        }, status=500)

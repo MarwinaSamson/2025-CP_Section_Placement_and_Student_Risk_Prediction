@@ -1,7 +1,7 @@
 from django import forms
 from .models import StudentRequirements, Section, SectionSubjectAssignment
 from django.contrib.auth import get_user_model
-from .models import Teacher, AddUserLog, ChangeHistory, Subject
+from .models import Teacher, AddUserLog, ChangeHistory, Subject, SchoolYear, Program
 from django.core.exceptions import ValidationError
 
 
@@ -237,7 +237,7 @@ class SubjectForm(forms.ModelForm):
     
     class Meta:
         model = Subject
-        fields = ['subject_name', 'subject_code', 'program', 'description', 'display_order']
+        fields = ['subject_name', 'subject_code', 'description', 'display_order']
         widgets = {
             'subject_name': forms.TextInput(attrs={
                 'class': 'form-input',
@@ -259,33 +259,97 @@ class SubjectForm(forms.ModelForm):
         }
     
     def __init__(self, *args, **kwargs):
+        # Accept program from the view
         program = kwargs.pop('program', None)
         super().__init__(*args, **kwargs)
-        
+
+        # Make order optional
+        self.fields['display_order'].required = False
+
+        # FIX: Set program on instance early, BEFORE validation
         if program:
             self.instance.program = program
-            self.fields['program'].widget = forms.HiddenInput()
-            self.fields['program'].initial = program
-        
-        # Make display_order optional with default
-        self.fields['display_order'].required = False
-    
+
     def clean_subject_code(self):
         subject_code = self.cleaned_data.get('subject_code')
-        program = self.cleaned_data.get('program') or self.instance.program
-        
-        # Check for duplicate subject code within the same program
+        program = self.instance.program  # Program is always set now
+
+        if not program:
+            raise forms.ValidationError('Program is required.')
+
         qs = Subject.objects.filter(
             subject_code=subject_code,
             program=program
         )
-        
+
         if self.instance.pk:
             qs = qs.exclude(pk=self.instance.pk)
-        
+
         if qs.exists():
             raise forms.ValidationError(
                 f'Subject code "{subject_code}" already exists for this program.'
             )
-        
+
         return subject_code
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+
+        # Program is already set properly in __init__
+        if commit:
+            instance.save()
+
+        return instance
+
+    
+class ProgramForm(forms.ModelForm):
+    """Form for creating and updating programs."""
+    
+    class Meta:
+        model = Program
+        fields = ['name', 'description', 'school_year', 'is_active']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'e.g., STE, SPFL, SPTVE'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-input',
+                'placeholder': 'Optional description of the program',
+                'rows': 3
+            }),
+            'school_year': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+            'is_active': forms.CheckboxInput(attrs={
+                'class': 'form-checkbox'
+            })
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Only show active school years in dropdown
+        self.fields['school_year'].queryset = SchoolYear.objects.filter(is_active=True)
+        
+        # Set default to current active school year if creating new
+        if not self.instance.pk:
+            current_sy = SchoolYear.objects.filter(is_active=True).first()
+            if current_sy:
+                self.fields['school_year'].initial = current_sy
+    
+    def clean_name(self):
+        """Validate program name to be uppercase and unique."""
+        name = self.cleaned_data.get('name', '').strip().upper()
+        
+        if not name:
+            raise forms.ValidationError("Program name is required.")
+        
+        # Check for duplicates (excluding current instance if updating)
+        existing = Program.objects.filter(name=name)
+        if self.instance.pk:
+            existing = existing.exclude(pk=self.instance.pk)
+        
+        if existing.exists():
+            raise forms.ValidationError(f"Program '{name}' already exists.")
+        
+        return name

@@ -559,6 +559,13 @@
 
                         <button
                             class="gradient-bg text-white px-6 py-3 rounded-xl flex items-center gap-3 hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-semibold shadow-lg"
+                            onclick="openManageProgramsModal()">
+                            <i class="fas fa-graduation-cap text-lg"></i>
+                            Manage Programs
+                        </button>
+
+                        <button
+                            class="gradient-bg text-white px-6 py-3 rounded-xl flex items-center gap-3 hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-semibold shadow-lg"
                             onclick="openManageSubjectsModal()">
                             <i class="fas fa-book text-lg"></i>
                             Manage Subjects
@@ -1178,6 +1185,109 @@
 
             <div class="modal-footer">
                 <button type="button" class="btn btn-back" onclick="closeManageSubjectsModal()">
+                    <i class="fas fa-arrow-left"></i>
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manage Programs Modal - Add before closing </body> tag -->
+    <div id="manageProgramsModal" class="modal">
+        <div class="modal-content subject-teacher-modal" style="max-width: 1400px !important;">
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <h2 class="modal-title">Manage Programs</h2>
+                <p class="modal-subtitle">Add, update, or delete educational programs</p>
+            </div>
+
+            <div class="modal-body">
+                <!-- Add Program Button -->
+                <div class="flex justify-end mb-4">
+                    <button
+                        class="gradient-bg text-white px-5 py-2 rounded-xl flex items-center gap-2 hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-semibold"
+                        onclick="openAddProgramForm()">
+                        <i class="fas fa-plus-circle"></i>
+                        Add Program
+                    </button>
+                </div>
+
+                <!-- Programs Table -->
+                <div class="subject-table-container">
+                    <table class="subject-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">#</th>
+                                <th>Program Name</th>
+                                <th>Description</th>
+                                <th>School Year</th>
+                                <th style="width: 120px;">Sections</th>
+                                <th style="width: 100px;">Status</th>
+                                <th style="width: 200px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="programsTableBody">
+                            <!-- Programs will be dynamically loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Add/Edit Program Form (Hidden by default) -->
+                <div id="programFormContainer" style="display: none; margin-top: 25px;">
+                    <div class="section-info-banner">
+                        <div class="section-info-text">
+                            <span id="programFormTitle">Add New Program</span>
+                        </div>
+                    </div>
+
+                    <form id="programForm">
+                        {% csrf_token %}
+                        <input type="hidden" id="programId" name="program_id">
+
+                        <div class="form-group">
+                            <label for="programName" class="form-label">Program Name</label>
+                            <input type="text" id="programName" name="name" placeholder="e.g., STE, SPFL, SPTVE" required class="form-input">
+                            <p class="text-xs text-gray-500 mt-1">Program name will be automatically converted to uppercase</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="programDescription" class="form-label">Description (Optional)</label>
+                            <textarea id="programDescription" name="description" placeholder="Brief description of the program" class="form-input" rows="3"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="programSchoolYear" class="form-label">School Year</label>
+                            <select id="programSchoolYear" name="school_year" required class="form-select">
+                                <option value="">Select School Year</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="programIsActive" name="is_active" checked class="form-checkbox w-5 h-5 text-red-600 rounded focus:ring-2 focus:ring-red-500">
+                                <span class="form-label mb-0">Active Program</span>
+                            </label>
+                            <p class="text-xs text-gray-500 mt-1">Only active programs will be displayed in the system</p>
+                        </div>
+
+                        <div class="flex justify-center gap-3 mt-4">
+                            <button type="button" class="btn btn-back" onclick="cancelProgramForm()">
+                                <i class="fas fa-times"></i>
+                                Cancel
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i>
+                                Save Program
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-back" onclick="closeManageProgramsModal()">
                     <i class="fas fa-arrow-left"></i>
                     Close
                 </button>

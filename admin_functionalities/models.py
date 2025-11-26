@@ -314,7 +314,11 @@ SUBJECT_CHOICES = [
 
 # This is for section table
 class Section(models.Model):
-    program = models.ForeignKey('Program', on_delete=models.CASCADE)
+    program = models.ForeignKey(
+    'admin_functionalities.Program',
+    on_delete=models.CASCADE,
+    related_name='sections'
+   )
     name = models.CharField(max_length=255)
     adviser = models.ForeignKey(
         'Teacher',
