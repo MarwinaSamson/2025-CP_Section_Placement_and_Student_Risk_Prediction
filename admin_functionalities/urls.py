@@ -134,6 +134,11 @@ from .views.section_views import (
     get_section_students,
     assign_subject_teachers,
     section_masterlist,
+    get_section_subjects, 
+    delete_subject, 
+    update_subject,
+    add_subject, 
+    get_subjects_by_program,
 )
 
 # Teacher views
@@ -192,10 +197,33 @@ urlpatterns = [
     # ============================================================================
     path('teachers/', teachers_view, name='teachers'),
     
+    # Subject Management URLs
+    path('api/subjects/<str:program>/', 
+         get_subjects_by_program, 
+         name='get_subjects_by_program'),
+    
+    path('api/subjects/add/<str:program>/', 
+         add_subject, 
+         name='add_subject'),
+    
+    path('api/subjects/update/<int:subject_id>/', 
+         update_subject, 
+         name='update_subject'),
+    
+    path('api/subjects/delete/<int:subject_id>/', 
+         delete_subject, 
+         name='delete_subject'),
+    
+    path('api/sections/<int:section_id>/subjects/', 
+         get_section_subjects, 
+         name='get_section_subjects'),
+    
     # ============================================================================
     # STUDENT ACADEMIC (Class-based view)
     # ============================================================================
     path('student/<int:student_id>/academic/update/', 
          StudentAcademicUpdateView.as_view(), 
          name='student_academic_update'),
+    
+    
 ]

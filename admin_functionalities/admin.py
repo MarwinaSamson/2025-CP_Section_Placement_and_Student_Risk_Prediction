@@ -1,12 +1,13 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, Notification, StudentRequirements
 from .forms import StudentRequirementsForm
 from teacher.models import (
     Intervention,
     InterventionUpdate,
     
 )
+
+from .models import CustomUser, Notification, StudentRequirements, SchoolYear
 
 
 

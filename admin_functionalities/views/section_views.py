@@ -18,8 +18,9 @@ from admin_functionalities.models import (
     Teacher, 
     SectionSubjectAssignment,
     Program,
+    Subject
 )
-from admin_functionalities.forms import SectionForm
+from admin_functionalities.forms import SectionForm, SubjectForm
 from admin_functionalities.utils import log_activity
 from enrollmentprocess.models import SectionPlacement, Student
 from django.contrib.auth import get_user_model
@@ -374,54 +375,47 @@ def section_masterlist(request, section_id):
 @csrf_exempt
 @require_http_methods(["POST"])
 def assign_subject_teachers(request, section_id):
-    """Assigns teachers to subjects within a section."""
+    """
+    Assigns teachers to subjects within a section.
+    Now works with Subject model instead of hardcoded subjects.
+    """
     try:
         section = Section.objects.get(id=section_id)
     except Section.DoesNotExist:
-        return JsonResponse({'success': False, 'message': 'Section not found.'}, status=404)
+        return JsonResponse({
+            'success': False,
+            'message': 'Section not found.'
+        }, status=404)
 
     try:
         body = json.loads(request.body)
         assignments = body.get('assignments', [])
     except json.JSONDecodeError:
-        return JsonResponse({'success': False, 'message': 'Invalid JSON data.'}, status=400)
-
-    subject_department_map = {
-        'MATHEMATICS': 'Mathematics',
-        'ENGLISH': 'English',
-        'SCIENCE': 'Science',
-        'FILIPINO': 'Filipino',
-        'ARALING_PANLIPUNAN': 'Social Studies',
-        'MAPEH': 'MAPEH',
-        'EDUKASYON_SA_PAGPAPAKATAO': 'Values Education',
-    }
+        return JsonResponse({
+            'success': False,
+            'message': 'Invalid JSON data.'
+        }, status=400)
 
     created_count = 0
+    updated_count = 0
+    
     for a in assignments:
-        subject = a.get('subject')
+        subject_id = a.get('subject_id')
         teacher_id = a.get('teacher_id')
         day = a.get('day')
         start_time = a.get('start_time')
         end_time = a.get('end_time')
 
-        if not (subject and teacher_id and day and start_time and end_time):
-            return JsonResponse({'success': False, 'message': 'Missing required fields.'}, status=400)
+        if not (subject_id and teacher_id and day and start_time and end_time):
+            continue  # Skip incomplete assignments
 
         try:
+            subject = Subject.objects.get(id=subject_id, is_active=True)
             teacher = Teacher.objects.get(id=teacher_id, is_active=True)
-        except Teacher.DoesNotExist:
-            return JsonResponse({'success': False, 'message': f'Teacher with ID {teacher_id} not found.'}, status=404)
+        except (Subject.DoesNotExist, Teacher.DoesNotExist):
+            continue  # Skip if subject or teacher not found
 
-        required_department = subject_department_map.get(subject)
-        if not required_department:
-            return JsonResponse({'success': False, 'message': f'Invalid subject: {subject}'}, status=400)
-
-        if teacher.department != required_department:
-            return JsonResponse({
-                'success': False,
-                'message': f'{teacher.full_name} belongs to {teacher.department} department, not {required_department}.'
-            }, status=400)
-
+        # Check for scheduling conflicts
         conflicts = SectionSubjectAssignment.objects.filter(
             teacher=teacher,
             day=day,
@@ -433,24 +427,285 @@ def assign_subject_teachers(request, section_id):
             conflict_section = conflicts.first().section
             return JsonResponse({
                 'success': False,
-                'message': f'{teacher.full_name} already has a class ({subject}) in section {conflict_section.name} at that time.'
+                'message': f'{teacher.full_name} already has a class in section {conflict_section.name} at that time.'
             }, status=400)
 
         assignment, created = SectionSubjectAssignment.objects.update_or_create(
             section=section,
             subject=subject,
             defaults={
-                'teacher': teacher.user if teacher.user else None,
+                'teacher': teacher,
                 'day': day,
                 'start_time': start_time,
                 'end_time': end_time
             }
         )
-        created_count += 1 if created else 0
         
-    log_activity(request.user, "Sections", f"Assigned subject teachers to section {section.name}")
+        if created:
+            created_count += 1
+        else:
+            updated_count += 1
+    
+    log_activity(
+        request.user,
+        "Sections",
+        f"Assigned/updated {created_count + updated_count} subject teacher(s) to section {section.name}"
+    )
 
     return JsonResponse({
         'success': True,
-        'message': f'Successfully assigned {created_count} subject teacher(s).'
+        'message': f'Successfully assigned {created_count} and updated {updated_count} subject teacher(s).'
     }, status=200)
+    
+@login_required
+@require_http_methods(["GET"])
+def get_subjects_by_program(request, program):
+    """
+    Fetch all subjects for a specific program.
+    Used by the Manage Subjects modal.
+    """
+    try:
+        program_name = program.upper()
+        
+        try:
+            program_instance = Program.objects.get(name=program_name, is_active=True)
+        except Program.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': f'Program "{program_name}" not found or inactive'
+            }, status=404)
+        
+        subjects = Subject.objects.filter(
+            program=program_instance,
+            is_active=True
+        ).order_by('display_order', 'subject_name')
+        
+        subjects_data = [{
+            'id': subject.id,
+            'name': subject.subject_name,
+            'code': subject.subject_code,
+            'description': subject.description,
+            'display_order': subject.display_order,
+            'program': program_name
+        } for subject in subjects]
+        
+        return JsonResponse({
+            'success': True,
+            'subjects': subjects_data,
+            'program': program_name
+        })
+        
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"ERROR in get_subjects_by_program: {error_details}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+        
+@login_required
+@require_http_methods(["POST"])
+def add_subject(request, program):
+    """
+    Add a new subject to a specific program.
+    """
+    try:
+        program_name = program.upper()
+        
+        try:
+            program_instance = Program.objects.get(name=program_name, is_active=True)
+        except Program.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'message': f'Program "{program_name}" does not exist.'
+            }, status=400)
+        
+        form = SubjectForm(request.POST, program=program_instance)
+        
+        if form.is_valid():
+            subject = form.save(commit=False)
+            subject.program = program_instance
+            
+            # Set display_order if not provided
+            if not subject.display_order:
+                max_order = Subject.objects.filter(
+                    program=program_instance
+                ).aggregate(models.Max('display_order'))['display_order__max']
+                subject.display_order = (max_order or 0) + 1
+            
+            subject.save()
+            
+            log_activity(
+                request.user,
+                "Subjects",
+                f"Added subject {subject.subject_name} to {program_name} program"
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Subject "{subject.subject_name}" added successfully!',
+                'subject': {
+                    'id': subject.id,
+                    'name': subject.subject_name,
+                    'code': subject.subject_code,
+                    'description': subject.description,
+                    'display_order': subject.display_order,
+                    'program': program_name
+                }
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'message': 'Validation failed. Please check the form fields.',
+                'errors': form.errors
+            }, status=400)
+            
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"ERROR in add_subject: {error_details}")
+        
+        return JsonResponse({
+            'success': False,
+            'message': f'Error adding subject: {str(e)}'
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def update_subject(request, subject_id):
+    """
+    Update an existing subject.
+    """
+    try:
+        subject = get_object_or_404(Subject, id=subject_id)
+        original_program = subject.program
+        
+        form = SubjectForm(request.POST, instance=subject, program=original_program)
+        
+        if form.is_valid():
+            updated_subject = form.save(commit=False)
+            updated_subject.program = original_program  # Ensure program doesn't change
+            updated_subject.save()
+            
+            log_activity(
+                request.user,
+                "Subjects",
+                f"Updated subject {updated_subject.subject_name} in {original_program.name}"
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Subject "{updated_subject.subject_name}" updated successfully!',
+                'subject': {
+                    'id': updated_subject.id,
+                    'name': updated_subject.subject_name,
+                    'code': updated_subject.subject_code,
+                    'description': updated_subject.description,
+                    'display_order': updated_subject.display_order,
+                    'program': original_program.name
+                }
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'message': 'Validation failed',
+                'errors': form.errors
+            }, status=400)
+            
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"ERROR in update_subject: {error_details}")
+        
+        return JsonResponse({
+            'success': False,
+            'message': f'Error updating subject: {str(e)}'
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["DELETE"])
+def delete_subject(request, subject_id):
+    """
+    Delete a subject.
+    Checks if subject is assigned to any sections before deleting.
+    """
+    try:
+        subject = get_object_or_404(Subject, id=subject_id)
+        subject_name = subject.subject_name
+        program_name = subject.program.name
+        
+        # Check if subject is assigned to any sections
+        assignments = SectionSubjectAssignment.objects.filter(subject=subject)
+        
+        if assignments.exists():
+            sections = [a.section.name for a in assignments[:5]]
+            section_list = ", ".join(sections)
+            more_text = f" and {assignments.count() - 5} more" if assignments.count() > 5 else ""
+            
+            return JsonResponse({
+                'success': False,
+                'message': f'Cannot delete "{subject_name}". It is currently assigned to sections: {section_list}{more_text}. Please remove these assignments first.'
+            }, status=400)
+        
+        subject.delete()
+        
+        log_activity(
+            request.user,
+            "Subjects",
+            f"Deleted subject {subject_name} from {program_name} program"
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Subject "{subject_name}" deleted successfully!'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error deleting subject: {str(e)}'
+        }, status=500)
+        
+@login_required
+@require_http_methods(["GET"])
+def get_section_subjects(request, section_id):
+    """
+    Get all subjects for a section's program.
+    Used when opening the Assign Teacher modal.
+    """
+    try:
+        section = get_object_or_404(Section, id=section_id)
+        program = section.program
+        
+        subjects = Subject.get_subjects_for_program(program)
+        
+        subjects_data = [{
+            'id': subject.id,
+            'name': subject.subject_name,
+            'code': subject.subject_code,
+            'key': subject.subject_code.lower().replace('-', '').replace(' ', '')
+        } for subject in subjects]
+        
+        return JsonResponse({
+            'success': True,
+            'subjects': subjects_data,
+            'section': {
+                'id': section.id,
+                'name': section.name,
+                'program': program.name
+            }
+        })
+        
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"ERROR in get_section_subjects: {error_details}")
+        
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+

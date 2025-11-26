@@ -132,7 +132,7 @@ def adviser_masterlist(request):
         
         'has_advisory_class': True,
         'advisory_section': advisory_section,
-        'program': advisory_section.get_program_display(),
+        'program': advisory_section.program.name,
         'program_code': advisory_section.program,
         'section_name': advisory_section.name,
         'full_section_name': f"{advisory_section.program}-{advisory_section.name}",

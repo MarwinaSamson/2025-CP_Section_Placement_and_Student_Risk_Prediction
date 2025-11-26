@@ -7,6 +7,9 @@ let advisers = [];
 let subjectTeachers = [];
 let buildingsRooms = {};
 let sectionsCache = {};
+let currentSubjectProgram = 'STE';
+let subjectsByProgram = {};
+let currentEditingSubject = null;
 
 // CSRF helper
 function getCookie(name) {
@@ -41,13 +44,409 @@ document.addEventListener('DOMContentLoaded', () => {
     Promise.all([
         fetchAdvisers().then(() => console.log('Advisers fetched')),
         fetchTeachers().then(() => console.log('Teachers fetched')),
-        fetchBuildingsRooms().then(() => console.log('Buildings/rooms fetched'))
+        fetchBuildingsRooms().then(() => console.log('Buildings/rooms fetched')),
+        loadAllProgramSubjects().then(() => console.log('Subjects loaded'))
     ]).then(() => {
         console.log('All data fetched successfully');
         loadSections(currentProgram);
         setupEventListeners();
     });
 });
+
+// Initialize mock subjects data
+function loadAllProgramSubjects() {
+    const programs = ['STE', 'SPFL', 'SPTVE', 'OHSP', 'SNED', 'TOP5', 'HETERO'];
+    
+    return Promise.all(
+        programs.map(program => 
+            fetch(`${BASE_URL}api/subjects/${program}/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        subjectsByProgram[program] = data.subjects || [];
+                    }
+                })
+                .catch(error => console.error(`Error loading subjects for ${program}:`, error))
+        )
+    );
+}
+
+// Manage Subjects Modal Functions
+function openManageSubjectsModal() {
+    console.log('Opening Manage Subjects Modal');
+    const modal = document.getElementById('manageSubjectsModal');
+    modal.style.display = 'flex';
+    document.body.classList.add('modal-open');
+    
+    // Set first tab as active
+    currentSubjectProgram = 'STE';
+    updateSubjectProgramTabs('STE');
+    loadSubjectsForProgram('STE');
+}
+
+
+function closeManageSubjectsModal() {
+    const modal = document.getElementById('manageSubjectsModal');
+    modal.style.display = 'none';
+    document.body.classList.remove('modal-open');
+    cancelSubjectForm();
+}
+
+function switchSubjectProgram(program) {
+    console.log(`Switching subject program to: ${program}`);
+    currentSubjectProgram = program;
+    updateSubjectProgramTabs(program);
+    loadSubjectsForProgram(program);
+    cancelSubjectForm();
+}
+
+function updateSubjectProgramTabs(program) {
+    document.querySelectorAll('.subject-tab-btn').forEach(btn => {
+        btn.classList.remove('active', 'gradient-bg', 'text-white', 'border-red-700', 'shadow-lg');
+        btn.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
+    });
+    
+    const targetTab = document.querySelector(`.subject-tab-btn[data-subject-program="${program}"]`);
+    if (targetTab) {
+        targetTab.classList.add('active', 'gradient-bg', 'text-white', 'border-red-700', 'shadow-lg');
+        targetTab.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
+    }
+}
+
+function loadSubjectsForProgram(program) {
+    console.log(`Loading subjects for program: ${program}`);
+    
+    fetch(`${BASE_URL}api/subjects/${program}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                subjectsByProgram[program] = data.subjects || [];
+                renderSubjectsTable(data.subjects || []);
+            } else {
+                console.error('Failed to load subjects:', data.error);
+                renderSubjectsTable([]);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading subjects:', error);
+            renderSubjectsTable([]);
+        });
+}
+
+function renderSubjectsTable(subjects) {
+    const tableBody = document.getElementById('subjectsTableBody');
+    
+    if (subjects.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="4" class="text-center py-8">
+                    <div class="flex flex-col items-center gap-3">
+                        <i class="fas fa-inbox text-4xl text-gray-300"></i>
+                        <p class="text-gray-500 font-medium">No subjects found for ${currentSubjectProgram}</p>
+                        <button class="gradient-bg text-white px-4 py-2 rounded-lg text-sm" onclick="openAddSubjectForm()">
+                            <i class="fas fa-plus mr-2"></i>Add First Subject
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tableBody.innerHTML = subjects.map((subject, index) => `
+        <tr>
+            <td class="text-center font-semibold text-gray-600">${index + 1}</td>
+            <td class="subject-name">${subject.name}</td>
+            <td class="font-medium text-gray-600">${subject.code}</td>
+            <td>
+                <div class="flex gap-2 justify-center">
+                    <button 
+                        class="px-3 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-all duration-200 flex items-center gap-2"
+                        onclick="editSubject(${subject.id})"
+                        title="Edit Subject">
+                        <i class="fas fa-edit"></i>
+                        <span class="text-sm font-medium">Edit</span>
+                    </button>
+                    <button 
+                        class="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-all duration-200 flex items-center gap-2"
+                        onclick="deleteSubject(${subject.id})"
+                        title="Delete Subject">
+                        <i class="fas fa-trash"></i>
+                        <span class="text-sm font-medium">Delete</span>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function openAddSubjectForm() {
+    console.log('Opening Add Subject Form');
+    document.getElementById('subjectFormContainer').style.display = 'block';
+    document.getElementById('subjectFormTitle').textContent = 'Add New Subject';
+    document.getElementById('subjectForm').reset();
+    document.getElementById('subjectId').value = '';
+    document.getElementById('subjectProgramInput').value = currentSubjectProgram;
+    currentEditingSubject = null;
+    
+    document.getElementById('subjectFormContainer').scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'nearest' 
+    });
+}
+
+function editSubject(subjectId) {
+    console.log(`Editing subject with ID: ${subjectId}`);
+    
+    let subject = null;
+    for (const program in subjectsByProgram) {
+        subject = subjectsByProgram[program].find(s => s.id === subjectId);
+        if (subject) break;
+    }
+    
+    if (!subject) {
+        alert('Subject not found!');
+        return;
+    }
+    
+    currentEditingSubject = subject;
+    
+    document.getElementById('subjectFormContainer').style.display = 'block';
+    document.getElementById('subjectFormTitle').textContent = 'Edit Subject';
+    document.getElementById('subjectId').value = subject.id;
+    document.getElementById('subjectProgramInput').value = subject.program;
+    document.getElementById('subjectName').value = subject.name;
+    document.getElementById('subjectCode').value = subject.code;
+    
+    document.getElementById('subjectFormContainer').scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'nearest' 
+    });
+}
+
+function deleteSubject(subjectId) {
+    console.log(`Deleting subject with ID: ${subjectId}`);
+    
+    if (!confirm('Are you sure you want to delete this subject? This action cannot be undone.')) {
+        return;
+    }
+    
+    fetch(`${BASE_URL}api/subjects/delete/${subjectId}/`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': CSRF_TOKEN
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            loadSubjectsForProgram(currentSubjectProgram);
+        } else {
+            alert(`Error: ${data.message}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting subject:', error);
+        alert('An error occurred while deleting the subject.');
+    });
+}
+
+
+function cancelSubjectForm() {
+    document.getElementById('subjectFormContainer').style.display = 'none';
+    document.getElementById('subjectForm').reset();
+    currentEditingSubject = null;
+}
+
+// Add event listener for subject form submission
+document.addEventListener('DOMContentLoaded', () => {
+    const subjectForm = document.getElementById('subjectForm');
+    if (subjectForm) {
+        subjectForm.addEventListener('submit', handleSubjectFormSubmit);
+    }
+});
+
+function handleSubjectFormSubmit(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const subjectId = formData.get('subject_id');
+    const isUpdate = !!subjectId;
+    
+    const url = isUpdate 
+        ? `${BASE_URL}api/subjects/update/${subjectId}/`
+        : `${BASE_URL}api/subjects/add/${currentSubjectProgram}/`;
+    
+    fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': CSRF_TOKEN
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            loadSubjectsForProgram(currentSubjectProgram);
+            cancelSubjectForm();
+        } else {
+            alert(`Error: ${data.message}\nDetails: ${JSON.stringify(data.errors)}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error saving subject:', error);
+        alert('An error occurred while saving the subject.');
+    });
+}
+
+
+// Update the openSubjectTeacherModal function to load subjects dynamically
+function openSubjectTeacherModal(sectionId) {
+    console.log('Opening Subject Teacher Modal for section ID:', sectionId);
+    const section = findSectionById(sectionId);
+    
+    if (section) {
+        document.getElementById('currentSection').textContent = section.name;
+        document.getElementById('currentAdviser').textContent = section.adviser;
+        
+        // Fetch and load subjects for this section's program
+        loadSubjectsForSection(sectionId);
+    }
+    
+    const modal = document.getElementById('addSubjectTeacherModal');
+    modal.style.display = 'flex';
+    document.body.classList.add('modal-open');
+}
+
+function loadSubjectsForSection(sectionId) {
+    fetch(`${BASE_URL}api/sections/${sectionId}/subjects/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                renderSectionSubjectsTable(data.subjects);
+                populateSubjectTeacherSelects();
+            } else {
+                console.error('Failed to load subjects:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading subjects:', error);
+        });
+}
+
+function renderSectionSubjectsTable(subjects) {
+    const tableBody = document.querySelector('#addSubjectTeacherModal .subject-table tbody');
+
+    if (subjects.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="4" class="text-center py-8">
+                    <p class="text-gray-500">No subjects available for this program.</p>
+                    <button class="text-red-600 hover:underline mt-2" onclick="closeSubjectTeacherModal(); openManageSubjectsModal();">
+                        <i class="fas fa-plus mr-1"></i>Add subjects first
+                    </button>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tableBody.innerHTML = subjects.map(subject => `
+        <tr>
+            <td class="subject-name">${subject.name}</td>
+            <td>
+                <select id="teacher_${subject.id}" name="teacher_${subject.id}" class="form-select" data-subject-id="${subject.id}">
+                    <option value="">Select Teacher</option>
+                </select>
+            </td>
+            <td>
+                <select id="day_${subject.id}" name="day_${subject.id}" class="form-select">
+                    <option value="DAILY">Daily</option>
+                    <option value="MWF">MWF</option>
+                    <option value="TTH">TTH</option>
+                </select>
+            </td>
+            <td>
+                <div class="time-inputs">
+                    <input type="time" id="time_${subject.id}" name="time_${subject.id}" class="form-input">
+                    <span class="time-separator">-</span>
+                    <input type="time" id="timeEnd_${subject.id}" name="timeEnd_${subject.id}" class="form-input">
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function loadSubjectsInAssignModal(program) {
+    console.log(`Loading subjects in assign modal for program: ${program}`);
+    const subjects = subjectsByProgram[program] || [];
+    const tableBody = document.querySelector('#addSubjectTeacherModal .subject-table tbody');
+    
+    if (subjects.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="4" class="text-center py-8">
+                    <p class="text-gray-500">No subjects available for ${program} program.</p>
+                    <button class="text-red-600 hover:underline mt-2" onclick="closeSubjectTeacherModal(); openManageSubjectsModal();">
+                        <i class="fas fa-plus mr-1"></i>Add subjects first
+                    </button>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    // Generate table rows for each subject
+    tableBody.innerHTML = subjects.map(subject => {
+        const subjectKey = subject.code.toLowerCase().replace(/[^a-z0-9]/g, '');
+        return `
+            <tr>
+                <td class="subject-name">${subject.name}</td>
+                <td>
+                    <select id="${subjectKey}Teacher" name="${subjectKey}Teacher" class="form-select">
+                        <option value="">Select Teacher</option>
+                    </select>
+                </td>
+                <td>
+                    <select id="${subjectKey}Day" name="${subjectKey}Day" class="form-select">
+                        <option value="DAILY">Daily</option>
+                        <option value="MWF">MWF</option>
+                        <option value="TTH">TTH</option>
+                    </select>
+                </td>
+                <td>
+                    <div class="time-inputs">
+                        <input type="time" id="${subjectKey}Time" name="${subjectKey}Time" class="form-input">
+                        <span class="time-separator">-</span>
+                        <input type="time" id="${subjectKey}TimeEnd" name="${subjectKey}TimeEnd" class="form-input">
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+    
+    // Populate teacher dropdowns after creating the rows
+    setTimeout(() => populateSubjectTeacherSelects(), 100);
+}
+
+// Add CSS for the subject tab buttons
+const subjectTabStyle = document.createElement('style');
+subjectTabStyle.textContent = `
+    .subject-tab-btn.active {
+        background: linear-gradient(135deg, #c41e3a 0%, #a01729 100%);
+        color: white;
+        border-color: #c41e3a;
+        box-shadow: 0 4px 12px rgba(196, 30, 58, 0.3);
+    }
+    
+    .subject-program-tabs {
+        border-bottom: 2px solid #f1f5f9;
+        padding-bottom: 20px;
+    }
+`;
+document.head.appendChild(subjectTabStyle);
 
 function setupEventListeners() {
     console.log('Setting up event listeners');
@@ -603,39 +1002,35 @@ function openSectionMasterlist(sectionId) {
 
 function handleAssignSubjectTeachers(event) {
     event.preventDefault();
-    
+
     if (!currentSectionForUpdate) {
         alert('No section selected. Please try again.');
         return;
     }
-    
+
     const assignments = [];
-    const subjectMapping = {
-        'math': 'MATHEMATICS',
-        'english': 'ENGLISH',
-        'science': 'SCIENCE',
-        'filipino': 'FILIPINO',
-        'arpan': 'ARALING_PANLIPUNAN',
-        'mapeh': 'MAPEH',
-        'esp': 'EDUKASYON_SA_PAGPAPAKATAO'
-    };
-    
-    for (const [prefix, subjectName] of Object.entries(subjectMapping)) {
-        const teacherSelect = document.getElementById(`${prefix}Teacher`);
-        const daySelect = document.getElementById(`${prefix}Day`);
-        const startTime = document.getElementById(`${prefix}Time`);
-        const endTime = document.getElementById(`${prefix}TimeEnd`);
-        
-        if (teacherSelect && daySelect && startTime && endTime && teacherSelect.value) {
-            assignments.push({
-                subject: subjectName,
-                teacher_id: teacherSelect.value,
-                day: daySelect.value,
-                start_time: startTime.value,
-                end_time: endTime.value
-            });
+    const teacherSelects = document.querySelectorAll('[data-subject-id]');
+
+    teacherSelects.forEach(select => {
+        const subjectId = select.dataset.subjectId;
+        const teacherId = select.value;
+
+        if (teacherId) {
+            const day = document.getElementById(`day_${subjectId}`).value;
+            const startTime = document.getElementById(`time_${subjectId}`).value;
+            const endTime = document.getElementById(`timeEnd_${subjectId}`).value;
+
+            if (day && startTime && endTime) {
+                assignments.push({
+                    subject_id: subjectId,
+                    teacher_id: teacherId,
+                    day: day,
+                    start_time: startTime,
+                    end_time: endTime
+                });
+            }
         }
-    }
+    });
 
     if (assignments.length === 0) {
         alert('No assignments to save. Please select at least one teacher.');
@@ -648,17 +1043,16 @@ function handleAssignSubjectTeachers(event) {
             'Content-Type': 'application/json',
             'X-CSRFToken': CSRF_TOKEN
         },
-        body: JSON.stringify({assignments})
+        body: JSON.stringify({ assignments })
     })
     .then(response => response.json())
     .then(data => {
-        console.log('Assign subject teachers response:', data);
         if (data.success) {
             alert(data.message);
             closeSubjectTeacherModal();
             loadSections(currentProgram);
         } else {
-            alert(`Error: ${data.message}\nDetails: ${JSON.stringify(data.errors)}`);
+            alert(`Error: ${data.message}`);
         }
     })
     .catch(error => {
@@ -770,3 +1164,5 @@ function findSectionById(sectionId) {
     }
     return null;
 }
+
+

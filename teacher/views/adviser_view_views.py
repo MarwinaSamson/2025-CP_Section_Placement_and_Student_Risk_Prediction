@@ -90,7 +90,7 @@ def adviser_view(request):
         'has_advisory_class': True,
         
         # Section info
-        'program': advisory_section.get_program_display(),
+        'program': advisory_section.program.name,
         'program_code': advisory_section.program,
         'section_name': advisory_section.name,
         'section_id': advisory_section.id,

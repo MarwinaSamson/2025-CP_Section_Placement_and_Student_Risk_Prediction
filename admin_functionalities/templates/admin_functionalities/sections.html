@@ -557,6 +557,13 @@
                             Add Section
                         </button>
 
+                        <button
+                            class="gradient-bg text-white px-6 py-3 rounded-xl flex items-center gap-3 hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-semibold shadow-lg"
+                            onclick="openManageSubjectsModal()">
+                            <i class="fas fa-book text-lg"></i>
+                            Manage Subjects
+                        </button>
+
                         <div class="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-xl border border-gray-200">
                             <div class="text-right">
                                 <span class="block font-semibold text-gray-800">Samson, Marwina D.</span>
@@ -1043,6 +1050,138 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Manage Subjects Modal - Add this after the updateSectionModal -->
+    <div id="manageSubjectsModal" class="modal">
+        <div class="modal-content subject-teacher-modal" style="max-width: 1400px !important;">
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <i class="fas fa-book"></i>
+                </div>
+                <h2 class="modal-title">Manage Subjects by Program</h2>
+                <p class="modal-subtitle">Add, update, or delete subjects for each program</p>
+            </div>
+
+            <div class="modal-body">
+                <!-- Program Tabs for Subjects -->
+                <div class="subject-program-tabs" style="margin-bottom: 25px;">
+                    <div class="flex gap-3 flex-wrap justify-center">
+                        <button
+                            class="subject-tab-btn px-6 py-3 border-2 border-gray-200 bg-white text-gray-600 rounded-xl cursor-pointer font-semibold transition-all duration-300 active"
+                            data-subject-program="STE"
+                            onclick="switchSubjectProgram('STE')">
+                            <i class="fas fa-flask mr-2"></i>STE
+                        </button>
+                        <button
+                            class="subject-tab-btn px-6 py-3 border-2 border-gray-200 bg-white text-gray-600 rounded-xl cursor-pointer font-semibold transition-all duration-300"
+                            data-subject-program="SPFL"
+                            onclick="switchSubjectProgram('SPFL')">
+                            <i class="fas fa-language mr-2"></i>SPFL
+                        </button>
+                        <button
+                            class="subject-tab-btn px-6 py-3 border-2 border-gray-200 bg-white text-gray-600 rounded-xl cursor-pointer font-semibold transition-all duration-300"
+                            data-subject-program="SPTVE"
+                            onclick="switchSubjectProgram('SPTVE')">
+                            <i class="fas fa-tools mr-2"></i>SPTVE
+                        </button>
+                        <button
+                            class="subject-tab-btn px-6 py-3 border-2 border-gray-200 bg-white text-gray-600 rounded-xl cursor-pointer font-semibold transition-all duration-300"
+                            data-subject-program="OHSP"
+                            onclick="switchSubjectProgram('OHSP')">
+                            <i class="fas fa-laptop-house mr-2"></i>OHSP
+                        </button>
+                        <button
+                            class="subject-tab-btn px-6 py-3 border-2 border-gray-200 bg-white text-gray-600 rounded-xl cursor-pointer font-semibold transition-all duration-300"
+                            data-subject-program="SNED"
+                            onclick="switchSubjectProgram('SNED')">
+                            <i class="fas fa-universal-access mr-2"></i>SNED
+                        </button>
+                        <button
+                            class="subject-tab-btn px-6 py-3 border-2 border-gray-200 bg-white text-gray-600 rounded-xl cursor-pointer font-semibold transition-all duration-300"
+                            data-subject-program="TOP5"
+                            onclick="switchSubjectProgram('TOP5')">
+                            <i class="fas fa-trophy mr-2"></i>TOP 5
+                        </button>
+                        <button
+                            class="subject-tab-btn px-6 py-3 border-2 border-gray-200 bg-white text-gray-600 rounded-xl cursor-pointer font-semibold transition-all duration-300"
+                            data-subject-program="HETERO"
+                            onclick="switchSubjectProgram('HETERO')">
+                            <i class="fas fa-users mr-2"></i>HETERO
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Add Subject Button -->
+                <div class="flex justify-end mb-4">
+                    <button
+                        class="gradient-bg text-white px-5 py-2 rounded-xl flex items-center gap-2 hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-semibold"
+                        onclick="openAddSubjectForm()">
+                        <i class="fas fa-plus-circle"></i>
+                        Add Subject
+                    </button>
+                </div>
+
+                <!-- Subjects Table -->
+                <div class="subject-table-container">
+                    <table class="subject-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">#</th>
+                                <th>Subject Name</th>
+                                <th>Subject Code</th>
+                                <th style="width: 150px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="subjectsTableBody">
+                            <!-- Subjects will be dynamically loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Add/Edit Subject Form (Hidden by default) -->
+                <div id="subjectFormContainer" style="display: none; margin-top: 25px;">
+                    <div class="section-info-banner">
+                        <div class="section-info-text">
+                            <span id="subjectFormTitle">Add New Subject</span>
+                        </div>
+                    </div>
+
+                    <form id="subjectForm">
+                        <input type="hidden" id="subjectId" name="subject_id">
+                        <input type="hidden" id="subjectProgramInput" name="program">
+
+                        <div class="form-group">
+                            <label for="subjectName" class="form-label">Subject Name</label>
+                            <input type="text" id="subjectName" name="subject_name" placeholder="e.g., Advanced Mathematics" required class="form-input">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="subjectCode" class="form-label">Subject Code</label>
+                            <input type="text" id="subjectCode" name="subject_code" placeholder="e.g., MATH-101" required class="form-input">
+                        </div>
+
+                        <div class="flex justify-center gap-3 mt-4">
+                            <button type="button" class="btn btn-back" onclick="cancelSubjectForm()">
+                                <i class="fas fa-times"></i>
+                                Cancel
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i>
+                                Save Subject
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-back" onclick="closeManageSubjectsModal()">
+                    <i class="fas fa-arrow-left"></i>
+                    Close
+                </button>
+            </div>
         </div>
     </div>
 

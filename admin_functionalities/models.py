@@ -314,54 +314,35 @@ SUBJECT_CHOICES = [
 
 # This is for section table
 class Section(models.Model):
-    # Reference to Program table
-    program = models.ForeignKey('Program', on_delete=models.CASCADE, verbose_name="Program Name")
+    program = models.ForeignKey('Program', on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    adviser = models.ForeignKey(
+        'Teacher',
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='adviser_sections'
+    )
 
-    # Section details
-    name = models.CharField(max_length=255, verbose_name="Section Name")
-    adviser = models.ForeignKey('Teacher', null=True, blank=True, on_delete=models.SET_NULL, related_name='adviser_sections', verbose_name="Adviser")
-    english_teacher = models.ForeignKey('Teacher', null=True, blank=True, on_delete=models.SET_NULL, related_name='english_sections', verbose_name="English Teacher")
-    filipino_teacher = models.ForeignKey('Teacher', null=True, blank=True, on_delete=models.SET_NULL, related_name='filipino_sections', verbose_name="Filipino Teacher")
-    mathematics_teacher = models.ForeignKey('Teacher', null=True, blank=True, on_delete=models.SET_NULL, related_name='mathematics_sections', verbose_name="Mathematics Teacher")
-    science_teacher = models.ForeignKey('Teacher', null=True, blank=True, on_delete=models.SET_NULL, related_name='science_sections', verbose_name="Science Teacher")
-    esp_gmrc_teacher = models.ForeignKey('Teacher', null=True, blank=True, on_delete=models.SET_NULL, related_name='esp_gmrc_sections', verbose_name="ESP/GMRC Teacher")
-    tle_teacher = models.ForeignKey('Teacher', null=True, blank=True, on_delete=models.SET_NULL, related_name='tle_sections', verbose_name="TLE Teacher")
-    arpan_teacher = models.ForeignKey('Teacher', null=True, blank=True, on_delete=models.SET_NULL, related_name='arpan_sections', verbose_name="Arpan Teacher")
-    mapeh_teacher = models.ForeignKey('Teacher', null=True, blank=True, on_delete=models.SET_NULL, related_name='mapeh_sections', verbose_name="MAPEH Teacher")
-    research_teacher = models.ForeignKey('Teacher', null=True, blank=True, on_delete=models.SET_NULL, related_name='research_sections', verbose_name="Research Teacher")
-    tve_teacher = models.ForeignKey('Teacher', null=True, blank=True, on_delete=models.SET_NULL, related_name='tve_sections', verbose_name="TVE Teacher")
-    fl_teacher = models.ForeignKey('Teacher', null=True, blank=True, on_delete=models.SET_NULL, related_name='fl_sections', verbose_name="FL Teacher")
+    max_students = models.PositiveIntegerField()
+    current_students = models.PositiveIntegerField(default=0)
 
-    # Student capacity
-    max_students = models.PositiveIntegerField(verbose_name="Max Students")
-    current_students = models.PositiveIntegerField(verbose_name="Current Students", default=0)
+    building = models.CharField(max_length=255)
+    room = models.CharField(max_length=50)
+    avatar = models.ImageField(upload_to='section_pics/', null=True, blank=True)
 
-    # Room details
-    building = models.CharField(max_length=255, verbose_name="Building")
-    room = models.CharField(max_length=50, verbose_name="Room Number")
-    avatar = models.ImageField(upload_to='section_pics/', null=True, blank=True, verbose_name="Section Picture")
-
-    # Status
-    is_active = models.BooleanField(default=True, verbose_name="Is Active")
+    is_active = models.BooleanField(default=True)
 
     class Meta:
-        verbose_name = "Section"
-        verbose_name_plural = "Sections"
         ordering = ['name']
 
     def __str__(self):
         return f"{self.name} - {self.program.name}"
 
-    def clean(self):
-        """Custom validation logic, if needed."""
-        super().clean()
-        if self.current_students > self.max_students:
-            raise ValidationError("Current students cannot exceed the maximum student capacity.")
 
 # For the "Add Subject Teacher" modal. Stores per-subject assignments.
 class SectionSubjectAssignment(models.Model): 
-    section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name='subject_assignments')
-    subject = models.CharField(max_length=50, choices=SUBJECT_CHOICES, verbose_name="Subject")
+    section = models.ForeignKey('Section', on_delete=models.CASCADE, related_name='subject_assignments')
+    subject = models.ForeignKey('admin_functionalities.Subject',on_delete=models.CASCADE,  related_name='section_assignments',verbose_name="Subject")
     teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, null=True, related_name='assigned_subjects', limit_choices_to={'is_teacher': True}, verbose_name="Teacher")
     day = models.CharField(max_length=10, choices=[('DAILY', 'Daily'), ('MWF', 'MWF'), ('TTH', 'TTH')], verbose_name="Day")
     start_time = models.TimeField(verbose_name="Start Time")
@@ -396,87 +377,49 @@ class ActivityLog(models.Model):
     
 
 
+# Add this to your existing models.py
+
 class Subject(models.Model):
     """
-    Subject model to handle all subjects across different programs.
-    Supports core subjects, program-specific subjects, and MAPEH sub-subjects.
+    Subject model to handle program-specific subjects.
+    Each subject belongs to a specific program.
     """
-    
-    # Program choices (matching your existing PROGRAM_CHOICES)
-    PROGRAM_CHOICES = [
-        ('STE', 'Science Technology and Engineering'),
-        ('SPFL', 'Special Program in Foreign Language'),
-        ('SPTVL', 'Special Program in Technical Vocational Livelihood'),
-        ('TOP5', 'Top 5 Regular Class'),
-        ('HETERO', 'Hetero Regular class'),
-        ('OHSP', 'Open High School Program'),
-        ('SNED', 'Special Needs Education Program'),
-    ]
-    
-    # Subject type to help organize
-    SUBJECT_TYPE_CHOICES = [
-        ('CORE', 'Core Subject'),
-        ('MAPEH_SUB', 'MAPEH Sub-Subject'),
-        ('PROGRAM_SPECIFIC', 'Program-Specific Subject'),
-    ]
     
     # Basic Information
     subject_code = models.CharField(
         max_length=20,
-        unique=True,
         verbose_name="Subject Code",
         help_text="Unique code (e.g., MATH7, ENG7, RESEARCH7)"
     )
+    
     subject_name = models.CharField(
         max_length=100,
         verbose_name="Subject Name",
-        help_text="Full subject name (e.g., Mathematics, English)"
-    )
-    subject_type = models.CharField(
-        max_length=20,
-        choices=SUBJECT_TYPE_CHOICES,
-        default='CORE',
-        verbose_name="Subject Type"
+        help_text="Name of the subject (e.g., Mathematics, English, Research)"
     )
     
-    # Program Association
-    program = models.CharField(
-        max_length=20,
-        choices=PROGRAM_CHOICES,
-        default='ALL',
-        verbose_name="Program",
-        help_text="Which program(s) offer this subject"
-    )
-    
-    # MAPEH Parent (for sub-subjects only)
-    parent_subject = models.ForeignKey(
-        'self',
+    # Program Association (REQUIRED - each subject belongs to one program)
+    program = models.ForeignKey(
+        'Program',
         on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name='sub_subjects',
-        verbose_name="Parent Subject",
-        help_text="Only for MAPEH sub-subjects (Music, Arts, PE, Health)"
+        related_name="subjects",
+        verbose_name="Program",
+        help_text="Program this subject belongs to"
     )
     
-    # Additional Info
+    # Display & Other Details
     description = models.TextField(
         blank=True,
-        verbose_name="Description",
         help_text="Optional subject description"
     )
     
-    # Order for display
     display_order = models.PositiveIntegerField(
         default=0,
-        verbose_name="Display Order",
         help_text="Lower numbers appear first"
     )
     
-    # Status
     is_active = models.BooleanField(
         default=True,
-        verbose_name="Is Active",
         help_text="Inactive subjects won't appear in dropdowns"
     )
     
@@ -487,39 +430,27 @@ class Subject(models.Model):
     class Meta:
         verbose_name = "Subject"
         verbose_name_plural = "Subjects"
-        ordering = ['display_order', 'subject_name']
+        ordering = ['program', 'display_order', 'subject_name']
+        unique_together = ['program', 'subject_code']  # Unique per program
         indexes = [
             models.Index(fields=['program', 'is_active']),
-            models.Index(fields=['subject_type']),
         ]
     
     def __str__(self):
-        if self.parent_subject:
-            return f"{self.parent_subject.subject_name} - {self.subject_name}"
-        return self.subject_name
+        return f"{self.subject_name} ({self.program.name})"
     
     def get_full_name(self):
-        """Get full subject name including parent if applicable"""
-        if self.parent_subject:
-            return f"{self.parent_subject.subject_name} ({self.subject_name})"
-        return self.subject_name
-    
-    def is_mapeh_sub(self):
-        """Check if this is a MAPEH sub-subject"""
-        return self.subject_type == 'MAPEH_SUB' and self.parent_subject is not None
+        return f"{self.subject_name} - {self.subject_code}"
     
     @classmethod
-    def get_subjects_for_program(cls, program_code):
+    def get_subjects_for_program(cls, program):
         """
-        Get all subjects available for a specific program.
-        Includes 'ALL' subjects and program-specific subjects.
+        Returns active subjects for a given program.
         """
-        from django.db.models import Q
         return cls.objects.filter(
-            Q(program='ALL') | Q(program=program_code),
+            program=program,
             is_active=True
         ).order_by('display_order', 'subject_name')
-
 
 class SchoolYear(models.Model):
     """
