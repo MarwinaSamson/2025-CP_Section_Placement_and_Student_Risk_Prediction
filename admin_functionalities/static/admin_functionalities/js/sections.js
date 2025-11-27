@@ -649,18 +649,24 @@ function openSubjectTeacherModal(sectionId) {
 }
 
 function loadSubjectsForSection(sectionId) {
+    console.log('Loading subjects for section:', sectionId);
+    
     fetch(`${BASE_URL}api/sections/${sectionId}/subjects/`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                console.log('Subjects loaded:', data.subjects);
                 renderSectionSubjectsTable(data.subjects);
-                populateSubjectTeacherSelects();
+                // Populate teacher dropdowns after subjects are rendered
+                setTimeout(() => populateSubjectTeacherSelects(), 100);
             } else {
                 console.error('Failed to load subjects:', data.error);
+                renderSectionSubjectsTable([]);
             }
         })
         .catch(error => {
             console.error('Error loading subjects:', error);
+            renderSectionSubjectsTable([]);
         });
 }
 
@@ -931,41 +937,28 @@ function populateAdviserSelects(currentAdviserId = null) {
 }
 
 function populateSubjectTeacherSelects() {
-    console.log('Populating subject teacher selects with department filtering:', subjectTeachers);
-
-    // Map subjects to their required department
-    const subjectDepartmentMap = {
-        'mathTeacher': 'Mathematics',
-        'englishTeacher': 'English',
-        'scienceTeacher': 'Science',
-        'filipinoTeacher': 'Filipino',
-        'arpanTeacher': 'Social Studies',
-        'mapehTeacher': 'MAPEH',
-        'espTeacher': 'Values Education'
-    };
-
-    Object.entries(subjectDepartmentMap).forEach(([selectId, department]) => {
-        const select = document.getElementById(selectId);
-        if (select) {
-            select.innerHTML = '<option value="">Select Teacher</option>';
-
-            const filteredTeachers = subjectTeachers.filter(t => t.department && t.department.toLowerCase().includes(department.toLowerCase()));
-
-            if (filteredTeachers.length === 0) {
-                const opt = document.createElement('option');
-                opt.disabled = true;
-                opt.textContent = `No ${department} teachers available`;
-                select.appendChild(opt);
-            } else {
-                filteredTeachers.forEach(teacher => {
-                    const option = document.createElement('option');
-                    option.value = teacher.id;
-                    option.textContent = `${teacher.name}`;
-                    select.appendChild(option);
-                });
-            }
-        }
+    console.log('Populating teacher selects for dynamically loaded subjects');
+    
+    // Find all teacher select elements in the Assign Teacher modal
+    const teacherSelects = document.querySelectorAll('#addSubjectTeacherModal select[data-subject-id]');
+    
+    console.log(`Found ${teacherSelects.length} teacher select dropdowns to populate`);
+    
+    teacherSelects.forEach(select => {
+        // Clear and add default option
+        select.innerHTML = '<option value="">Select Teacher</option>';
+        
+        // Populate with all subject teachers (no department filtering for now)
+        // You can add department filtering later if needed
+        subjectTeachers.forEach(teacher => {
+            const option = document.createElement('option');
+            option.value = teacher.id;
+            option.textContent = `${teacher.name}${teacher.department ? ' - ' + teacher.department : ''}`;
+            select.appendChild(option);
+        });
     });
+    
+    console.log('Teacher dropdowns populated successfully');
 }
 
 function populateBuildingSelects() {
@@ -1134,19 +1127,6 @@ function closeAddSectionModal() {
     document.getElementById('addSectionForm').reset();
 }
 
-function openSubjectTeacherModal(sectionId) {
-    console.log('Opening Subject Teacher Modal for section ID:', sectionId);
-    const section = findSectionById(sectionId);
-    if (section) {
-        document.getElementById('currentSection').textContent = section.name;
-        document.getElementById('currentAdviser').textContent = section.adviser;
-    }
-    
-    const modal = document.getElementById('addSubjectTeacherModal');
-    modal.style.display = 'flex';
-    document.body.classList.add('modal-open');
-    populateSubjectTeacherSelects();
-}
 
 function closeSubjectTeacherModal() {
     const modal = document.getElementById('addSubjectTeacherModal');

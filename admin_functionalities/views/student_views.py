@@ -63,6 +63,10 @@ def student_edit_view(request, student_id):
     requirements, _ = StudentRequirements.objects.get_or_create(student=student)
 
     if request.method == "POST":
+        logger.info(f"\n{'='*80}")
+        logger.info(f"📝 Processing POST request for student {student_id}: {student.first_name} {student.last_name}")
+        logger.info(f"{'='*80}")
+        
         student_form = StudentForm(request.POST, request.FILES, instance=student, user=request.user)
         family_form = FamilyForm(request.POST, request.FILES, instance=get_family_or_create(student), user=request.user)
         non_academic_form = StudentNonAcademicForm(request.POST, instance=get_non_academic_or_create(student), user=request.user)
@@ -83,9 +87,36 @@ def student_edit_view(request, student_id):
                     missing.append(friendly)
             return missing
 
-        if all(form.is_valid() for form in [student_form, family_form, non_academic_form, academic_form, placement_form, requirements_form]):
+        # Validate all forms
+        forms_valid = all([
+            student_form.is_valid(),
+            family_form.is_valid(),
+            non_academic_form.is_valid(),
+            academic_form.is_valid(),
+            placement_form.is_valid(),
+            requirements_form.is_valid()
+        ])
+        
+        if not forms_valid:
+            messages.error(request, "Please correct the errors below.")
+            logger.warning(f"⚠️ Form validation failed for student {student.id}")
+            
+            # Log which forms have errors
+            for form_name, form in [
+                ('Student', student_form),
+                ('Family', family_form),
+                ('Non-Academic', non_academic_form),
+                ('Academic', academic_form),
+                ('Placement', placement_form),
+                ('Requirements', requirements_form)
+            ]:
+                if not form.is_valid():
+                    logger.error(f"❌ {form_name} form errors: {form.errors}")
+        else:
             try:
                 with transaction.atomic():
+                    logger.info("💾 Saving all forms...")
+                    
                     # Save forms first
                     student_form.save()
                     family_form.save()
@@ -93,19 +124,36 @@ def student_edit_view(request, student_id):
                     academic_form.save()
                     placement_form.save()
                     requirements_form.save()
+                    
+                    logger.info("✅ All forms saved successfully")
 
-                    # Only auto-assign when status == 'approved'
+                    # Get placement details
                     placement_status = placement_form.cleaned_data.get('status', '').lower()
                     selected_program = placement_form.cleaned_data.get('selected_program', '') or ''
-                    selected_program = selected_program.upper()
+                    selected_program = str(selected_program).strip().upper()
+                    
+                    logger.info(f"📋 Placement Status: {placement_status}")
+                    logger.info(f"📋 Selected Program: {selected_program}")
 
                     # Check requirements
                     requirement_confirmed = request.POST.get('confirm_approve_incomplete') == '1'
                     missing_requirements = get_missing_requirements(requirements_form.cleaned_data)
+                    
+                    if missing_requirements:
+                        logger.warning(f"⚠️ Missing requirements: {', '.join(missing_requirements)}")
 
+                    # Only auto-assign when status == 'approved'
                     if placement_status == 'approved':
+                        logger.info("🎯 Status is 'approved' - proceeding with section assignment")
+                        
+                        # Check requirements before assignment
                         if missing_requirements and not requirement_confirmed:
-                            messages.warning(request, f"Student marked as Approved but requirements incomplete.")
+                            logger.warning("⚠️ Requirements incomplete and not confirmed")
+                            messages.warning(
+                                request, 
+                                f"Student marked as Approved but requirements incomplete: "
+                                f"{', '.join(missing_requirements)}"
+                            )
                             context = {
                                 "student": student,
                                 "student_form": student_form,
@@ -119,18 +167,107 @@ def student_edit_view(request, student_id):
                             }
                             return render(request, "admin_functionalities/student_edit.html", context)
 
-                        # Proceed to assign
-                        success, assigned_section, msg = SectionAssignmentService.assign_student_to_section(student, selected_program)
-
-                        if success:
-                            messages.success(
+                        # Validate program is selected
+                        if not selected_program:
+                            logger.error("❌ No program selected for approved student")
+                            messages.error(
                                 request,
-                                f"✓ Student {student.first_name} {student.last_name} updated and assigned to {assigned_section.name} ({selected_program})"
+                                "Cannot approve student without selecting a program. "
+                                "Please select a program and try again."
                             )
-                            log_activity(request.user, "Enrollment", f"Approved and assigned {student.first_name} {student.last_name} to {assigned_section.name} ({selected_program})")
+                            context = {
+                                "student": student,
+                                "student_form": student_form,
+                                "family_form": family_form,
+                                "non_academic_form": non_academic_form,
+                                "academic_form": academic_form,
+                                "placement_form": placement_form,
+                                "requirements_form": requirements_form,
+                                "is_admin": request.user.is_staff,
+                            }
+                            return render(request, "admin_functionalities/student_edit.html", context)
+
+                        # Attempt section assignment
+                        logger.info(f"🚀 Calling assign_student_to_section...")
+                        
+                        result = SectionAssignmentService.assign_student_to_section(
+                            student, 
+                            selected_program
+                        )
+                        
+                        # Validate result
+                        if result is None:
+                            logger.error("❌ assign_student_to_section returned None!")
+                            messages.error(
+                                request,
+                                "Section assignment failed: Service returned no result. "
+                                "Please contact system administrator."
+                            )
+                            context = {
+                                "student": student,
+                                "student_form": student_form,
+                                "family_form": family_form,
+                                "non_academic_form": non_academic_form,
+                                "academic_form": academic_form,
+                                "placement_form": placement_form,
+                                "requirements_form": requirements_form,
+                                "is_admin": request.user.is_staff,
+                                "section_assignment_error": "Service returned None",
+                            }
+                            return render(request, "admin_functionalities/student_edit.html", context)
+                        
+                        # Unpack result
+                        if not isinstance(result, tuple) or len(result) != 3:
+                            logger.error(f"❌ Unexpected result format: {result}")
+                            messages.error(
+                                request,
+                                f"Section assignment failed: Invalid result format. "
+                                f"Please contact system administrator."
+                            )
+                            context = {
+                                "student": student,
+                                "student_form": student_form,
+                                "family_form": family_form,
+                                "non_academic_form": non_academic_form,
+                                "academic_form": academic_form,
+                                "placement_form": placement_form,
+                                "requirements_form": requirements_form,
+                                "is_admin": request.user.is_staff,
+                                "section_assignment_error": f"Invalid result: {result}",
+                            }
+                            return render(request, "admin_functionalities/student_edit.html", context)
+                        
+                        success, assigned_section, msg = result
+                        
+                        logger.info(f"📊 Assignment Result:")
+                        logger.info(f"  Success: {success}")
+                        logger.info(f"  Section: {assigned_section}")
+                        logger.info(f"  Message: {msg}")
+
+                        if success and assigned_section:
+                            success_msg = (
+                                f"✓ Student {student.first_name} {student.last_name} "
+                                f"updated and assigned to {assigned_section.name} ({selected_program})"
+                            )
+                            messages.success(request, success_msg)
+                            log_activity(
+                                request.user, 
+                                "Enrollment", 
+                                f"Approved and assigned {student.first_name} {student.last_name} "
+                                f"to {assigned_section.name} ({selected_program})"
+                            )
+                            logger.info(f"✅ {success_msg}")
                         else:
-                            messages.warning(request, f"Student updated but section assignment failed: {msg}")
-                            log_activity(request.user, "Enrollment", f"Updated {student.first_name} {student.last_name}, but section assignment failed: {msg}")
+                            warning_msg = f"Student updated but section assignment failed: {msg}"
+                            messages.warning(request, warning_msg)
+                            log_activity(
+                                request.user, 
+                                "Enrollment", 
+                                f"Updated {student.first_name} {student.last_name}, "
+                                f"but section assignment failed: {msg}"
+                            )
+                            logger.warning(f"⚠️ {warning_msg}")
+                            
                             context = {
                                 "student": student,
                                 "student_form": student_form,
@@ -146,18 +283,29 @@ def student_edit_view(request, student_id):
                             return render(request, "admin_functionalities/student_edit.html", context)
                     else:
                         # Not approved: skip assignment
-                        messages.success(request, f"Student {student.first_name} {student.last_name} updated. Section placement skipped (status: {placement_status}).")
-                        log_activity(request.user, "Enrollment", f"Updated student {student.first_name} {student.last_name} (status: {placement_status})")
+                        info_msg = (
+                            f"Student {student.first_name} {student.last_name} updated. "
+                            f"Section placement skipped (status: {placement_status})."
+                        )
+                        messages.success(request, info_msg)
+                        log_activity(
+                            request.user, 
+                            "Enrollment", 
+                            f"Updated student {student.first_name} {student.last_name} "
+                            f"(status: {placement_status})"
+                        )
+                        logger.info(f"ℹ️ {info_msg}")
 
+                logger.info(f"{'='*80}\n")
                 return redirect("admin_functionalities:student_edit", student_id=student.id)
 
             except Exception as e:
-                logger.error(f"Error in student_edit_view for student {student.id}: {str(e)}")
+                logger.error(f"❌ Error in student_edit_view for student {student.id}: {str(e)}")
+                logger.exception("Full traceback:")
                 messages.error(request, f"Error saving data: {e}")
-        else:
-            messages.error(request, "Please correct the errors below.")
-            logger.warning(f"Form validation failed for student {student.id}")
+                logger.info(f"{'='*80}\n")
     else:
+        # GET request - initialize forms
         student_form = StudentForm(instance=student, user=request.user)
         family_form = FamilyForm(instance=get_family_or_create(student), user=request.user)
         non_academic_form = StudentNonAcademicForm(instance=get_non_academic_or_create(student), user=request.user)

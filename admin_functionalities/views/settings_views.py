@@ -25,54 +25,80 @@ CustomUser = get_user_model()
 
 @method_decorator(login_required, name='dispatch')
 class AddUserView(View):
-    """View for adding new users."""
+    """Handles creation of new system users."""
     
     def get(self, request):
         return redirect(reverse('admin_functionalities:settings'))
 
     def post(self, request):
-        print(f"=== DEBUG: POST received in AddUserView ===")
+        print("=== DEBUG: POST received in AddUserView ===")
         form = AddUserForm(request.POST, request.FILES)
 
-        if form.is_valid():
-            try:
-                user = form.save(created_by_user=request.user)
-                
-                log_activity(request.user, "Settings", f"Added new user {user.username}")
-
-                # JSON Response for AJAX
-                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                    return JsonResponse({
-                        'success': True,
-                        'message': f'User {user.first_name} {user.last_name} added successfully!',
-                        'user': {
-                            'id': user.id,
-                            'first_name': user.first_name,
-                            'last_name': user.last_name,
-                            'email': user.email,
-                            'is_superuser': user.is_superuser,
-                            'is_staff_expert': getattr(user, 'is_staff_expert', False),
-                            'is_subject_teacher': getattr(user, 'is_subject_teacher', False),
-                            'is_adviser': getattr(user, 'is_adviser', False),
-                            'date_joined_formatted': user.date_joined.strftime("%B %d, %Y"),
-                        }
-                    })
-
-                return redirect(reverse('admin_functionalities:settings'))
-
-            except Exception as save_err:
-                print(f"=== ERROR: {save_err} ===")
-                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                    return JsonResponse({'success': False, 'error': str(save_err)}, status=500)
-                from django.contrib import messages
-                messages.error(request, f"Error saving user: {save_err}")
-                return redirect(reverse('admin_functionalities:settings'))
-        else:
+        if not form.is_valid():
             print("=== DEBUG: Invalid form ===", form.errors)
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+
             from django.contrib import messages
             messages.error(request, 'Form validation failed.')
+            return redirect(reverse('admin_functionalities:settings'))
+
+        try:
+            # Create user
+            user = form.save(created_by_user=request.user)
+
+            # Standard activity log
+            log_activity(
+                request.user, 
+                "Settings", 
+                f"Added new user {user.username}"
+            )
+
+            # FIXED: Log entry using correct model fields
+            AddUserLog.objects.create(
+                user=request.user,
+                action="Created a New User Account",
+                description=f"Added user {user.username}",
+
+                affected_first_name=user.first_name,
+                affected_last_name=user.last_name,
+                affected_email=user.email,
+                affected_employee_id=getattr(user, "employee_id", None),
+
+                affected_is_admin=getattr(user, "is_admin", False),
+                affected_is_staff_expert=getattr(user, "is_staff_expert", False),
+                affected_is_adviser=getattr(user, "is_adviser", False),
+                affected_is_teacher=getattr(user, "is_subject_teacher", False),
+            )
+
+            # AJAX response
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'message': f'User {user.first_name} {user.last_name} added successfully!',
+                    'user': {
+                        'id': user.id,
+                        'first_name': user.first_name,
+                        'last_name': user.last_name,
+                        'email': user.email,
+                        'is_superuser': user.is_superuser,
+                        'is_staff_expert': getattr(user, 'is_staff_expert', False),
+                        'is_subject_teacher': getattr(user, 'is_subject_teacher', False),
+                        'is_adviser': getattr(user, 'is_adviser', False),
+                        'date_joined_formatted': user.date_joined.strftime("%B %d, %Y"),
+                    }
+                })
+
+            return redirect(reverse('admin_functionalities:settings'))
+
+        except Exception as save_err:
+            print(f"=== ERROR: {save_err} ===")
+
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'error': str(save_err)}, status=500)
+
+            from django.contrib import messages
+            messages.error(request, f"Error saving user: {save_err}")
             return redirect(reverse('admin_functionalities:settings'))
 
 

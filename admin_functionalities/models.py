@@ -339,8 +339,66 @@ class Section(models.Model):
     class Meta:
         ordering = ['name']
 
+    # def __str__(self):
+    #     return f"{self.name} - {self.program.name}"
+    
+    def clean(self):
+        """
+        Validate that current_students doesn't exceed max_students.
+        This runs during form validation and model.save(full_clean=True).
+        """
+        super().clean()
+        
+        if self.current_students > self.max_students:
+            raise ValidationError({
+                'current_students': f'Current students ({self.current_students}) cannot exceed maximum capacity ({self.max_students}). '
+                                   f'Please increase max_students or remove students from this section.'
+            })
+    
+    def save(self, *args, **kwargs):
+        """
+        Override save to ensure current_students is never greater than max_students.
+        """
+        # Auto-correct if somehow exceeded (defensive programming)
+        if self.current_students > self.max_students:
+            raise ValidationError(
+                f"Cannot save: Section {self.name} would exceed capacity "
+                f"({self.current_students}/{self.max_students})"
+            )
+        
+        super().save(*args, **kwargs)
+    
+    def has_available_space(self):
+        """Check if section has space for more students."""
+        return self.current_students < self.max_students
+    
+    def available_slots(self):
+        """Return number of available slots."""
+        return max(0, self.max_students - self.current_students)
+    
+    def capacity_percentage(self):
+        """Return capacity usage as percentage."""
+        if self.max_students == 0:
+            return 0
+        return round((self.current_students / self.max_students) * 100, 1)
+    
+    def is_full(self):
+        """Check if section is at full capacity."""
+        return self.current_students >= self.max_students
+    
+    class Meta:
+        ordering = ['name']
+        # Add database constraint to enforce capacity
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(current_students__lte=models.F('max_students')),
+                name='current_students_cannot_exceed_max'
+            )
+        ]
+    
     def __str__(self):
-        return f"{self.name} - {self.program.name}"
+        return f"{self.name} - {self.program.name} ({self.current_students}/{self.max_students})"
+
 
 
 # For the "Add Subject Teacher" modal. Stores per-subject assignments.
@@ -366,17 +424,15 @@ class ActivityLog(models.Model):
     action = models.CharField(max_length=255)
     module = models.CharField(max_length=100, blank=True, null=True)
     timestamp = models.DateTimeField(default=timezone.now)
-
-    @property
-    def date(self):
+    
+    # Make these regular methods instead of properties
+    def get_date(self):
         return self.timestamp.strftime("%B %d, %Y")
-
-    @property
-    def time(self):
+    
+    def get_time(self):
         return self.timestamp.strftime("%I:%M %p")
-
-    @property
-    def combined_activity(self):
+    
+    def get_combined_activity(self):
         return f"{self.user.get_full_name()} - {self.action}"
     
 
