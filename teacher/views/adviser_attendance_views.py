@@ -34,7 +34,7 @@ def adviser_attendance(request):
         adviser_sections = Section.objects.filter(
             adviser=teacher,
             is_active=True
-        ).order_by('name')
+        ).select_related('program').order_by('name')  # Add select_related
         
         # Get sections where teacher has subject assignments (for subject teachers)
         taught_section_ids = SectionSubjectAssignment.objects.filter(
@@ -44,7 +44,7 @@ def adviser_attendance(request):
         taught_sections = Section.objects.filter(
             id__in=taught_section_ids,
             is_active=True
-        ).order_by('name')
+        ).select_related('program').order_by('name')  # Add select_related
         
         # Combine all accessible sections
         all_sections = (adviser_sections | taught_sections).distinct().order_by('name')
@@ -109,7 +109,22 @@ def get_section_info(request, section_id):
     """
     try:
         teacher = Teacher.objects.get(user=request.user)
-        section = get_object_or_404(Section, id=section_id, adviser=teacher)
+        
+        # Check if teacher has access (either as adviser or subject teacher)
+        section = get_object_or_404(Section, id=section_id, is_active=True)
+        
+        # Verify access
+        has_adviser_access = section.adviser == teacher
+        has_subject_access = SectionSubjectAssignment.objects.filter(
+            teacher=teacher,
+            section=section
+        ).exists()
+        
+        if not (has_adviser_access or has_subject_access):
+            return JsonResponse({
+                'success': False,
+                'error': 'You do not have access to this section'
+            }, status=403)
         
         # Get grade level from section
         # Assuming section has grade level info or we derive from program
@@ -140,7 +155,7 @@ def get_section_info(request, section_id):
             'section': {
                 'id': section.id,
                 'name': section.name,
-                'program': section.program,
+                'program': section.program.name,  # ✅ FIX: Get the name from Program object
                 'grade_level': grade_level,
                 'building': section.building,
                 'room': section.room,
@@ -151,6 +166,9 @@ def get_section_info(request, section_id):
     except Teacher.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Teacher not found'}, status=404)
     except Exception as e:
+        print(f"ERROR in get_section_info: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
@@ -235,7 +253,18 @@ def load_attendance_record(request):
                 'error': 'Missing required parameters'
             }, status=400)
         
-        section = get_object_or_404(Section, id=section_id, adviser=teacher)
+        # Verify access to section
+        section = get_object_or_404(Section, id=section_id, is_active=True)
+        has_access = (section.adviser == teacher) or SectionSubjectAssignment.objects.filter(
+            teacher=teacher, section=section
+        ).exists()
+        
+        if not has_access:
+            return JsonResponse({
+                'success': False,
+                'error': 'You do not have access to this section'
+            }, status=403)
+        
         school_year = get_object_or_404(SchoolYear, id=school_year_id)
         
         # Try to get existing record
@@ -327,6 +356,9 @@ def load_attendance_record(request):
         })
         
     except Exception as e:
+        print(f"ERROR in load_attendance_record: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
@@ -426,6 +458,9 @@ def save_attendance(request):
     except json.JSONDecodeError:
         return JsonResponse({'success': False, 'error': 'Invalid JSON data'}, status=400)
     except Exception as e:
+        print(f"ERROR in save_attendance: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 

@@ -54,21 +54,20 @@ def adviser_subview(request):
         assignments = SectionSubjectAssignment.objects.filter(
             teacher=teacher,
             section=section
-        )
+        ).select_related('subject')  # Optimize query
         
         subjects = []
         for assignment in assignments:
-            subject_choices_dict = dict(SectionSubjectAssignment._meta.get_field('subject').choices)
-            subject_display = subject_choices_dict.get(assignment.subject, assignment.subject)
+            # Since subject is a ForeignKey, access it directly
             subjects.append({
-                'code': assignment.subject,
-                'name': subject_display
+                'code': assignment.subject.subject_code,
+                'name': assignment.subject.subject_name
             })
         
         sections_with_subjects[section.id] = {
             'section': section,
             'subjects': subjects,
-            'student_count': section.get_student_count() if hasattr(section, 'get_student_count') else 0
+            'student_count': section.current_students  # Use the actual field from your model
         }
     
     context = {
@@ -119,16 +118,20 @@ def set_active_section(request):
         # Set in session
         request.session['selected_section_id'] = section.id
         request.session['selected_section_name'] = section.name
-        request.session['selected_section_program'] = section.program
+        request.session['selected_section_program'] = section.program.name  # ForeignKey to Program
         
         # Get subjects for this section
-        subjects = SectionSubjectAssignment.objects.filter(
+        assignments = SectionSubjectAssignment.objects.filter(
             teacher=teacher,
             section=section
-        ).values_list('subject', flat=True)
+        ).select_related('subject')
         
-        subject_choices_dict = dict(SectionSubjectAssignment._meta.get_field('subject').choices)
-        subject_names = [subject_choices_dict.get(s, s) for s in subjects]
+        subject_codes = []
+        subject_names = []
+        
+        for assignment in assignments:
+            subject_codes.append(assignment.subject.subject_code)
+            subject_names.append(assignment.subject.subject_name)
         
         return JsonResponse({
             'success': True,
@@ -136,8 +139,8 @@ def set_active_section(request):
             'section': {
                 'id': section.id,
                 'name': section.name,
-                'program': section.program,
-                'subjects': list(subjects),
+                'program': section.program.name,
+                'subjects': subject_codes,
                 'subject_names': subject_names
             }
         })
@@ -169,10 +172,12 @@ def get_active_section(request):
         
         # Get subjects
         teacher = request.user.teacher_profile
-        subjects = SectionSubjectAssignment.objects.filter(
+        assignments = SectionSubjectAssignment.objects.filter(
             teacher=teacher,
             section=section
-        ).values_list('subject', flat=True)
+        ).select_related('subject')
+        
+        subject_codes = [assignment.subject.subject_code for assignment in assignments]
         
         return JsonResponse({
             'success': True,
@@ -180,10 +185,10 @@ def get_active_section(request):
             'section': {
                 'id': section.id,
                 'name': section.name,
-                'program': section.program,
+                'program': section.program.name,
                 'building': section.building,
                 'room': section.room,
-                'subjects': list(subjects)
+                'subjects': subject_codes
             }
         })
         

@@ -38,7 +38,7 @@ def adviser_masterlist(request):
             'has_advisory_class': False,
             'error_message': 'You do not have an assigned advisory class.',
         }
-        return render(request, 'teacher/adviser/adviser_masterlist.html', context)
+        return render(request, 'teacher/adviser/Masterlist.html', context)
     
     # Get or create masterlist for current school year
     school_year = '2025-2026'  # Can be dynamic later
@@ -49,11 +49,25 @@ def adviser_masterlist(request):
         defaults={'is_active': True}
     )
     
-    # Get all students in this section
-    section_name = advisory_section.name
+    # FIXED: Get students assigned to this section through SectionPlacement
+    # Import SectionPlacement model
+    from enrollmentprocess.models import SectionPlacement
+    
+    # Get students who have approved placements in this section
     students = Student.objects.filter(
-        section_placement=section_name
-    ).select_related('studentacademic').order_by('last_name', 'first_name')
+        section_placements__section=advisory_section,
+        section_placements__status='approved'  # Only approved placements
+    ).select_related('studentacademic').distinct().order_by(
+        'last_name', 'first_name'
+    )
+    
+    # If no approved students, try getting all students with any placement status
+    if not students.exists():
+        students = Student.objects.filter(
+            section_placements__section=advisory_section
+        ).select_related('studentacademic').distinct().order_by(
+            'last_name', 'first_name'
+        )
     
     # Ensure all students are in masterlist
     for student in students:
@@ -85,7 +99,7 @@ def adviser_masterlist(request):
             academic = student.studentacademic
             overall_avg = academic.overall_average
             is_probation = overall_avg < 70 if overall_avg else False
-        except StudentAcademic.DoesNotExist:
+        except (StudentAcademic.DoesNotExist, AttributeError):
             overall_avg = None
             is_probation = False
         
@@ -99,7 +113,7 @@ def adviser_masterlist(request):
         students_data.append({
             'id': student.id,
             'lrn': student.lrn,
-            'full_name': f"{student.last_name}, {student.first_name} {student.middle_name}".strip(),
+            'full_name': f"{student.last_name}, {student.first_name} {student.middle_name or ''}".strip(),
             'last_name': student.last_name,
             'first_name': student.first_name,
             'middle_name': student.middle_name or '',
@@ -125,7 +139,7 @@ def adviser_masterlist(request):
     
     context = {
         'teacher': teacher,
-        'teacher_full_name': f"{teacher.last_name}, {teacher.first_name} {teacher.middle_name}".strip(),
+        'teacher_full_name': f"{teacher.last_name}, {teacher.first_name} {teacher.middle_name or ''}".strip(),
         'teacher_position': teacher.position if teacher.position else 'Adviser',
         'teacher_photo': teacher.profile_photo.url if teacher.profile_photo else None,
         'teacher_initials': teacher_initials,
@@ -206,7 +220,7 @@ def get_student_grades(request, student_id):
     student_info = {
         'id': student.id,
         'lrn': student.lrn,
-        'full_name': f"{student.last_name}, {student.first_name} {student.middle_name}".strip(),
+        'full_name': f"{student.last_name}, {student.first_name} {student.middle_name or ''}".strip(),
         'gender': student.gender,
         'age': student.age,
         'photo': student.photo.url if student.photo else None,

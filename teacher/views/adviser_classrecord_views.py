@@ -119,24 +119,26 @@ def adviser_classrecord(request):
         # Organize subjects by section
         sections_with_subjects = {}
         for assignment in subject_assignments:
-            section_id = str(assignment.section.id)
-            if section_id not in sections_with_subjects:
-                sections_with_subjects[section_id] = {
-                    'section_id': assignment.section.id,
-                    'section_name': assignment.section.name,
-                    'program': assignment.section.program,
-                    'subjects': []
-                }
-            
-            # Get subject display name from choices
-            subject_choices_dict = dict(SectionSubjectAssignment._meta.get_field('subject').choices)
-            subject_display = subject_choices_dict.get(assignment.subject, assignment.subject)
-            
-            sections_with_subjects[section_id]['subjects'].append({
-                'code': assignment.subject,
-                'name': subject_display,
-                'assignment_id': assignment.id
-            })
+                sec = assignment.section  # ← GET SECTION ONCE
+                section_id = str(sec.id)
+
+                if section_id not in sections_with_subjects:
+                    sections_with_subjects[section_id] = {
+                        'program_id': sec.program.id,
+                        'program_name': sec.program.name,
+                        'section_id': sec.id,
+                        'section_name': sec.name,
+                        'subjects': []
+                    }
+
+                # Add the subject
+                sections_with_subjects[section_id]['subjects'].append({
+                    'id': assignment.subject.id,
+                    'code': assignment.subject.subject_code,
+                    'name': assignment.subject.subject_name,
+                    'assignment_id': assignment.id
+                })
+
         
         print(f"\nDEBUG - Sections with subjects structure:")
         import pprint
@@ -211,79 +213,59 @@ def get_class_record(request):
     """
     try:
         teacher = Teacher.objects.get(user=request.user)
-        
-        # Get parameters - ACCEPT BOTH subject_code AND subject_id for compatibility
+
+        # Get parameters
         section_id = request.GET.get('section_id')
-        subject_code = request.GET.get('subject_code') or request.GET.get('subject_id')  # <-- FIX HERE
+        subject_code = request.GET.get('subject_code') or request.GET.get('subject_id')
         quarter = request.GET.get('quarter')
         school_year = request.GET.get('school_year')
-        
+
         print(f"\n{'='*80}")
-        print(f"GET CLASS RECORD REQUEST")
+        print("GET CLASS RECORD REQUEST")
         print(f"Section ID: {section_id}")
         print(f"Subject Code: {subject_code}")
         print(f"Quarter: {quarter}")
         print(f"School Year: {school_year}")
         print(f"{'='*80}\n")
-        
-        # Validate required parameters
-        if not all([section_id, subject_code, quarter, school_year]):
-            missing = []
-            if not section_id: missing.append('section_id')
-            if not subject_code: missing.append('subject_code/subject_id')
-            if not quarter: missing.append('quarter')
-            if not school_year: missing.append('school_year')
-            
+
+        # Validate parameters
+        missing = []
+        if not section_id: missing.append("section_id")
+        if not subject_code: missing.append("subject_code/subject_id")
+        if not quarter: missing.append("quarter")
+        if not school_year: missing.append("school_year")
+
+        if missing:
             return JsonResponse({
-                'success': False,
-                'error': f'Missing required parameters: {", ".join(missing)}'
+                "success": False,
+                "error": f"Missing required parameters: {', '.join(missing)}"
             }, status=400)
-        
-        # Get related objects
+
+        # Fetch section
         section = get_object_or_404(Section, id=section_id, is_active=True)
-        
-        # Find the subject assignment to get the actual Subject
+
+        # Convert subject_code → Subject object
+        subject = Subject.objects.filter(subject_code=subject_code).first()
+        if not subject:
+            return JsonResponse({
+                "success": False,
+                "error": f"Subject with code {subject_code} not found."
+            }, status=404)
+
+        # Check assignment
         assignment = SectionSubjectAssignment.objects.filter(
             section=section,
-            subject=subject_code,
+            subject=subject,
             teacher=teacher
         ).first()
-        
-        if not assignment:
+
+        if not assignment and section.adviser != teacher:
             return JsonResponse({
-                'success': False,
-                'error': f'No assignment found for {subject_code} in {section.name}'
-            }, status=404)
-        
-        # Get or create the Subject model
-        subject = Subject.objects.filter(subject_code=subject_code).first()
-        
-        if not subject:
-            # Create a Subject if it doesn't exist
-            subject_choices_dict = dict(SectionSubjectAssignment._meta.get_field('subject').choices)
-            subject_name = subject_choices_dict.get(subject_code, subject_code)
-            
-            subject = Subject.objects.create(
-                subject_code=subject_code,
-                subject_name=subject_name,
-                subject_type='CORE',
-                is_active=True
-            )
-            print(f"Created new Subject: {subject}")
-        
-        # Check if teacher has access to this section/subject
-        has_access = (
-            section.adviser == teacher or
-            assignment is not None
-        )
-        
-        if not has_access:
-            return JsonResponse({
-                'success': False,
-                'error': 'You do not have access to this class record'
+                "success": False,
+                "error": "You do not have access to this class record."
             }, status=403)
-        
-        # Get or create class record
+
+        # Create or get class record
         class_record, created = ClassRecord.objects.get_or_create(
             teacher=teacher,
             subject=subject,
@@ -296,155 +278,101 @@ def get_class_record(request):
                 'quarterly_assessment_weight': 20,
             }
         )
-        
+
         print(f"Class Record: {class_record} ({'created' if created else 'existing'})")
-        
-        # ========================================================================
-        # FETCH STUDENTS FROM ADVISER MASTERLIST (SAME AS ATTENDANCE VIEW)
-        # ========================================================================
-        
+
+        # =====================================================================
+        # Fetch Students (Masterlist first, fallback to SectionPlacement)
+        # =====================================================================
+
         from teacher.models import AdviserMasterlist, MasterlistStudent
-        
+        from enrollmentprocess.models import SectionPlacement
+
+        students_data = []
+
         masterlist = AdviserMasterlist.objects.filter(
             section=section,
             school_year=school_year,
             is_active=True
         ).first()
-        
-        students_data = []
-        
+
         if masterlist:
-            print(f"Found Masterlist: {masterlist}")
-            print(f"Total students in masterlist: {masterlist.total_students}")
-            
-            # Get active students from masterlist
+            print(f"Loaded Masterlist: {masterlist}")
+
             masterlist_students = MasterlistStudent.objects.filter(
                 masterlist=masterlist,
                 is_active=True
-            ).select_related('student').order_by('student__last_name', 'student__first_name')
-            
-            print(f"Active students found: {masterlist_students.count()}")
-            
-            # Get or create student grades
-            for idx, ms in enumerate(masterlist_students, start=1):
-                student = ms.student
-                
-                print(f"  {idx}. {student.last_name}, {student.first_name} (ID: {student.id})")
-                
-                # Get or create student grade
-                student_grade, grade_created = StudentGrade.objects.get_or_create(
-                    class_record=class_record,
-                    student=student
-                )
-                
-                students_data.append({
-                    'id': student.id,
-                    'number': idx,
-                    'name': f"{student.last_name}, {student.first_name} {student.middle_name or ''}".strip(),
-                    'gender': student.gender,
-                    'grade_id': student_grade.id,
-                    'scores': {
-                        'ww': [
-                            student_grade.ww_score_1, student_grade.ww_score_2,
-                            student_grade.ww_score_3, student_grade.ww_score_4,
-                            student_grade.ww_score_5, student_grade.ww_score_6,
-                            student_grade.ww_score_7, student_grade.ww_score_8,
-                            student_grade.ww_score_9, student_grade.ww_score_10
-                        ],
-                        'pt': [
-                            student_grade.pt_score_1, student_grade.pt_score_2,
-                            student_grade.pt_score_3, student_grade.pt_score_4,
-                            student_grade.pt_score_5, student_grade.pt_score_6,
-                            student_grade.pt_score_7, student_grade.pt_score_8,
-                            student_grade.pt_score_9, student_grade.pt_score_10
-                        ],
-                        'qa': [student_grade.qa_score_1]
-                    },
-                    'computed': {
-                        'ww_total': student_grade.ww_total,
-                        'ww_percentage': student_grade.ww_percentage,
-                        'ww_weighted_score': student_grade.ww_weighted_score,
-                        'pt_total': student_grade.pt_total,
-                        'pt_percentage': student_grade.pt_percentage,
-                        'pt_weighted_score': student_grade.pt_weighted_score,
-                        'qa_percentage': student_grade.qa_percentage,
-                        'qa_weighted_score': student_grade.qa_weighted_score,
-                        'initial_grade': student_grade.initial_grade,
-                        'quarterly_grade': student_grade.quarterly_grade
-                    }
-                })
+            ).select_related('student').order_by(
+                'student__last_name', 'student__first_name'
+            )
+
+            print(f"Masterlist Students: {masterlist_students.count()}")
+
+            student_list = [
+                ms.student for ms in masterlist_students
+            ]
+
         else:
-            # Fallback: Try to get from SectionPlacement if no masterlist exists
-            print(f"No masterlist found for {section.name} - {school_year}")
-            print(f"Trying SectionPlacement as fallback...")
-            
-            from enrollmentprocess.models import SectionPlacement
-            
+            # Fallback loading
+            print("⚠ No masterlist found. Using SectionPlacement fallback.")
             placements = SectionPlacement.objects.filter(
                 section=section,
-                status='approved'
-            ).select_related('student').order_by('student__last_name', 'student__first_name')
-            
-            print(f"Students from SectionPlacement: {placements.count()}")
-            
-            for idx, placement in enumerate(placements, start=1):
-                student = placement.student
-                
-                print(f"  {idx}. {student.last_name}, {student.first_name} (ID: {student.id})")
-                
-                # Get or create student grade
-                student_grade, _ = StudentGrade.objects.get_or_create(
-                    class_record=class_record,
-                    student=student
-                )
-                
-                students_data.append({
-                    'id': student.id,
-                    'number': idx,
-                    'name': f"{student.last_name}, {student.first_name} {student.middle_name or ''}".strip(),
-                    'gender': student.gender,
-                    'grade_id': student_grade.id,
-                    'scores': {
-                        'ww': [
-                            student_grade.ww_score_1, student_grade.ww_score_2,
-                            student_grade.ww_score_3, student_grade.ww_score_4,
-                            student_grade.ww_score_5, student_grade.ww_score_6,
-                            student_grade.ww_score_7, student_grade.ww_score_8,
-                            student_grade.ww_score_9, student_grade.ww_score_10
-                        ],
-                        'pt': [
-                            student_grade.pt_score_1, student_grade.pt_score_2,
-                            student_grade.pt_score_3, student_grade.pt_score_4,
-                            student_grade.pt_score_5, student_grade.pt_score_6,
-                            student_grade.pt_score_7, student_grade.pt_score_8,
-                            student_grade.pt_score_9, student_grade.pt_score_10
-                        ],
-                        'qa': [student_grade.qa_score_1]
-                    },
-                    'computed': {
-                        'ww_total': student_grade.ww_total,
-                        'ww_percentage': student_grade.ww_percentage,
-                        'ww_weighted_score': student_grade.ww_weighted_score,
-                        'pt_total': student_grade.pt_total,
-                        'pt_percentage': student_grade.pt_percentage,
-                        'pt_weighted_score': student_grade.pt_weighted_score,
-                        'qa_percentage': student_grade.qa_percentage,
-                        'qa_weighted_score': student_grade.qa_weighted_score,
-                        'initial_grade': student_grade.initial_grade,
-                        'quarterly_grade': student_grade.quarterly_grade
-                    }
-                })
-        
-        print(f"\nTotal students loaded: {len(students_data)}\n")
-        
-        if len(students_data) == 0:
-            print("⚠ WARNING: No students found!")
-            print(f"  - Masterlist exists: {masterlist is not None}")
-            if masterlist:
-                print(f"  - Masterlist total_students: {masterlist.total_students}")
-                print(f"  - Active MasterlistStudent count: {MasterlistStudent.objects.filter(masterlist=masterlist, is_active=True).count()}")
-        
-        # Prepare response data
+                status="approved"
+            ).select_related('student').order_by(
+                'student__last_name', 'student__first_name'
+            )
+            print(f"Fallback Students: {placements.count()}")
+            student_list = [p.student for p in placements]
+
+        # Build student grade entries
+        for idx, student in enumerate(student_list, start=1):
+
+            student_grade, _ = StudentGrade.objects.get_or_create(
+                class_record=class_record,
+                student=student
+            )
+
+            students_data.append({
+                'id': student.id,
+                'number': idx,
+                'name': f"{student.last_name}, {student.first_name} {student.middle_name or ''}".strip(),
+                'gender': student.gender,
+                'grade_id': student_grade.id,
+                'scores': {
+                    'ww': [
+                        student_grade.ww_score_1, student_grade.ww_score_2, student_grade.ww_score_3,
+                        student_grade.ww_score_4, student_grade.ww_score_5, student_grade.ww_score_6,
+                        student_grade.ww_score_7, student_grade.ww_score_8, student_grade.ww_score_9,
+                        student_grade.ww_score_10
+                    ],
+                    'pt': [
+                        student_grade.pt_score_1, student_grade.pt_score_2, student_grade.pt_score_3,
+                        student_grade.pt_score_4, student_grade.pt_score_5, student_grade.pt_score_6,
+                        student_grade.pt_score_7, student_grade.pt_score_8, student_grade.pt_score_9,
+                        student_grade.pt_score_10
+                    ],
+                    'qa': [student_grade.qa_score_1]
+                },
+                'computed': {
+                    'ww_total': student_grade.ww_total,
+                    'ww_percentage': student_grade.ww_percentage,
+                    'ww_weighted_score': student_grade.ww_weighted_score,
+                    'pt_total': student_grade.pt_total,
+                    'pt_percentage': student_grade.pt_percentage,
+                    'pt_weighted_score': student_grade.pt_weighted_score,
+                    'qa_percentage': student_grade.qa_percentage,
+                    'qa_weighted_score': student_grade.qa_weighted_score,
+                    'initial_grade': student_grade.initial_grade,
+                    'quarterly_grade': student_grade.quarterly_grade
+                }
+            })
+
+        print(f"Total students loaded: {len(students_data)}")
+
+        # =====================================================================
+        # Prepare JSON response
+        # =====================================================================
+
         response_data = {
             'success': True,
             'created': created,
@@ -461,18 +389,16 @@ def get_class_record(request):
                 },
                 'hps': {
                     'ww': [
-                        class_record.ww_hps_1, class_record.ww_hps_2,
-                        class_record.ww_hps_3, class_record.ww_hps_4,
-                        class_record.ww_hps_5, class_record.ww_hps_6,
-                        class_record.ww_hps_7, class_record.ww_hps_8,
-                        class_record.ww_hps_9, class_record.ww_hps_10
+                        class_record.ww_hps_1, class_record.ww_hps_2, class_record.ww_hps_3,
+                        class_record.ww_hps_4, class_record.ww_hps_5, class_record.ww_hps_6,
+                        class_record.ww_hps_7, class_record.ww_hps_8, class_record.ww_hps_9,
+                        class_record.ww_hps_10
                     ],
                     'pt': [
-                        class_record.pt_hps_1, class_record.pt_hps_2,
-                        class_record.pt_hps_3, class_record.pt_hps_4,
-                        class_record.pt_hps_5, class_record.pt_hps_6,
-                        class_record.pt_hps_7, class_record.pt_hps_8,
-                        class_record.pt_hps_9, class_record.pt_hps_10
+                        class_record.pt_hps_1, class_record.pt_hps_2, class_record.pt_hps_3,
+                        class_record.pt_hps_4, class_record.pt_hps_5, class_record.pt_hps_6,
+                        class_record.pt_hps_7, class_record.pt_hps_8, class_record.pt_hps_9,
+                        class_record.pt_hps_10
                     ],
                     'qa': [class_record.qa_hps_1]
                 },
@@ -484,23 +410,19 @@ def get_class_record(request):
             },
             'students': students_data
         }
-        
-        print(f"✅ Returning response with {len(students_data)} students\n")
-        
+
         return JsonResponse(response_data)
-        
+
     except Teacher.DoesNotExist:
         return JsonResponse({
             'success': False,
-            'error': 'Teacher profile not found'
+            'error': 'Teacher profile not found.'
         }, status=404)
+
     except Exception as e:
         import traceback
         traceback.print_exc()
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=500)
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
 @login_required

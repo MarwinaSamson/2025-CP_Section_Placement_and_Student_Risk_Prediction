@@ -24,26 +24,43 @@ def adviser_settings(request):
         # Get teaching load (sections where this teacher is adviser or subject teacher)
         teaching_load = []
         
-        # Get sections where teacher is adviser
-        adviser_sections = teacher.adviser_sections.all()
-        for section in adviser_sections:
-            teaching_load.append({
-                'subject': f'Adviser - {section.program}',
-                'grade_section': f'{section.program} – {section.name}',
-                'num_students': section.current_students
-            })
+        try:
+            # Get sections where teacher is adviser
+            adviser_sections = teacher.adviser_sections.all()
+            for section in adviser_sections:
+                teaching_load.append({
+                    'subject': f'Adviser - {section.program.name}',  # FIXED: Added .name
+                    'grade_section': f'{section.program.name} – {section.name}',  # FIXED: Added .name
+                    'num_students': section.current_students
+                })
+        except Exception as e:
+            print(f"Error loading adviser sections: {e}")
+            # Continue even if there's an error
         
-        # Get sections where teacher is subject teacher
-        subject_assignments = teacher.assigned_subjects.select_related('section').all()
-        for assignment in subject_assignments:
-            teaching_load.append({
-                'subject': assignment.get_subject_display(),
-                'grade_section': f'{assignment.section.program} – {assignment.section.name}',
-                'num_students': assignment.section.current_students
-            })
+        try:
+            # Get sections where teacher is subject teacher
+            subject_assignments = teacher.assigned_subjects.select_related(
+                'section', 
+                'section__program',
+                'subject'
+            ).all()
+            
+            for assignment in subject_assignments:
+                teaching_load.append({
+                    'subject': assignment.subject.subject_name,  # FIXED: Get actual subject name
+                    'grade_section': f'{assignment.section.program.name} – {assignment.section.name}',
+                    'num_students': assignment.section.current_students
+                })
+        except Exception as e:
+            print(f"Error loading subject assignments: {e}")
+            # Continue even if there's an error
         
-        # Get change history
-        change_history = teacher.change_history.all().order_by('-date', '-time')[:10]
+        # Get change history (with error handling)
+        try:
+            change_history = teacher.change_history.all().order_by('-date', '-time')[:10]
+        except Exception as e:
+            print(f"Error loading change history: {e}")
+            change_history = []
         
         # Format data for template
         context = {
@@ -56,11 +73,35 @@ def adviser_settings(request):
         return render(request, 'teacher/adviser/Setting.html', context)
         
     except Teacher.DoesNotExist:
-        messages.error(request, "Teacher profile not found. Please contact administrator.")
-        return redirect('teacher:bothaccess-dashboard')
+        # Print debug info
+        print(f"Teacher profile not found for user: {request.user.username}")
+        print(f"User ID: {request.user.id}")
+        
+        # Try to show settings page anyway with minimal context
+        context = {
+            'teacher': None,
+            'teaching_load': [],
+            'change_history': [],
+            'user': request.user,
+            'error_message': 'Teacher profile not found. Please contact administrator.'
+        }
+        return render(request, 'teacher/adviser/Setting.html', context)
+        
     except Exception as e:
-        messages.error(request, f"An error occurred: {str(e)}")
-        return redirect('teacher:bothaccess-dashboard')
+        # Log the actual error
+        print(f"Error in adviser_settings: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
+        # Show settings page with error message
+        context = {
+            'teacher': None,
+            'teaching_load': [],
+            'change_history': [],
+            'user': request.user,
+            'error_message': f'An error occurred: {str(e)}'
+        }
+        return render(request, 'teacher/adviser/Setting.html', context)
 
 
 @login_required

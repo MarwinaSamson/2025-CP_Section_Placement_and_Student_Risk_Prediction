@@ -43,17 +43,14 @@ def adviser_sub_intervention(request):
     # Optionally filter to only subjects this teacher teaches
     # Get subject codes/names from SectionSubjectAssignment
     from admin_functionalities.models import SectionSubjectAssignment
-    taught_subject_codes = SectionSubjectAssignment.objects.filter(
+    taught_subjects = SectionSubjectAssignment.objects.filter(
         teacher=teacher
-    ).values_list('subject', flat=True).distinct()
-    
-    if taught_subject_codes:
-        # Match by subject name or code
-        subjects = subjects.filter(
-            Q(subject_code__in=taught_subject_codes) | 
-            Q(subject_name__in=taught_subject_codes)
-        )
-    
+    ).values_list('subject__id', flat=True).distinct()
+
+    if taught_subjects:
+        subjects = subjects.filter(id__in=taught_subjects)
+
+        
     context = {
         'teacher': teacher,
         'sections': sections,
@@ -64,175 +61,6 @@ def adviser_sub_intervention(request):
     
     return render(request, 'teacher/adviser/subject_Intervention.html', context)
 
-
-# @login_required
-# @require_http_methods(["GET"])
-# def get_intervention_students(request):
-#     """
-#     API endpoint to get students with intervention data for a section/quarter.
-#     Returns student list with risk levels and intervention info.
-#     """
-#     try:
-#         teacher = request.user.teacher_profile
-#     except:
-#         return JsonResponse({'success': False, 'error': 'Teacher profile not found'})
-    
-#     section_id = request.GET.get('section_id')
-#     quarter = request.GET.get('quarter', 'Q1')
-#     subject_id = request.GET.get('subject_id')
-    
-#     if not section_id:
-#         return JsonResponse({'success': False, 'error': 'Section ID required'})
-    
-#     section = get_object_or_404(Section, id=section_id)
-#     current_sy = SchoolYear.get_current()
-    
-#     # Get all students in section
-#     students = Student.objects.filter(
-#         masterlist_entries__masterlist__section=section,
-#         masterlist_entries__is_active=True
-#     ).distinct()
-    
-#     students_data = []
-    
-#     for student in students:
-#         # Get intervention plan if exists
-#         intervention = InterventionPlan.objects.filter(
-#             student=student,
-#             quarter=quarter,
-#             school_year=current_sy,
-#             is_active=True
-#         ).first()
-        
-#         # If no intervention, check if student needs one
-#         if not intervention:
-#             # Check attendance
-#             attendance_records = StudentAttendance.objects.filter(
-#                 student=student,
-#                 attendance_record__section=section,
-#                 attendance_record__quarter=quarter
-#             )
-#             total_absences = sum(rec.total_absences for rec in attendance_records)
-            
-#             # Check grades if subject specified
-#             missing_ww = 0
-#             missing_pt = 0
-#             current_grade = 0
-#             missed_qa = False
-            
-#             if subject_id:
-#                 subject = Subject.objects.get(id=subject_id)
-#                 student_grades = StudentGrade.objects.filter(
-#                     student=student,
-#                     class_record__section=section,
-#                     class_record__subject=subject,
-#                     class_record__quarter=quarter
-#                 ).first()
-                
-#                 if student_grades:
-#                     current_grade = student_grades.quarterly_grade
-                    
-#                     # Count missing works (scores = 0)
-#                     ww_scores = student_grades.get_ww_scores_list()
-#                     pt_scores = student_grades.get_pt_scores_list()
-                    
-#                     missing_ww = sum(1 for score in ww_scores if score == 0)
-#                     missing_pt = sum(1 for score in pt_scores if score == 0)
-                    
-#                     # Check if QA was given but student has 0
-#                     if student_grades.class_record.qa_hps_1 > 0 and student_grades.qa_score_1 == 0:
-#                         missed_qa = True
-            
-#             # Determine if intervention needed
-#             needs_intervention = False
-#             risk_level = 'On Track'
-            
-#             # Critical conditions
-#             if total_absences >= 7 or missed_qa or missing_ww >= 4 or missing_pt >= 3:
-#                 needs_intervention = True
-#                 risk_level = 'Critical'
-#             # At Risk conditions
-#             elif total_absences >= 5 or missing_ww >= 2 or missing_pt >= 2:
-#                 needs_intervention = True
-#                 risk_level = 'At Risk'
-#             elif missing_ww >= 1 and missing_pt >= 1:
-#                 needs_intervention = True
-#                 risk_level = 'At Risk'
-            
-#             # Create intervention if needed
-#             if needs_intervention and subject_id:
-#                 intervention = InterventionPlan.objects.create(
-#                     student=student,
-#                     section=section,
-#                     subject_id=subject_id,
-#                     created_by=teacher,
-#                     quarter=quarter,
-#                     school_year=current_sy,
-#                     risk_level=risk_level,
-#                     current_grade=current_grade,
-#                     total_absences=total_absences,
-#                     missing_written_works=missing_ww,
-#                     missing_performance_tasks=missing_pt,
-#                     missed_quarterly_assessment=missed_qa
-#                 )
-#                 # intervention.update_risk_assessment()
-        
-#         # Build student data
-#         if intervention:
-#             student_data = {
-#                 'id': student.id,
-#                 'lrn': student.lrn,
-#                 'name': f"{student.last_name}, {student.first_name} {student.middle_name}".strip(),
-#                 'sex': student.gender,
-#                 'age': student.age,
-#                 'current_grade': intervention.current_grade,
-#                 'absences': intervention.total_absences,
-#                 'missing_work': intervention.missing_written_works + intervention.missing_performance_tasks,
-#                 'missing_ww': intervention.missing_written_works,
-#                 'missing_pt': intervention.missing_performance_tasks,
-#                 'missed_qa': intervention.missed_quarterly_assessment,
-#                 'risk_level': intervention.risk_level,
-#                 'intervention_tier': intervention.current_tier,
-#                 'intervention_id': intervention.id,
-#                 'has_intervention': True,
-#                 'is_resolved': intervention.is_resolved,
-#             }
-#         else:
-#             # Student without intervention (on track)
-#             student_data = {
-#                 'id': student.id,
-#                 'lrn': student.lrn,
-#                 'name': f"{student.last_name}, {student.first_name} {student.middle_name}".strip(),
-#                 'sex': student.gender,
-#                 'age': student.age,
-#                 'current_grade': 0,
-#                 'absences': 0,
-#                 'missing_work': 0,
-#                 'missing_ww': 0,
-#                 'missing_pt': 0,
-#                 'missed_qa': False,
-#                 'risk_level': 'On Track',
-#                 'intervention_tier': 'None',
-#                 'intervention_id': None,
-#                 'has_intervention': False,
-#                 'is_resolved': False,
-#             }
-        
-#         students_data.append(student_data)
-    
-#     # Calculate statistics
-#     stats = {
-#         'total': len(students_data),
-#         'critical': len([s for s in students_data if s['risk_level'] == 'Critical']),
-#         'at_risk': len([s for s in students_data if s['risk_level'] == 'At Risk']),
-#         'on_track': len([s for s in students_data if s['risk_level'] == 'On Track']),
-#     }
-    
-#     return JsonResponse({
-#         'success': True,
-#         'students': students_data,
-#         'stats': stats
-#     })
 
 @login_required
 @require_http_methods(["GET"])
@@ -325,84 +153,6 @@ def get_intervention_students(request):
     })
 
 
-# @login_required
-# @require_http_methods(["GET"])
-# def get_student_intervention_details(request, student_id):
-#     """
-#     Get detailed intervention information for a specific student.
-#     """
-#     try:
-#         teacher = request.user.teacher_profile
-#     except:
-#         return JsonResponse({'success': False, 'error': 'Teacher profile not found'})
-    
-#     quarter = request.GET.get('quarter', 'Q1')
-#     subject_id = request.GET.get('subject_id')
-    
-#     student = get_object_or_404(Student, id=student_id)
-#     current_sy = SchoolYear.get_current()
-    
-#     # Get intervention plan
-#     intervention = InterventionPlan.objects.filter(
-#         student=student,
-#         quarter=quarter,
-#         school_year=current_sy
-#     ).first()
-    
-#     if not intervention:
-#         return JsonResponse({'success': False, 'error': 'No intervention plan found'})
-    
-#     # Get all actions for this intervention
-#     actions = InterventionAction.objects.filter(
-#         intervention_plan=intervention
-#     ).select_related('handled_by')
-    
-#     actions_data = [{
-#         'id': action.id,
-#         'tier': action.tier,
-#         'action_type': action.action_type,
-#         'action_name': action.action_name,
-#         'description': action.description,
-#         'start_date': action.start_date.strftime('%Y-%m-%d'),
-#         'target_date': action.target_date.strftime('%Y-%m-%d') if action.target_date else '',
-#         'completion_date': action.completion_date.strftime('%Y-%m-%d') if action.completion_date else '',
-#         'status': action.status,
-#         'progress_notes': action.progress_notes,
-#         'teacher_notes': action.teacher_notes,
-#         'handled_by': action.handled_by.full_name,
-#         'was_successful': action.was_successful,
-#         'outcome_notes': action.outcome_notes,
-#     } for action in actions]
-    
-#     # Get notes
-#     notes = InterventionNote.objects.filter(
-#         intervention_plan=intervention
-#     ).select_related('created_by')
-    
-#     notes_data = [{
-#         'id': note.id,
-#         'note': note.note,
-#         'date': note.note_date.strftime('%Y-%m-%d'),
-#         'created_by': note.created_by.full_name,
-#     } for note in notes]
-    
-#     data = {
-#         'success': True,
-#         'intervention': {
-#             'id': intervention.id,
-#             'risk_level': intervention.risk_level,
-#             'current_tier': intervention.current_tier,
-#             'current_grade': intervention.current_grade,
-#             'total_absences': intervention.total_absences,
-#             'missing_ww': intervention.missing_written_works,
-#             'missing_pt': intervention.missing_performance_tasks,
-#             'missed_qa': intervention.missed_quarterly_assessment,
-#             'risk_factors': intervention.get_risk_factors(),
-#             'is_resolved': intervention.is_resolved,
-#         },
-#         'actions': actions_data,
-#         'notes': notes_data,
-#     }
     
 #     return JsonResponse(data)
 @login_required
